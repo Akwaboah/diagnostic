@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="utf-8">
+    <title>{{bus_info.Bus_Name}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+
+    <!-- Favicons -->
+    <link href="{% static 'web-assets/assets/img/favicon.ico' %}" rel="icon">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap.min.css' %}">
+
+    <!-- Bootstrap DatePicker Css -->
+    <link href="{% static 'admin/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}"
+        rel="stylesheet" />
+
+    <!-- Sweet Alert  Animation Css -->
+    <link href="{% static 'admin/assets/plugins/animate-css/animate.css' %}" rel="stylesheet" />
+
+    <!-- Sweet Alert Css -->
+    <link href="{% static 'admin/assets/plugins/sweetalert/sweetalert.css' %}" rel="stylesheet" />
+
+    <!-- Fontawesome CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/all.min.css' %}">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/style.css' %}">
+
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+			<script src="assets/js/html5shiv.min.js"></script>
+			<script src="assets/js/respond.min.js"></script>
+		<![endif]-->
+    <!-- <style>
+        /* Make the image fully responsive */
+        .carousel-inner img {
+            width: 100%;
+            height: 100%;
+        }
+    </style> -->
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <!-- Include the nav -->
+        {% include 'I_CARE/admin/main-nav-staff.html' %}
+    </header>
+    <!-- /Header -->
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-12 col-12">
+                    <nav aria-label="breadcrumb" class="page-breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="#">Home</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{{page}}</li>
+                        </ol>
+                    </nav>
+                    <h2 class="breadcrumb-title">{{page}}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Breadcrumb -->
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+
+        <!-- Page Content -->
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-5 col-lg-4 col-xl-3 theiaStickySidebar">
+                        <div class="profile-sidebar">
+                            <div class="widget-profile pro-widget-content">
+                                <div class="profile-info-widget">
+                                    <a href="#" class="booking-doc-img">
+                                        {% if user_info.Profile.url %}
+                                        <img src="{{user_info.Profile.url}}" alt="User Image">
+                                        {% else %}
+                                        <img src="{% static 'admin/assets/img/profiles/avatar.png' %}" alt="User Image">
+                                        {% endif %}
+                                    </a>
+                                    <div class="profile-det-info">
+                                        <h3>{{request.user.first_name}} {{request.user.last_name}}</h3>
+                                        <div class="patient-details">
+                                            <h5 class="mb-0">{{user_info.Qualification}}</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-widget">
+                                <div class="doc-info-cont m-2">
+                                    <div class="rating">
+                                        <i class="fas fa-star filled"></i>
+                                        <i class="fas fa-star filled"></i>
+                                        <i class="fas fa-star filled"></i>
+                                        <i class="fas fa-star filled"></i>
+                                        <i class="fas fa-star"></i>
+                                        <span class="d-inline-block average-rating">(35)</span>
+                                    </div>
+                                    <div class="clinic-details">
+                                        <p class="doc-location"><i class="fas fa-map-marker-alt"></i> {{user_det.Address.value}} - <a href="javascript:void(0);">Get Directions</a></p>
+                                        <p class="doc-location"><i class="fas fa-phone-alt"></i> {{user_det.Contact.value}} - <a href="javascript:void(0);">Call Now</a></p>
+
+                                    </div>
+                                    <div class="clinic-services">
+                                        <span>{{user_info.Gender}}</span>
+                                        <span>{{user_det.Level.value}}</span>
+                                    </div>
+                                </div>
+                                <!-- About Details -->
+                                <div class="widget about-widget m-2">
+                                    <h4 class="widget-title">About Me</h4>
+                                    <p>{{user_det.About.value}}</p>
+                                </div>
+                                <!-- /About Details -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-7 col-lg-8 col-xl-9">
+                        <div class="card">
+                            <div class="card-body pt-0">
+                                <!-- Tab Menu -->
+                                <nav class="user-tabs mb-4">
+                                    <ul class="nav nav-tabs nav-tabs-bottom nav-item">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="#usr_overview"
+                                                data-toggle="tab">User Demographic</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#usr_security" data-toggle="tab">Change Password</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                                <!-- /Tab Menu -->
+
+                                <!-- Tab Content -->
+                                <div class="tab-content pt-0">
+                                    <!-- Profile Content -->
+                                    <div role="tabpanel" id="usr_overview" class="tab-pane fade show active">
+                                        <div class="row ">
+                                            <div class="col-md-12">
+                                                <form method="post" enctype="multipart/form-data">
+                                                    {% csrf_token %}
+                                                    <div class="row form-row">
+                                                        <div class="col-12 col-md-12">
+                                                            <div class="form-group">
+                                                                <div class="change-avatar">
+                                                                    <div class="profile-img">
+                                                                        {% if 'avatar' in user_det.Profile.value %}
+                                                                        <img id="img_profile" src="{% static 'admin/assets/img/profiles/avatar.png' %}"
+                                                                            alt="User Image">
+                                                                        {% else %}
+                                                                        <img id="img_profile" src="{{user_det.Profile.value.url}}"
+                                                                            alt="User Image">
+                                                                        {% endif %}
+                                                                    </div>
+                                                                    <div class="upload-img">
+                                                                        <div class="change-photo-btn">
+                                                                            <span><i class="fa fa-upload"></i> Upload
+                                                                                Photo</span>
+                                                                            {{user_det.Profile}}
+                                                                        </div>
+                                                                        <small class="form-text text-muted">Allowed JPG,
+                                                                            GIF or PNG. Max size of 2MB</small>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-2 col-md-2">
+                                                            <div class="form-group">
+                                                                <label>Username</label>
+                                                                <input readonly type="text" name="username"
+                                                                    class="form-control"
+                                                                    value="{{request.user.username}}">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-5 col-md-5">
+                                                            <div class="form-group">
+                                                                <label>First Name</label>
+                                                                <input type="text" name="first_name"
+                                                                    class="form-control"
+                                                                    value="{{request.user.first_name}}">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-5 col-md-5">
+                                                            <div class="form-group">
+                                                                <label>Last Name</label>
+                                                                <input type="text" name="last_name" class="form-control"
+                                                                    value="{{request.user.last_name}}">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12 col-md-12">
+                                                            <div class="row">
+                                                                <div class="col-lg-3 col-md-6 col-sm-4">
+                                                                    <div class="form-group">
+                                                                        <label>Gender</label>
+                                                                        <div class="form-group row">
+                                                                            <div class="col-lg-9">
+                                                                                <div
+                                                                                    class="form-check form-check-inline">
+                                                                                    <input class="form-check-input"
+                                                                                        type="radio" name="gender"
+                                                                                        id="gender_male" value="Male"
+                                                                                        checked>
+                                                                                    <label class="form-check-label"
+                                                                                        for="gender_male">
+                                                                                        Male
+                                                                                    </label>
+                                                                                </div>
+                                                                                <div
+                                                                                    class="form-check form-check-inline">
+                                                                                    <input class="form-check-input"
+                                                                                        type="radio" name="gender"
+                                                                                        id="gender_female"
+                                                                                        value="Female">
+                                                                                    <label class="form-check-label"
+                                                                                        for="gender_female">
+                                                                                        Female
+                                                                                    </label>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4 col-md-6 col-sm-4">
+                                                                    <div class="form-group">
+                                                                        <label>Mobile</label>
+                                                                        {{user_det.Contact}}
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-5 col-md-12 col-sm-4">
+                                                                    <div class="form-group">
+                                                                        <label>Email ID</label>
+                                                                        <input type="email" name="email"
+                                                                            class="form-control"
+                                                                            value="{{request.user.email}}">
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12 col-md-6">
+                                                            <div class="form-group">
+                                                                <label>City</label>
+                                                                {{user_det.City}}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12 col-md-6">
+                                                            <div class="form-group">
+                                                                <label>Town</label>
+                                                                {{user_det.Town}}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4 col-md-4">
+                                                            <div class="form-group">
+                                                                <label>Address</label>
+                                                                {{user_det.Address}}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4 col-md-4">
+                                                            <div class="form-group">
+                                                                <label>Qualifications</label>
+                                                                {{user_det.Qualification}}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4 col-md-4">
+                                                            <div class="form-group">
+                                                                <label>User Level</label>
+                                                                {{user_det.Level}}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="form-group">
+                                                                <label>About Me</label>
+                                                                {{user_det.About}}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="submit-section">
+                                                        <button type="submit" class="btn btn-primary submit-btn">Save
+                                                            Changes</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /Profile Content -->
+
+                                    <!-- Change Password Form -->
+                                    <div role="tabpanel" id="usr_security" class="tab-pane fade">
+                                        <div class="row">
+                                            <div class="col-md-12 col-lg-6">
+                                                <form method="POST" action="{% url 'auth-staff' 'change-password' %}">
+                                                    {% csrf_token %}
+                                                    <div class="form-group">
+                                                        <label>Old Password</label>
+                                                        <input type="password" name="OldPassword" autocomplete="off" class="form-control" required>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>New Password</label>
+                                                        <input type="password" name="NewPassword" onchange="onChange();" class="form-control" required>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Confirm Password</label>
+                                                        <input type="password" name="NewPasswordConfirm" onchange="onChange();" class="form-control" required>
+                                                    </div>
+                                                    <div class="submit-section">
+                                                        <button type="submit" class="btn btn-primary submit-btn">Save Changes</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /Change Password Form -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+        <!-- /Page Content -->
+
+        <!-- Footer -->
+        {% include 'I_CARE/web/footer.html' %}
+        <!-- /Footer -->
+
+    </div>
+    <!-- /Main Wrapper -->
+
+    <!-- jQuery -->
+    <script src="{% static 'web-assets/assets/js/jquery.min.js' %}"></script>
+
+    <!-- Bootstrap Datepicker Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <!-- Date Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/custom-date.js' %}"></script>
+
+
+    <!-- Bootstrap Core JS -->
+    <script src="{% static 'web-assets/assets/js/popper.min.js' %}"></script>
+    <script src="{% static 'web-assets/assets/js/bootstrap.min.js' %}"></script>
+
+    <!-- Bootstrap Notify Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-notify/bootstrap-notify.js' %}"></script>
+
+    <!-- Sweet Alert Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/sweetalert/sweetalert.min.js' %}"></script>
+
+    <!-- Slick JS -->
+    <script src="{% static 'web-assets/assets/js/slick.js' %}"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+
+    <!-- Sweet Notification Trigger-->
+    <script src="{% static 'admin/assets/plugins/sweetalert/notifications.js' %}"></script>
+
+    <!-- extends child js into this block tag -->
+    {% block extra-js %}
+    {% endblock extra-js %}
+
+    <!-- Messages Handler -->
+    {% for message in messages %} {% if message.tags == "info" %}
+    <script>
+        var text = '{{ message}}'
+        //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+        window.parent.showNotification(null, text, 'top', 'left', 'animated bounceIn', 'animated bounceOut');
+    </script>
+    {% elif message.tags == "success" %}
+    <script>
+        var text = '{{ message}}'
+        //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+        window.parent.showNotification(null, text, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+    </script>
+    {% endif %} {% endfor %}
+
+    <script>
+        $(function () {
+            var gender = "{{user_info.Gender}}";
+            if (gender == 'Male') {
+                document.getElementById('gender_male').checked = true
+                document.getElementById('gender_female').checked = false
+            } else {
+                document.getElementById('gender_male').checked = false
+                document.getElementById('gender_female').checked = true
+            }
+        })
+        function onChange() {
+            const password = document.querySelector('input[name=NewPassword]');
+            const confirm = document.querySelector('input[name=NewPasswordConfirm]');
+            if (confirm.value === password.value) {
+                confirm.setCustomValidity('');
+            } else {
+                confirm.setCustomValidity('Passwords do not match');
+            }
+        }
+        function checkImage(event) {
+        var image = URL.createObjectURL(event.target.files[0]);
+        var imgAttr = document.getElementById('img_profile');
+        imgAttr.src = image;
+        // imgAttr.style.width = "100px";
+        // imgAttr.style.height = "100px";
+    }
+    </script>
+</body>
+
+</html>

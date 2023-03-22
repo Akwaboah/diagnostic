@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- doccure/blank-page.html  30 Nov 2019 04:12:20 GMT -->
+
+<head>
+	<meta charset="utf-8">
+	<title>{{bus_info.Bus_Name}}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+
+	<!-- Favicons -->
+	<link href="{% static 'web-assets/assets/img/favicon.ico' %}" rel="icon">
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap.min.css' %}">
+
+	<!-- Sweet Alert  Animation Css -->
+    <link href="{% static 'admin/assets/plugins/animate-css/animate.css' %}" rel="stylesheet" />
+
+    <!-- Sweet Alert Css -->
+    <link href="{% static 'admin/assets/plugins/sweetalert/sweetalert.css' %}" rel="stylesheet" />
+
+	<!-- Fontawesome CSS -->
+	<link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/font-awesome.min.css' %}">
+	<link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/all.min.css' %}">
+
+
+	<!-- Main CSS -->
+	<link rel="stylesheet" href="{% static 'web-assets/assets/css/style.css' %}">
+
+	<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!--[if lt IE 9]>
+			<script src="assets/js/html5shiv.min.js"></script>
+			<script src="assets/js/respond.min.js"></script>
+		<![endif]-->
+
+</head>
+
+<body>
+
+	<!-- Main Wrapper -->
+	<div class="main-wrapper">
+		<!-- Breadcrumb -->
+		{% include 'I_CARE/web/breadcrumb.html' %}
+		<!-- /Breadcrumb -->
+
+		<!-- Header -->
+		<header class="header">
+			<!-- Include the nav -->
+			{% include 'I_CARE/web/main-nav.html' %}
+		</header>
+		<!-- /Header -->
+
+		<!-- Page Content -->
+		<div class="uni-about">
+			<div id="wrapper-container" class="site-wrapper-container">
+				<div id="main-content" class="site-main-content">
+					<div class="uni-contact-us-body bg-white">
+						<!--MAP-->
+						<div class="uni-about-map">
+							<iframe class="map"
+								src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15852.694553675838!2d-1.6508316!3d6.6253424!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x10c751e04221f14!2sFRAMADA%20DENTAL%20CLINIC!5e0!3m2!1sen!2sgh!4v1669562506236!5m2!1sen!2sgh"
+								height="700" style="border:0"></iframe>
+ 						</div>
+						<div class="uni-contact-us-body-content">
+							<div class="container">
+								<div class="row">
+									<div class="col-md-4">
+										<div class="uni-send-a-message">
+											<div class="uni-contact-title">
+												<h3>Send a message</h3>
+												<div class="uni-line"></div>
+											</div>
+											<div class="uni-send-a-message-body">
+												<form method="POST" action="{% url 'web-links' 'message' %}">
+													{% csrf_token %}
+													<div class="input-group form-group">
+														<span class="input-group-addon"><i class="fa fa-user"
+																aria-hidden="true"></i></span>
+														<input type="text" class="form-control" name="name" value=""
+														required	placeholder="your name">
+													</div>
+													<div class="input-group form-group">
+														<span class="input-group-addon"><i class="fa fa-phone"
+																aria-hidden="true"></i></span>
+														<input type="tel" class="form-control" name="phone" value=""
+														required placeholder="phone number">
+													</div>
+													<div class="input-group form-group">
+														<span class="input-group-addon"><i class="fa fa-envelope"
+																aria-hidden="true"></i></span>
+														<input type="email" class="form-control" name="email" value=""
+														required	placeholder="email">
+													</div>
+													<div class="input-group form-group">
+														<textarea name="message" class="form-control"
+														required placeholder="Message"></textarea>
+													</div>
+													<button class="vk-btn vk-btn-send">send</button>
+												</form>
+											</div>
+										</div>
+									</div>
+									<div class="col-md-4">
+										<div class="uni-contact-info">
+											<div class="uni-contact-title">
+												<h3>Contact us</h3>
+												<div class="uni-line"></div>
+											</div>
+											<div class="uni-contact-info-body">
+												<div class="item">
+													<div class="icon-holder">
+														<i class="fa fa-map-marker" aria-hidden="true"></i>
+													</div>
+													<div class="text-holder">
+														<p>{{bus_info.GPS_Address}}</p>
+														<span>{{bus_info.City}}</span>
+													</div>
+												</div>
+
+												<!--Receive records-->
+												<!-- <div class="uni-receive-records">
+													<div class="uni-contact-info-title">
+														<h4>Receive records</h4>
+														<div class="uni-divider"></div>
+													</div>
+
+													<div class="item">
+														<div class="icon-holder">
+															<i class="fa fa-phone" aria-hidden="true"></i>
+														</div>
+														<div class="text-holder">
+															<p>Call Us</p>
+															<span>(094) 123 4567</span>
+														</div>
+													</div>
+													<div class="item">
+														<div class="icon-holder">
+															<i class="fa fa-envelope" aria-hidden="true"></i>
+														</div>
+														<div class="text-holder">
+															<p>Send A Message</p>
+															<span>medicareplus@domain.com</span>
+														</div>
+													</div>
+												</div> -->
+
+												<!--customer care-->
+												<div class="uni-customer-care">
+													<div class="uni-contact-info-title">
+														<h4>customer care</h4>
+														<div class="uni-divider"></div>
+													</div>
+
+													<div class="item">
+														<div class="icon-holder">
+															<i class="fa fa-phone" aria-hidden="true"></i>
+														</div>
+														<div class="text-holder">
+															<p>Call Us</p>
+															<span>{{bus_info.Gen_Tel}}</span>
+														</div>
+													</div>
+													<div class="item">
+														<div class="icon-holder">
+															<i class="fa fa-envelope" aria-hidden="true"></i>
+														</div>
+														<div class="text-holder">
+															<p>Send A Message</p>
+															<span>{{bus_info.Email}}</span>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="col-md-4">
+										<div class="uni-contact-us-hours">
+											<div class="uni-contact-us-title">
+												<div class="icon">
+													<i class="fa fa-clock" aria-hidden="true"></i>
+												</div>
+												<h4>opening hours</h4>
+											</div>
+											<div class="uni-contact-us-hours-content">
+												<table class="table">
+													<tr>
+														<td>monday</td>
+														<td>8:00 - 17:00</td>
+													</tr>
+													<tr>
+														<td>tuesday</td>
+														<td>8:00 - 17:00</td>
+													</tr>
+													<tr>
+														<td>wednesday</td>
+														<td>8:00 - 17:00</td>
+													</tr>
+													<tr>
+														<td>thursday</td>
+														<td>8:00 - 17:00</td>
+													</tr>
+													<tr>
+														<td>friday</td>
+														<td>8:00 - 17:00</td>
+													</tr>
+													<tr>
+														<td>saturday</td>
+														<td>8:00 - 17:00</td>
+													</tr>
+												</table>
+												<a href="{% url 'web-links' 'our-services' %}" class="book-appointment">Book appointments</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /Page Content -->
+
+		<!-- Footer -->
+		{% include 'I_CARE/web/footer.html' %}
+		<!-- /Footer -->
+
+	</div>
+	<!-- /Main Wrapper -->
+
+	<!-- jQuery -->
+	<script src="{% static 'web-assets/assets/js/jquery.min.js' %}"></script>
+
+	<!-- Bootstrap Core JS -->
+	<script src="{% static 'web-assets/assets/js/popper.min.js' %}"></script>
+	<script src="{% static 'web-assets/assets/js/bootstrap.min.js' %}"></script>
+
+	<!-- Bootstrap Notify Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-notify/bootstrap-notify.js' %}"></script>
+
+    <!-- Sweet Alert Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/sweetalert/sweetalert.min.js' %}"></script>
+
+
+	<!-- Custom JS -->
+	<script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+
+	<!-- Sweet Notification Trigger-->
+	<script src="{% static 'admin/assets/plugins/sweetalert/notifications.js' %}"></script>
+	{% for message in messages %}
+	<script>
+		var text = '{{ message}}'
+		//Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+		window.parent.showNotification(null, text, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+	</script>
+	{% endfor %}
+
+</body>
+
+<!-- doccure/blank-page.html  30 Nov 2019 04:12:20 GMT -->
+
+</html>

@@ -1,0 +1,440 @@
+{% extends 'I_CARE/admin/index.html' %}
+
+{% block extra-css %}
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'admin/assets/css/select2.min.css' %}">
+{% endblock extra-css %}
+
+<!--dashboard-menu -->
+{% block dashboard-menu %}
+<nav class="dashboard-menu">
+    <ul>
+        <li>
+            <a href="{% url 'pharm' 'dashboard' %}">
+                <i class="fas fa-columns"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'pharm' 'list' %}">
+                <i class="fas fa-list"></i>
+                <span>Drugs List</span>
+            </a>
+        </li>
+        <li class="active">
+            <a href="{% url 'pharm' 'stocking' %}">
+                <i class="fas fa-pills"></i>
+                <span>Manage Drugs</span>
+            </a>
+        </li>
+        <li>
+			<a href="{% url 'pharm' 'cash-form' %}">
+				<i class="fas fa-cart-plus"></i>
+				<span>Prescriptions</span>
+			</a>
+		</li>
+        <li>
+			<a  href="javascript:void(0);" data-color="red" data-toggle="modal"
+				data-target="#modal-inventory-rep">
+				<i class="fas fa-file-pdf-o"></i>
+				<span>General Reporting</span>
+			</a>
+		</li>
+    </ul>
+</nav>
+{% endblock dashboard-menu %}
+<!-- /dashboard-menu -->
+
+<!-- page content -->
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <!-- <h4 class="mb-2">Patient Registration</h4> -->
+        <div class="appointment-tab">
+            <ul class="nav nav-tabs nav-tabs-solid nav-tabs-justified p-2">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#pc" data-toggle="tab">Manage Drugs</a>
+                </li>
+            </ul>
+            
+            <div class="tab-content">
+                <!-- Manage Drugs Tab -->
+                <div class="tab-pane show active" id="pc">
+                    <form method="POST" id="drugForm"> 
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="row clearfix">
+                                            <div class="col-lg-6 col-md-12">
+                                                <div class="card">
+                                                    <div style="margin: 5px; padding: 5px;">
+                                                        <div class="form-group row">
+                                                            <h5 class="card-title col-lg-5"><u>PRODUCT DETAILS</u></h5>
+                                                                <div class="col-lg-7">
+                                                                <!-- <div class="col-lg-12"> -->
+                                                                <select class="select form-control" id="searchPat" name="searchPat"
+                                                                    onchange="searchDrug(this.value);">
+                                                                    <option value="" selected hidden></option>
+                                                                    <option value="None">Clear Fields</option>
+                                                                    {% for val in items %}
+                                                                    <option value="{{val.Product_Id}}">{{val.Product_Name}}</option>
+                                                                    {% endfor%}
+                                                                </select>
+                                                                <!-- </div> -->
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group row">
+                                                            <div class="col-lg-6 col-md-6 col-sm-6 col-6">
+                                                                <div class="row">
+                                                                    <div class="col-lg-10 col-md-10 col-sm-10 col-10">
+                                                                        {{form.Department}}
+                                                                    </div>
+                                                                    <div class="col-lg-2 col-md-2 col-sm-2 col-2">
+                                                                        <div class="row">
+                                                                            <a data-toggle="modal"
+                                                                                data-target="#modal-department"
+                                                                                class="btn btn-primary btn-md">
+                                                                                <i class="fa fa-plus"></i>
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-lg-6 col-md-6 col-sm-6 col-6">
+                                                                <!-- <label class="form-label">Product Name*</label> -->
+                                                                {{form.Product_Name}}
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group row">
+                                                            <div
+                                                                class="col-lg-3 col-md-3 col-sm-3 col-3">
+                                                                Quantity *
+                                                                {{form.Quantity}}
+                                                            </div>
+                                                            <div
+                                                                class="col-lg-5 col-md-5 col-sm-5 col-5">
+                                                                Purchased Price *
+                                                                {{form.Purchase}}
+                                                            </div>
+                                                            <div
+                                                                class="col-lg-4 col-md-4 col-sm-4 col-4">
+                                                                Total Cost*
+                                                                {{form.Total}}
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                                                                <div class="row">
+                                                                    <div
+                                                                        class="col-lg-6 col-md-6 col-sm-6 col-6">
+                                                                        RETAIL PRICE
+                                                                        {{form.Retail}}
+                                                                    </div>
+                                                                    <div
+                                                                        class="col-lg-6 col-md-6 col-sm-6 col-6">
+                                                                        W.SALE PRICE
+                                                                        {{form.Whole_Sale}}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6 col-md-12">
+                                                <div class="card">
+                                                    <div style="margin: 5px; padding: 5px;">
+                                                        <div class="row">
+                                                            <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                                                                <div class="row">
+                                                                    <div
+                                                                        class="col-lg-6 col-md-6 col-sm-6 col-6">
+                                                                        EXPIRY DATE
+                                                                        {{form.Expiry_Date}}
+                                                                    </div>
+                                                                    <div class="col-lg-6 col-md-6 col-sm-6 col-6">
+                                                                        PRODUCT ID
+                                                                        {{form.Product_Id}}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <h5 class="card-title"><u>SUPPLIER DETAILS</u></h5>
+                                                        <div class="row">
+                                                            <div class="col-lg-7 col-md-7 col-sm-7 col-7">
+                                                                <div class="row">
+                                                                    <div
+                                                                        class="col-lg-10 col-md-10 col-sm-10 col-10">
+                                                                        {{form.Suppliers}}
+                                                                    </div>
+                                                                    <div
+                                                                        class="col-lg-2 col-md-2 col-sm-2 col-2">
+                                                                        <div class="row">
+                                                                            <a data-toggle="modal"
+                                                                                data-target="#modal-supplier"
+                                                                                class="btn btn-primary btn-md">
+                                                                                <i class="fa fa-plus"></i>
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div
+                                                                class="col-lg-5 col-md-5 col-sm-5 col-5">
+                                                                <!-- <label class="form-label">Product Name*</label> -->
+                                                                {{form.Invoice}}
+                                                            </div>
+                                                        </div> 
+                                                        <hr style="margin: 6px;">
+                                                        <!-- <div class="col"> -->
+                                                            <div class="row">
+                                                                <div class="col-lg-3 col-md-3 col-sm-3 col-3">
+                                                                    <div class="pull-left">
+                                                                        <button class="btn btn-danger "
+                                                                            id="btn_save_changes"
+                                                                            type="submit">Confirm</button>
+
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="col-lg-5 col-md-5 col-sm-5 col-5">
+                                                                    <div class="row">
+                                                                        <div
+                                                                            class="col-lg-5 col-md-5 col-sm-5 col-5">
+                                                                            <input type="checkbox"
+                                                                                id="vat_check"
+                                                                                class="custom-control-input"
+                                                                                onclick="vat_main_cal();">
+                                                                            <label
+                                                                                class="custom-control-label"
+                                                                                style="margin-top: 10px;"
+                                                                                for="vat_check">Vat/NHIL</label>
+                                                                        </div>
+                                                                        <div
+                                                                            class="col-lg-7 col-md-7 col-sm-7 col-7">
+                                                                            {{form.Vat}}</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        <!-- </div> -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div> 
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <!-- /Manage Drugs Tab -->
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock content %}
+<!-- /page content -->
+
+{% block extra-js %}
+
+<!-- Sticky Sidebar JS -->
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/ResizeSensor.js' %}"></script>
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/theia-sticky-sidebar.js' %}"></script>
+
+<!-- Select2 JS -->
+<script src="{% static 'admin/assets/js/select2.min.js' %}"></script>
+
+<!-- Custom JS -->
+<script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+
+<!-- Mask JS -->
+<script src="{% static 'admin/assets/js/jquery.maskedinput.min.js' %}"></script>
+<script src="{% static 'admin/assets/js/mask.js' %}"></script>
+
+
+<script>
+    let drugsData;
+    
+    $(document).ready(function () {
+        
+        $('#id_Expiry_Date').mask('9999-99');
+
+        $("#searchPat").select2(
+            {
+                dropdownAutoWidth: true,
+                multiple: false,
+                width: '100%',
+                placeholder: "Enter to search",
+                // allowClear: true,
+            }
+        );
+
+        drugsData=JSON.parse('{{jsonDrugs|safe}}');
+         
+    });
+    
+    function searchDrug(drugID) {
+        drugsData.forEach((data,index) => {
+            if (data.Product_Id==drugID) {
+                $('#id_Department').val(data.Department_id).change()
+                $('#id_Product_Name').val(data.Product_Name)
+                $('#id_Purchase').val(data.Purchase)
+                $('#id_Retail').val(data.Retail)
+                $('#id_Whole_Sale').val(data.Whole_Sale)
+                let exp_date=String(data.Expiry_Date).split('-')
+                $('#id_Expiry_Date').val(`${exp_date[0]}-${exp_date[1]}`)
+                $('#id_Product_Id').val(data.Product_Id)
+                $('#id_Suppliers').val(data.Suppliers_id).change()
+                $('#id_Invoice').val(data.Invoice)
+                $('#vat_value_id').val(data.Vat)
+                if (data.Vat>0) {
+                    document.getElementById('vat_check').checked=true
+                }else{
+                    document.getElementById('vat_check').checked=false
+                }
+            } else if (drugID=='None') {
+                $('#drugForm')[0].reset()
+            }
+        });
+    }
+ 
+    function Quantity_Cal() {
+        // <!--This is used to get value from input field-->
+        var qnt = document.getElementById("id_Quantity").value;
+        var pur = document.getElementById("id_Purchase").value;
+        var total = (qnt * pur);
+        document.getElementById("id_Total").value = total.toFixed(2);
+    }
+
+    function vat_main_cal() {
+        var chk = document.getElementById("vat_check");
+        if (chk.checked) {
+            document.getElementById("vat_value_id").value = 0.03;
+            // <!--Whole_Sales Price Vat-->
+            var sale = document.getElementById("id_Whole_Sale").value;
+            var rate = document.getElementById("vat_value_id").value;
+            var cal = (parseFloat(sale) * parseFloat(rate));
+            // <!--console.log("The Mult Operation: "+cal.toFixed(2));-->
+            var min_cal = (parseFloat(cal) + parseFloat(sale));
+            // <!--console.log("The Addition Operation: "+min_cal.toFixed(2));-->
+            document.getElementById("id_Whole_Sale").value = min_cal.toFixed(2);
+            // <!--Retail Price Vat-->
+            var retail_sale = document.getElementById("id_Retail").value;
+            var rate2 = document.getElementById("vat_value_id").value;
+            var cal2 = (parseFloat(retail_sale) * parseFloat(rate2));
+            // <!--console.log("The Mult Operation: "+cal2.toFixed(2));-->
+            var min_cal2 = (parseFloat(cal2) + parseFloat(retail_sale));
+            // <!--console.log("The Addition Operation: "+min_cal2.toFixed(2));-->
+            document.getElementById("id_Retail").value = min_cal2.toFixed(2);
+        } else {
+            document.getElementById("vat_value_id").value = 0.03;
+            // <!--Whole_Sales Price reset Vat-->
+            var sale = document.getElementById("id_Whole_Sale").value;
+            var rate = document.getElementById("vat_value_id").value;
+            var cal = (parseFloat(sale) * parseFloat(rate));
+            // <!--console.log("The Mult Operation: "+cal.toFixed(2));-->
+            var min_cal = (parseFloat(sale) - parseFloat(cal));
+            // <!--console.log("The Addition Operation: "+min_cal.toFixed(2));-->
+            document.getElementById("id_Whole_Sale").value = min_cal.toFixed(2);
+            // <!--Retail Price reset Vat-->
+            var retail_sale = document.getElementById("id_Retail").value;
+            var rate2 = document.getElementById("vat_value_id").value;
+            var cal2 = (parseFloat(retail_sale) * parseFloat(rate2));
+            // <!--console.log("The Mult Operation: "+cal2.toFixed(2));-->
+            var min_cal2 = (parseFloat(retail_sale) - parseFloat(cal2));
+            // <!--console.log("The Addition Operation: "+min_cal2.toFixed(2));-->
+            document.getElementById("id_Retail").value = min_cal2.toFixed(2);
+        }
+    }
+
+    // Adding Department Ajax Post
+    $("#department_form").on('submit', function (e) {
+        e.preventDefault();
+        $.ajax({
+            type: "POST",
+            url: "{% url 'pharm' 'new_department' %}",
+            data: {
+                Department: $('#new_Department').val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                dataType: "json"
+            },
+            
+            beforeSend: function () {
+                // show progress whiles request in pregess to avoid many submission
+                swal({
+                    title: "Processing Request",
+                    text: "please wait whiles we proccess your request",
+                    imageUrl: "{% static 'admin/assets/img/loading.gif' %}",
+                    showConfirmButton: false
+                });
+            },
+            success: function (data) {
+                window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                swal.close();
+                // refresh the dropdown selection field
+                $("#id_Department").load(window.location.href + " #id_Department>*", "");
+                $("#departmentTable").load(window.location.href + " #departmentTable>*", "");
+                $('#new_Department').val("")
+            },
+           
+            error: function (data) {
+                window.parent.showNotification(null, "Error occured whiles processing data", 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                swal.close();
+            }
+        });
+    });
+
+    // Adding Supplier Ajax Post
+    $("#supplier_form").on('submit', function (e) {
+        e.preventDefault();
+        $.ajax({
+            type: "POST",
+            url: "{% url 'pharm' 'add_supplier' %}",
+            data: {
+                contact: $('#supContact').val(),
+                company_name: $('#supComapny_Name').val(),
+                address: $('#supAddress').val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                dataType: "json"
+            },
+            
+            beforeSend: function () {
+                // show progress whiles request in pregess to avoid many submission
+                swal({
+                    title: "Processing Request",
+                    text: "please wait whiles we proccess your request",
+                    imageUrl: "{% static 'sms_assets/images/loading.gif' %}",
+                    showConfirmButton: false
+                });
+            },
+            
+            success: function (data) {
+                window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                swal.close();
+                // refresh the dropdown selection field
+                $("#id_Suppliers").load(window.location.href + " #id_Suppliers>*", "");
+                $("#supplierTable").load(window.location.href + " #supplierTable>*", "");
+
+                $('#supContact').val(""),
+                $('#supComapny_Name').val("")
+                $('#supAddress').val("")
+            },
+
+            error: function (data) {
+                window.parent.showNotification(null, "Error occured whiles processing data", 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                swal.close();
+            }
+        });
+    });
+ 
+
+</script>
+
+{% endblock extra-js %}
+
+</body>
+
+</html>

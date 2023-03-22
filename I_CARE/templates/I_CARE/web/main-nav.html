@@ -1,0 +1,49 @@
+<nav class="navbar navbar-expand-lg header-nav">
+    <div class="navbar-header">
+        <a id="mobile_btn" href="javascript:void(0);">
+            <span class="bar-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </span>
+        </a>
+        <a href="{% url 'home-page' %}" class="navbar-brand logo">
+            <img src="{{bus_info.Web_Logo.url}}" class="img-fluid" alt="Logo">
+        </a>
+    </div>
+    <div class="main-menu-wrapper">
+        <div class="menu-header">
+            <a href="{% url 'home-page' %}" class="menu-logo">
+                <img src="{{bus_info.Footer_Logo.url}}" class="img-fluid" alt="Logo">
+            </a>
+            <a id="menu_close" class="menu-close" href="javascript:void(0);">
+                <i class="fas fa-times"></i>
+            </a>
+        </div>
+        <ul class="main-nav">
+            <li class="{% if page in 'web' %}active{% endif %}">
+                <a href="{% url 'home-page' %}">HOME</a>
+            </li>
+            <li class="{% if page in 'about-us' %}active{% endif %}">
+                <a href="{% url 'web-links' 'about-us' %}">ABOUT US</a>
+            </li>
+            <li class="{% if page in 'our-services' %}active{% endif %}">
+                <a href="{% url 'web-links' 'our-services' %}">OUR SERVICES</a>
+            </li>
+            <li class="{% if page in 'contact-us' %}active{% endif %}">
+                <a href="{% url 'web-links' 'contact-us' %}">CONTACT US</a>
+            </li>
+        </ul>
+    </div>
+    <ul class="nav header-navbar-rht">
+        <li class="nav-item contact-item">
+            <div class="header-contact-img">
+                <i class="far fa-hospital"></i>
+            </div>
+            <div class="header-contact-detail">
+                <p class="contact-header">Book Appointment</p>
+                <p class="contact-info-header">{{bus_info.App_Tel}}</p>
+            </div>
+        </li>
+    </ul>
+</nav>

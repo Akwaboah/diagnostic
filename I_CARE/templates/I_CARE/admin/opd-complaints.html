@@ -1,0 +1,283 @@
+{% extends 'I_CARE/admin/index.html' %}
+
+
+{% block extra-css %}
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'admin/assets/css/select2.min.css' %}">
+<style>
+    .select2-selection__rendered {
+        line-height: 40px !important;
+    }
+
+    .select2-container .select2-selection--single {
+        height: 40px !important;
+    }
+
+    .select2-selection__arrow {
+        height: 40px !important;
+    }
+</style>
+{% endblock extra-css %}
+
+<!--dashboard-menu -->
+{% block dashboard-menu %}
+<nav class="dashboard-menu">
+    <ul>
+        <li>
+            <a href="{% url 'opd' 'dashboard' %}">
+                <i class="fas fa-columns"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'opd' 'pat-reg' %}">
+                <i class="fas fa-user-friends"></i>
+                <span>Patient Registration</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'opd' 'pat-update' %}">
+                <i class="fas fa-user-edit"></i>
+                <span>Patient Demographics</span>
+            </a>
+        </li>
+        <li class="active">
+            <a href="{% url 'opd' 'pat-complaints' %}">
+                <i class="fas fa-user"></i>
+                <span>Existing Patients</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endblock dashboard-menu %}
+<!-- /dashboard-menu -->
+
+<!-- page content -->
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <!-- <h4 class="mb-2">Presenting Complaints/Vitals</h4> -->
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header p-1">
+                            <div class="form-group row">
+                                <label class="col-lg-2 col-form-label font-weight-bold">SEARCH PATIENT</label>
+                                <div class="col-lg-10">
+                                    <!-- <div class="col-lg-12"> -->
+                                    <div class="input-group input-group-md d-flex justify-content-between">
+                                        <select class="select form-control" required id="searchPat" name="searchPat"
+                                            onchange="searchPatient(this.value);">
+                                            <option value="" disabled selected hidden></option>
+                                            {% for val in pat_data %}
+                                            <option value="{{val.Patient_Id}}">{{val.First_Name}} {{val.Surname}}({{val.Tel}})</option>
+                                            {% endfor%}
+                                        </select>
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                                        </div>
+                                    </div>
+                                    <!-- </div> -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-xl-12">
+                                    <!-- <h4 class="card-title">Personal Details</h4> -->
+                                    <div class="form-group">
+                                        <div class="change-avatar">
+                                            <div class="profile-img">
+                                                <img id="img_profile" src="{% static 'admin/assets/img/profiles/avatar.png' %}" alt="User Image">
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-xl-12">
+                                                    <label>Name/ID:<b id="Name">_ _ _ _ _ _ _ _ _ _ _</b> <br>
+                                                           Gender/Age:<b id="Gender">_ _ _ _ _ _ _ _ _ _ _</b> <br>
+                                                           Nationality/Residence:<b id="Address">_ _ _ _ _ _ _ _ _ _ _</b> <br>
+                                                           Tel/Occupation:<b id="Contact">_ _ _ _ _ _ _ _ _ _ _</b><br>
+                                                           Insurance:<b id="Insurance">_ _ _ _ _ _ _ _ _ _ _</b><br>
+                                                           Last Seen:<b id="Last_Visit">_ _ _ _ _ _ _ _ _ _ _</b>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <label class="col-lg-3 col-form-label">Referring Facility/Doctor</label>
+                                        <div class="col-lg-9">
+                                            <div class="row">
+                                                <div class="col-md-6 col-6">
+                                                    <div class="form-group">
+                                                        <select id="referring_facility" name="Referring_Facility"
+                                                            required class="js-states form-control">
+                                                            {% for val in referring_facilities %}
+                                                            <option value="{{val}}">{{val}}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-6">
+                                                    <div
+                                                        class="input-group input-group-md d-flex justify-content-between">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text"><i
+                                                                    class="fa fa-user-nurse"></i></span>
+                                                        </div>
+                                                        <input placeholder="Refferring Doctor" type="text" name="Reffered_Doctor" class="form-control form-control-md">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="col-lg-3 col-form-label">Insurance Details</label>
+                                        <div class="col-lg-9">
+                                            <div class="row">
+                                                <div class="col-lg-6 col-6">
+                                                    <div class="form-group">
+                                                        <select name="Insurance_Type" class="form-control">
+                                                            {% for val in accpet_insurance %}
+                                                            <option select value="">Insurance Type</option>
+                                                            <option value="{{val.Name}}">{{val}}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-6 col-6">
+                                                    <div class="form-group">
+                                                        <input placeholder="Insurance Id" type="text" name="Insurance_Id" autocomplete class="form-control form-control-md">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="col-lg-3 col-form-label">Procedures</label>
+                                        <div class="col-lg-9">
+                                            <div class="row">
+                                                <div class="col-lg-12 col-md-12 col-12">
+                                                    <div class="form-group">
+                                                        <select style="width: 100%" id="procedure_type" name="Procedure_Name" multiple="multiple"
+                                                            required class="js-states form-control">
+                                                            {% for val in procedures %}
+                                                            <option value="{{val.id}}">{{val}}({{val.Charge}})</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-5 col-5">
+                                                    <button type="submit" class="btn btn-md btn-primary">INITIATE PROCEDURE</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}
+<!-- /page content -->
+
+{% block extra-js %}
+
+<!-- Sticky Sidebar JS -->
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/ResizeSensor.js' %}"></script>
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/theia-sticky-sidebar.js' %}"></script>
+
+<!-- Select2 JS -->
+<script src="{% static 'admin/assets/js/select2.min.js' %}"></script>
+
+<!-- Custom JS -->
+<script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+
+<script>
+
+    $(function () {
+        $("#searchPat").select2();
+         
+        $("#referring_facility").select2({
+            dropdownAutoWidth: true,
+            multiple: false,
+            width: '100%',
+            placeholder: "Referring Facility",
+            allowClear: true,
+            tags: true , //helps for adding new data which is not in option
+            // tokenSeparators: [',', ' '], // entering a space or a comma will create tag
+        });
+
+        $('#procedure_type').select2({
+            dropdownAutoWidth: true,
+            multiple: true,
+            width: '100%',
+            placeholder: "Add procedures",
+            allowClear: true,
+            // tags: true , //helps for adding new data which is not in option
+            // tokenSeparators: [',', ' '], // entering a space or a comma will create tag
+        });
+
+         
+        $('.select2-search__field').css('width', '100%'); // select2 placeholder css
+    });
+
+    function searchPatient(patId) {
+                        
+        $.ajax({
+            type: "GET",
+            url: "{% url 'opd' 'search-patient' %}",
+            data: {
+                Patient_Id: patId,
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                dataType: "json",
+            },
+            beforeSend: function () {
+                // show progress whiles request in pregess to avoid many submission
+                swal({
+                    title: "Retrieving ",
+                    text: "please wait whiles we proccess your request",
+                    imageUrl: "{% static 'admin/assets/img/loading.gif' %}",
+                    showConfirmButton: false
+                });
+            },
+            success: function (data) {
+                swal.close();
+                const patient_data=JSON.parse(data.pat_data)
+                document.getElementById('Name').innerText=patient_data['First_Name']+" "+patient_data['Surname']+"/"+patient_data['Patient_Id'];
+                document.getElementById('Gender').innerText=patient_data['Gender']+"/"+patient_data['Age'];
+                document.getElementById('Address').innerText=patient_data['Nationality']+"/"+patient_data['Residence'];
+                document.getElementById('Contact').innerText=patient_data['Tel']+"/"+patient_data['Occupation'];
+                document.getElementById('Insurance').innerText=`${patient_data['Insurance_Name']}(${patient_data['Insurance_Id']})`;
+                document.getElementById('Last_Visit').innerText=`${patient_data['Last_Visit']}`;
+
+                let image=patient_data['Profile']
+                var imgAttr = document.getElementById('img_profile');
+                imgAttr.src = image;
+                
+                // window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+            },
+            error: function (data) {
+                window.parent.showNotification(null, "Error occurred whiles retriving data", 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                swal.close();
+            }
+
+        });
+   
+   }
+
+</script>
+
+{% endblock extra-js %}
+
+</body>
+
+<!-- doccure/doctor-dashboard.html  30 Nov 2019 04:12:09 GMT -->
+
+</html>

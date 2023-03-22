@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="utf-8">
+    <title>{{bus_info.Bus_Name}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+
+    <!-- Favicons -->
+    <link href="{% static 'web-assets/assets/img/favicon.ico' %}" rel="icon">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap.min.css' %}">
+
+    <!-- Bootstrap DatePicker Css -->
+    <link href="{% static 'admin/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}"
+        rel="stylesheet" />
+
+    <!-- Sweet Alert  Animation Css -->
+    <link href="{% static 'admin/assets/plugins/animate-css/animate.css' %}" rel="stylesheet" />
+
+    <!-- Sweet Alert Css -->
+    <link href="{% static 'admin/assets/plugins/sweetalert/sweetalert.css' %}" rel="stylesheet" />
+
+    <!-- Fontawesome CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/all.min.css' %}">
+
+    <!-- Datatables CSS -->
+    <link rel="stylesheet" href="{% static 'admin/assets/plugins/datatables/datatables.min.css' %}">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/style.css' %}">
+
+    <!-- Table Length CSS -->
+    <link rel="stylesheet" href="{% static 'admin/assets/css/dr-consulting-tables.css' %}">
+
+    <!-- Select2 CSS -->
+    <link rel="stylesheet" href="{% static 'admin/assets/css/select2.min.css' %}">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+			<script src="assets/js/html5shiv.min.js"></script>
+			<script src="assets/js/respond.min.js"></script>
+		<![endif]-->
+    <!-- <style>
+        /* Make the image fully responsive */
+        .carousel-inner img {
+            width: 100%;
+            height: 100%;
+        }
+    </style> -->
+    <style>/* Set !important rule to override default colors */
+        .Tab_active {
+          background: #ECECEC !important;
+        }
+    </style>
+</head>
+
+<body class='badge-secondary'>
+
+    <!-- Header -->
+    <header class="header">
+        <!-- Include the nav -->
+        {% include 'I_CARE/admin/main-nav-staff.html' %}
+    </header>
+    <!-- /Header -->
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-12 col-12">
+                    <!-- <nav aria-label="breadcrumb" class="page-breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'home-page' %}">Home</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{{page}}</li>
+                        </ol>
+                    </nav>
+                    <h2 class="breadcrumb-title">{{page}}</h2> -->
+                
+                    <!-- Tab Menu -->
+                    <nav class="user-tabs">
+                        <ul class="nav nav-tabs nav-tabs-solid nav-justified">
+                            <li class="nav-item">
+                                <a id="tabCount" class="nav-link active text-align-center p-1" href="#pat_list"
+                                    data-toggle="tab">{{incoming_pats}}</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-align-center p-1" href="#pat_lab_test" data-toggle="tab">
+                                    Test Results</a>
+                            </li>  
+                        </ul>
+                    </nav>
+                    <!-- /Tab Menu -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Breadcrumb -->
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+
+        <!-- Page Content -->
+        <div class="content">
+            <div class="col-md-12 col-lg-12 col-xl-12">
+                <div class="row">  
+                    <div class="card-body mb-2">
+                        <!-- Tab Content -->
+                        <div class="tab-content pt-0">
+                            <!--Patient List Tab -->
+                            <div class="tab-pane fade show active" id="pat_list">
+                                <div class="row justify-content-center">
+                                    <div class="col-10">
+                                        <div class="card card-table mb-5">
+                                            <div class="card-body p-3">
+                                                <div class="table-responsive">
+                                                    <table id="patientsTable" class="table table-bordered table-hover mb-0"
+                                                        style="cursor: pointer;">
+                                                        <thead>
+                                                            <tr class="tb_r">
+                                                                <th>Patient Id</th>
+                                                                <th>Age</th>
+                                                                <th>Modality</th>
+                                                                <th>Procedure</th>
+                                                                <th>Referring Facility</th>
+                                                                <th>Referring Doctor</th>
+                                                                <th>Last Seen</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- /Patient List Tab -->
+
+                            <!--Lab Test Tab -->
+                            <div class="tab-pane fade" id="pat_lab_test">
+                                <div class="row justify-content-center">
+                                    <div class="col-10">
+                                        <h4 class="card-title text-w-100 text-white" id="testPatDetails">Patient Details</h4>
+                                        <div class="card card-table mb-5">
+                                            <div class="card-body p-3">
+                                                <div class="row">
+                                                    <div class="col-md-5 col-sm-5">
+                                                        <div class="table-responsive mb-2">
+                                                            <table id="labTable" class="table table-bordered table-hover"
+                                                                style="cursor: pointer;">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>ID</th>
+                                                                        <th>Date</th>
+                                                                        <th>Technician</th>
+                                                                        <th>Procedure</th>
+                                                                        <th>Test Result</th>
+                                                                        <th>Attachment</th>
+                                                                        <th>Att. Name</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                        <textarea id="Lab_Complaints" name="Complaints" rows="6" cols="10" class="form-control"
+                                                            placeholder="Technician Notes/Comments"></textarea>
+                                                    </div>
+                                                    <div class="col-md-7 col-sm-7">
+                                                        <form id="testReportSubmit" method="POST" action="{% url 'doc' 'approve-test' %}" enctype="multipart/form-data">
+                                                            {% csrf_token %}
+                                                            <textarea name="Docs_Complaints" rows="10" cols="10" class="form-control"
+                                                            placeholder="Final Notes/Comments"></textarea> 
+                                                            <hr>
+                                                            <div class="row">
+                                                                <div class="col-lg-3 col-md-3 col-3">
+                                                                    <div class="form-group">
+                                                                        <button type="submit" class="btn btn-md btn-primary">APPROVE</button>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-9 col-sm-9">
+                                                                    <div class="form-group">
+                                                                        <input type="file" required class="form-control form-control-md" name="Report">
+                                                                    </div>
+                                                                    <div class="row" hidden>
+                                                                        <div class="col-lg-6 col-md-6 col-6">
+                                                                            <div class="form-group">
+                                                                                <input type="text" placeholder="Test Id" class="form-control form-control-md" name="Vital_Id" id="Test_Vital_Id">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-lg-6 col-md-6 col-6">
+                                                                            <div class="form-group">
+                                                                                <input type="text" placeholder="Patient Id" required class="form-control form-control-md" name="Patient_Id" id="Test_Pat_Id">
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- /Lab Test Tab -->
+                        </div>
+                        <!-- Tab Content -->
+                    </div>
+                </div>
+            </div>
+         </div>
+        <!-- /Page Content -->
+
+        <!-- Footer -->
+        {% comment %} {% include 'I_CARE/web/footer.html' %} {% endcomment %}
+        <!-- /Footer -->
+
+    </div>
+    <!-- /Main Wrapper -->
+ 
+
+    <!-- jQuery -->
+    <script src="{% static 'web-assets/assets/js/jquery.min.js' %}"></script>
+
+    <!-- Bootstrap Datepicker Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <!-- Date Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/custom-date.js' %}"></script>
+
+    <!-- Bootstrap Core JS -->
+    <script src="{% static 'web-assets/assets/js/popper.min.js' %}"></script>
+    <script src="{% static 'web-assets/assets/js/bootstrap.min.js' %}"></script>
+
+    <!-- Bootstrap Notify Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-notify/bootstrap-notify.js' %}"></script>
+
+    <!-- Sweet Alert Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/sweetalert/sweetalert.min.js' %}"></script>
+
+    <!-- Slick JS -->
+    <!-- <script src="{% static 'web-assets/assets/js/slick.js' %}"></script> -->
+
+    <!-- Select2 JS -->
+    <script src="{% static 'admin/assets/js/select2.min.js' %}"></script>
+
+    <!-- Datatables JS -->
+    <script src="{% static 'admin/assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'admin/assets/plugins/datatables/datatables.min.js' %}"></script>
+
+    <!-- jquery-datatable.js -->
+    <script src="{% static 'admin/assets/js/pages/tables/jquery-datatable.js' %}"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'admin/assets/js/script.js' %}"></script>
+
+    <!-- Mask JS -->
+    <script src="{% static 'admin/assets/js/jquery.maskedinput.min.js' %}"></script>
+    <script src="{% static 'admin/assets/js/mask.js' %}"></script>
+
+    <!-- Sweet Notification Trigger-->
+    <script src="{% static 'admin/assets/plugins/sweetalert/notifications.js' %}"></script>
+
+    <script>
+        // pat tables var 
+        let patientsTable;
+        let labTable;
+        
+        let pc_history;
+        let vital_history;
+        let Patient_Id = "None";
+        let TreatmentCheckedList = []
+        // normal vars
+        let prescripedItems=[];
+        let pharmacyCost=0;
+
+        $(document).ready(function () {
+            
+            $('.select2-search__field').css('width', '100%'); // select2 placeholder css
+            
+            patientsTable=$('#patientsTable').DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: {
+                    url: "{% url 'web-links' 'patients-data' %}",
+                    type: "GET",
+                    dataType: 'json',
+                    data:{
+                        load:'consultation'
+                    },
+                    dataSrc: "vitalHist",
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    complete: function(data) {
+                        json_obj=(JSON.parse(data.responseText))
+                        //re-instantiat all the histories records 
+                        pc_history = json_obj.pc_hist;
+                        vital_history = json_obj.vitalHist;
+                        drugsPrescribed_History = json_obj.prescHist;
+                        document.getElementById('tabCount').innerHTML=json_obj.total_incoming;
+                    },
+                },
+                columns: [
+                    {"render": function (data, type, JsonResultRow, meta) {
+                            if (String(JsonResultRow.Profile).includes('avatar')) {
+                                return `<h2 class="table-avatar">
+                                        <a href="${JsonResultRow.Profile}" class="avatar avatar-sm mr-2">
+                                            <img class="avatar-img rounded-circle"  src="${JsonResultRow.Profile}" alt="User Image">
+                                        </a>
+                                        <a href="javascript:void(0);">${JsonResultRow.Fullname}<span>#${JsonResultRow.Patient_ID}</span></a>
+                                        </h2>`
+                            } else {
+                                return `<h2 class="table-avatar">
+                                        <a href="/media/${JsonResultRow.Profile}" class="avatar avatar-sm mr-2">
+                                            <img class="avatar-img rounded-circle"  src="/media/${JsonResultRow.Profile}" alt="User Image">
+                                        </a>
+                                        <a href="javascript:void(0);">${JsonResultRow.Fullname}<span>#${JsonResultRow.Patient_ID}</span></a>
+                                        </h2>`
+                            }
+                        }},
+                    { "data": "Age" },
+                    { "data": "Modality" ,"orderable" : true },
+                    { "data": "Procedure_Name"},
+                    { "data": "Referring_Facility"},
+                    { "data": "Referred_Doctor"},
+                    {"data": "Last_Seen" }],
+                paging: false,
+                ordering: true,
+                info: false,
+                searching: true,
+                bLengthChange: false,
+                pageLength: 6,
+                lengthMenu: [[6, 12, 18, -1], [6, 12, 18, "All"]],
+            });
+            // refresh patientsTable every 12 seconds to load new data
+            setInterval( function () {
+                patientsTable.ajax.reload(function(json){
+                    // add background color to the table if Pat Id was selected
+                    patientsTable.rows( function (idx, data, node ) {             
+                        if(data.Patient_ID === Patient_Id){
+                            // console.log(`Matched Id: ${Patient_Id}- Table ${data.Pat_Code}`)
+                            $(node).find("td").each(function(i) {
+                                //toggle between adding/removing the 'active' class
+                                $(this).addClass('Tab_active');
+                            });        
+                        }
+                        return false;
+                    });
+                },false ); // user paging is not reset on reload
+            }, 12000); // reload every 12 sec
+ 
+            
+            labTable = $('#labTable').DataTable({
+                paging: false,
+                ordering: false,
+                info: false,
+                searching: false,
+                bLengthChange: false,
+                pageLength: 7,
+                lengthMenu: [[7, 14, 21, -1], [7, 14, 21, "All"]],
+                columnDefs: [ {
+                    "targets": [4],
+                    "visible":false,
+                    "render": function ( data, type, row, meta ) {
+                    return type === 'display' && data.length > 25 ?
+                        '<textarea rows="3" cols="28">'+data+'</textarea>' :
+                        data;
+                    }
+                } ,{
+                    "targets": [5],
+                    "visible":true,
+                    "render": function ( data, type, row, meta ) {
+                        if (row[6]=="None") {
+                            // prevent accessing media link if no file attache
+                            return '<a class="d-inline-block fw-normal w-100 h-100 pe-auto" href="javascript:void(0)">' + row[6] + '</a>';
+                        } else {
+                            return '<a target="_blank" href="'+ data + '" class="btn btn-sm bg-success-light"><i class="fa fa-file"></i> Preview </a>'
+                            {% comment %} return '<a class="d-inline-block text-danger fw-normal w-100 h-100 pe-auto" href="'+ data + '">' + row[6] + '</a>'; {% endcomment %}
+                        }
+                    }
+                } 
+                ,{
+                    "targets": [6],
+                    "visible":false,
+                } ,{
+                    "targets": [0],
+                    "visible":false,
+                } ]
+            }); 
+
+        });
+
+        function optionSaves(com_category, com_type, description, ans, evt, deactivate) {
+            if (deactivate != 'None') {
+                document.getElementById(deactivate).checked = false;
+            }
+            let chkData = {
+                Complaint_Category: com_category,
+                Complaint_Type: com_type,
+                Description: description,
+                Ans: ans
+            }
+            //remove if item already exist then add it back
+            for (var i = 0; i < TreatmentCheckedList.length; i++) {
+                if (JSON.parse(TreatmentCheckedList[i]).Complaint_Type === com_type && JSON.parse(TreatmentCheckedList[i]).Description === description) {
+                    // remove element from the array
+                    TreatmentCheckedList.splice(i, 1);
+                }
+            }
+            // add to list if check box is checked as true
+            if (evt.checked) {
+                // add to list with the correct data
+                TreatmentCheckedList.push(JSON.stringify(chkData))
+                // window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+            }
+            // alert(TreatmentCheckedList)
+        }
+
+        function removeCheckedList(key_value) {
+            //remove if item already exist then add it back
+            for (var i = 0; i < TreatmentCheckedList.length; i++) {
+                if (JSON.parse(TreatmentCheckedList[i]).Complaint_Type === key_value) {
+                    // remove element from the array
+                    TreatmentCheckedList.splice(i, 1);
+                }
+            }
+        }
+
+        function removepresDrug(drug_id) {
+            //remove if item already exist then add it back
+            prescripedItems.forEach((element,index) => {
+                let data = JSON.parse(element);
+                if (data.drug_id === drug_id) {
+                  delete  prescripedItems[index];
+                }
+            });
+            // clear the table 
+            currentPresTable.clear().draw();
+            // reset pharmacyCost
+            pharmacyCost=0
+            // populate cart table
+            prescripedItems.forEach(element => {
+                let data = JSON.parse(element);
+                currentPresTable.row.add([data.drug_name, data.drug_qty, data.frequency, data.others, data.duration,data.date_from,data.date_to,"<a class='btn btn-xs btn-danger text-white' href='javascript:void(0)' role='button' onclick=removepresDrug(" + "'" + "" + data.drug_id + "" + "'" + "); aria-haspopup='false' aria-expanded='false'> <i class='fa fa-trash'></i></a>"]).draw(false);
+                pharmacyCost+=parseFloat(data.total_cost)
+            });
+        }
+
+        {% comment %} Prevent Lab Report submission if no test is selected from the table {% endcomment %}
+        $('#testReportSubmit').on('submit',function(e){
+            let vitId= $('#Test_Vital_Id').val();
+            if(vitId.length < 1) {
+                window.parent.showNotification(null, 'Please highligt a test from the table to proceed.' , 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                e.preventDefault();
+            }
+        });
+         
+        // get table click    
+        $('#patientsTable tbody').on('click', 'tr', function() {
+            let data=patientsTable.row(this).data();
+            Patient_Id = data.Patient_ID;
+            document.getElementById('testPatDetails').innerHTML = `Patient Name: ${data.First_Name} ${data.Surname}`;
+            // clear all history table
+            labTable.clear().draw();
+            // get all old hospital history
+            pc_history.forEach((data, index) => {
+                if (Patient_Id == data.Patient_ID) {
+                    com_cat = data.Complaint_Category
+                    com_type = data.Complaint_Type
+                    if (com_cat == "Medical Condition") {
+                        // populate medconTable table
+                        medconTable.row.add([data.Date, data.Complaint_Type, data.Complaints, data.Complaint_Ans]).draw(false);
+                    } else if (com_type == 'PC') {
+                        // populate pcTable table
+                        pcTable.row.add([data.Date, data.Complaints, data.Duration + "-" + data.Duration_In]).draw(false);
+                    } else if (com_type == 'INVESTIGATION') {
+                        // populate pcTable table
+                        investTable.row.add([data.Date, data.Complaints]).draw(false);
+                    } else if (com_type == 'TREATMENT MANAGEMENT') {
+                        // populate treatMTable table
+                        treatMTable.row.add([data.Date, data.Treatment_Plan, data.Treatment_Done, data.Treatment_Other, data.Review_Date]).draw(false);
+                    } else if (com_type == 'EXAMINATION') {
+                        // populate examTable table
+                        examTable.row.add([data.Date, data.General_Exam, data.Systemic_Enquiry, data.Extraoral_Exam, data.Intraoral_Exam]).draw(false);
+                    } else if (com_type == 'DIAGNOSIS') {
+                        // populate diagTable table
+                        diagTable.row.add([data.Date, data.Complaints]).draw(false);
+                    } else if (com_type == 'LAB TEST' || com_type == 'RADIOLOGY') {
+                        // populate labTable table
+                        labTable.row.add([data.Vital_ID, data.Date, data.Technician, com_cat, data.Complaints,data.Tech_Report_Url,data.Tech_Report_Name]).draw(false);
+                        $('.user-tabs a[href="#pat_lab_test"]').tab('show')
+                        $('#Test_Pat_Id').val(data.Patient_ID);
+                    }
+                }
+            });
+            
+            // remove background color from the rows table
+            patientsTable.rows().eq(0).each( function ( index ) {
+                $(this).find("td").each(function(i) {
+                    //toggle between adding/removing the 'active' class
+                    $(this).removeClass('Tab_active');
+                });
+            } );
+            
+            // add background clolor to the selected row
+            $(this).find("td").each(function(i) {
+                //toggle between adding/removing the 'active' class
+                $(this).addClass('Tab_active');
+            });
+            
+        })
+         
+        
+        $('#labTable tbody').on('click', 'tr', function() {
+            // remove background color from the rows table
+            labTable.rows().eq(0).each( function ( index ) {
+                $(this).find("td").each(function(i) {
+                    //toggle between adding/removing the 'active' class
+                    $(this).removeClass('Tab_active');
+                });
+            } );
+
+            let data=labTable.row(this).data();
+            $('#Lab_Complaints').val(data[4]);
+            $('#Test_Vital_Id').val(data[0]);
+            // add background clolor to the selected row
+            $(this).find("td").each(function(i) {
+                //toggle between adding/removing the 'active' class
+                $(this).addClass('Tab_active');
+            });
+        });
+        // end of table click
+  
+
+    </script>
+
+    <!-- Messages Handler -->
+    {% for message in messages %} {% if message.tags == "info" %}
+    <script>
+        var text = '{{ message}}'
+        //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+        window.parent.showNotification(null, text, 'top', 'left', 'animated bounceIn', 'animated bounceOut');
+    </script>
+    {% elif message.tags == "success" %}
+    <script>
+        var text = '{{ message}}'
+        //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+        window.parent.showNotification(null, text, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+    </script>
+    {% endif %} {% endfor %}
+
+</body>
+
+</html>

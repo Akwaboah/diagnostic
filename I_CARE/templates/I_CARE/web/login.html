@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="utf-8">
+    <title>{{bus_info.Bus_Name}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+
+    <!-- Favicons -->
+    <link href="{% static 'web-assets/assets/img/favicon.ico' %}" rel="icon">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap.min.css' %}">
+
+
+    <!-- Fontawesome CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/all.min.css' %}">
+
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/style.css' %}">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+			<script src="assets/js/html5shiv.min.js"></script>
+			<script src="assets/js/respond.min.js"></script>
+		<![endif]-->
+ 
+</head>
+
+<body class="account-page">
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb-bar">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="col-md-12 col-12">
+                            <div class="row justify-content-between footer-contact-info">
+                                <nav aria-label="breadcrumb" class="page-breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="d-lg-block d-md-block d-none"><a href="javascript:void(0);"><i
+                                                    class="fas fa-map-marker-alt"></i>&nbsp;{{bus_info.GPS_Address}}</a>
+                                        </li>
+                                        <li><a
+                                                href="tel:+233 24 647 1816">&nbsp;&nbsp;<i class="fas fa-phone-alt"></i>&nbsp;{{bus_info.Gen_Tel}}</a>
+                                        </li>
+                                        <li class="d-lg-block d-md-block d-none"><a
+                                                href="mail:+233 24 647 1816">&nbsp;&nbsp;<i
+                                                    class="fas fa-envelope"></i>&nbsp;{{bus_info.Email}}</a>
+                                        </li>
+                                    </ol>
+                                </nav>
+                                <nav aria-label="breadcrumb" class="page-breadcrumb d-xl-block d-md-block d-none">
+                                    <a class="btn-primary btn-sm" href="{% url 'web-links' 'our-services' %}">Book
+                                        Appointment</a>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /Breadcrumb -->
+
+        <!-- Header -->
+        <header class="header">
+            <!-- Include the nav -->
+            {% include 'I_CARE/web/main-nav.html' %}
+        </header>
+        <!-- /Header -->
+
+        <!-- Page Content -->
+        <div class="content">
+            <div class="container-fluid">
+
+                <div class="row">
+                    <div class="col-md-8 offset-md-2">
+
+                        <!-- Login Tab Content -->
+                        <div class="account-content">
+                            <div class="row align-items-center justify-content-center">
+                                <div class="col-md-7 col-lg-6 login-left">
+                                    <img src="{% static 'web-assets/assets/img/login-banner.png' %}" class="img-fluid" alt="Login">
+                                </div>
+                                <div class="col-md-12 col-lg-6 login-right">
+                                    <div class="login-header">
+                                        <h3>Login</h3>
+                                    </div>
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <div class="form-group form-focus">
+                                            <input required type="password" class="form-control floating">
+                                            <label class="focus-label">Patient ID</label>
+                                        </div>
+                                        <div class="text-right">
+                                            <a class="forgot-link" href="{% url 'auth-patient' 'resend-id' %}">Forgot Patient ID ?</a>
+                                        </div>
+                                        <button class="btn btn-primary btn-block btn-lg login-btn"
+                                            type="submit">Login</button>
+                                        <!-- <div class="login-or">
+                                            <span class="or-line"></span>
+                                            <span class="span-or">or</span>
+                                        </div>
+                                        
+                                        <div class="text-center dont-have">Don’t have an account? <a
+                                                href="javascript:void(0)">Register</a></div> -->
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /Login Tab Content -->
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+        <!-- /Page Content -->
+
+        <!-- Footer -->
+        {% include 'I_CARE/web/footer.html' %}
+        <!-- /Footer -->
+
+    </div>
+    <!-- /Main Wrapper -->
+
+    <!-- jQuery -->
+    <script src="{% static 'web-assets/assets/js/jquery.min.js' %}"></script>
+
+    <!-- Bootstrap Core JS -->
+    <script src="{% static 'web-assets/assets/js/popper.min.js' %}"></script>
+    <script src="{% static 'web-assets/assets/js/bootstrap.min.js' %}"></script>
+
+    <!-- Slick JS -->
+    <script src="{% static 'web-assets/assets/js/slick.js' %}"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+
+</body>
+
+</html>

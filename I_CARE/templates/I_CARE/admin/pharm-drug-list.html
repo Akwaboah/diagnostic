@@ -1,0 +1,201 @@
+{% extends 'I_CARE/admin/index.html' %}
+
+{% block extra-css %}
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'admin/assets/css/select2.min.css' %}">
+<!-- Datatables CSS -->
+<link rel="stylesheet" href="{% static 'admin/assets/plugins/datatables/datatables.min.css' %}">
+
+{% endblock extra-css %}
+
+<!--dashboard-menu -->
+{% block dashboard-menu %}
+<nav class="dashboard-menu">
+    <ul>
+        <li>
+            <a href="{% url 'pharm' 'dashboard' %}">
+                <i class="fas fa-columns"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li class="active">
+            <a href="{% url 'pharm' 'list' %}">
+                <i class="fas fa-list"></i>
+                <span>Drugs List</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'pharm' 'stocking' %}">
+                <i class="fas fa-pills"></i>
+                <span>Manage Drugs</span>
+            </a>
+        </li>
+        <li>
+			<a href="{% url 'pharm' 'cash-form' %}">
+				<i class="fas fa-cart-plus"></i>
+				<span>Prescriptions</span>
+			</a>
+		</li>
+        <li>
+			<a  href="javascript:void(0);" data-color="red" data-toggle="modal"
+				data-target="#modal-inventory-rep">
+				<i class="fas fa-file-pdf-o"></i>
+				<span>General Reporting</span>
+			</a>
+		</li>
+    </ul>
+</nav>
+{% endblock dashboard-menu %}
+<!-- /dashboard-menu -->
+
+<!-- page content -->
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <!-- <h4 class="mb-2">Patient Registration</h4> -->
+        <div class="appointment-tab">
+            <ul class="nav nav-tabs nav-tabs-solid nav-tabs-justified p-2">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#patient-appointments" data-toggle="tab">Drugs List({{items_size}}prd)~({{total_items}}qty)</a>
+                </li> 
+            </ul>
+            
+            <div class="tab-content">
+                <!-- Drugs List Tab -->
+                <div class="tab-pane show active" id="patient-appointments">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card card-table mb-0">
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table id="drugsList" class="table table-bordered table-hover table-center mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>NAME</th>
+                                                    <th>DEPARTMENT</th>
+                                                    <th>QTY</th>
+                                                    <th>RETAIL PRICE</th>
+                                                    <th>W.S PRICE</th>
+                                                    <th class="text-center">VAT</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for val in items %}
+                                                <tr>
+                                                    <td>
+                                                        <h2 class="table-avatar">
+                                                            <a href="#">{{val.Product_Name}}<span>#{{val.Product_Id}}/Inv:{{val.Invoice}}</span></a>
+                                                        </h2>
+                                                    </td>
+                                                    <td>{{val.Department}}</td>
+                                                    <td>{{val.Quantity}}
+                                                    </td>
+                                                    <td>{{val.Retail}}</td>
+                                                    <td>{{val.Whole_Sale}}</td>
+                                                    <td class="text-center">{{val.Vat}}</td>
+                                                    <td class="text-right">
+                                                        <div class="table-action">
+                                                            <a href="javascript:void(0);" onclick="delData('{{val.Product_Name}}','{{val.Product_Id}}')" class="btn btn-sm bg-danger-light">
+                                                                <i class="fas fa-trash"></i> Delete
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /Drugs List Tab -->
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock content %}
+<!-- /page content -->
+
+{% block extra-js %}
+
+<!-- Sticky Sidebar JS -->
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/ResizeSensor.js' %}"></script>
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/theia-sticky-sidebar.js' %}"></script>
+
+<!-- Datatables JS -->
+<script src="{% static 'admin/assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'admin/assets/plugins/datatables/datatables.min.js' %}"></script>
+    
+<!-- jquery-datatable.js -->
+<script src="{% static 'admin/assets/js/pages/tables/jquery-datatable.js' %}"></script>
+
+<!-- Custom JS -->
+<script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+ 
+
+<script>
+
+    $(document).ready(function () {
+        
+        $('#drugsList').DataTable({
+            // destroy : true,  
+            paging: true,
+            ordering: false,
+            info: false,
+            searching:true,
+            bLengthChange: false,
+            stateSave:true,
+            pageLength:7,
+            lengthMenu: [ [7, 14, 21, -1], [7, 14, 21, "All"] ]
+        });
+     
+    });
+
+ 
+ 
+    function delData(name,id) {
+		swal({
+			title: "Are you sure?",
+			text: `you really want to delete "${name}" from your drugs list! `,
+			// imageUrl: '',
+			showCancelButton: true,
+			confirmButtonColor: "#DD6B55",
+			confirmButtonText: `Yes, Delete`,
+			cancelButtonText: `No, Cancel`,
+			closeOnConfirm: false,
+			closeOnCancel: true
+		}, function (isConfirm) {
+			if (isConfirm) {
+				$.ajax({
+					type: "POST",
+					url: "{% url 'pharm' 'delete' %}",
+					data: {
+						Id: id,
+                        Name: name,
+						csrfmiddlewaretoken: '{{ csrf_token }}',
+						dataType: "json"
+					},
+					success: function (data) {
+						window.parent.showNotification(null, data['message'], 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+						swal.close();
+					},
+					error: function (data) {
+						swal("Error Occured", "Request aborted, please try again :)", "error");
+					}
+				});
+			}
+		});
+	}
+ 
+
+</script>
+
+{% endblock extra-js %}
+
+</body>
+
+</html>

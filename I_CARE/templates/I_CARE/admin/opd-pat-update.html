@@ -1,0 +1,342 @@
+{% extends 'I_CARE/admin/index.html' %}
+
+
+{% block extra-css %}
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'admin/assets/css/select2.min.css' %}">
+{% endblock extra-css %}
+
+<!--dashboard-menu -->
+{% block dashboard-menu %}
+<nav class="dashboard-menu">
+    <ul>
+        <li >
+            <a href="{% url 'opd' 'dashboard' %}">
+                <i class="fas fa-columns"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'opd' 'pat-reg' %}">
+                <i class="fas fa-user-friends"></i>
+                <span>Patient Registration</span>
+            </a>
+        </li>
+        <li class="active">
+            <a href="{% url 'opd' 'pat-update' %}">
+                <i class="fas fa-user-edit"></i>
+                <span>Patient Demographics</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'opd' 'pat-complaints' %}">
+                <i class="fas fa-user"></i>
+                <span>Existing Patients</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endblock dashboard-menu %}
+<!-- /dashboard-menu -->
+
+<!-- page content -->
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <!-- <h4 class="mb-2">Patient Demographics Update</h4> -->
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header p-2">
+                            <div class="form-group row">
+                                <label class="col-lg-2 col-form-label font-weight-bold">SEARCH PATIENT</label>
+                                <div class="col-lg-10">
+                                    <!-- <div class="col-lg-12"> -->
+                                    <div class="input-group input-group-md d-flex justify-content-between">
+                                        <select class="select form-control" id="searchPat" name="searchPat"
+                                            onchange="searchPatient(this.value);">
+                                            <option value="" disabled selected hidden>Enter to search</option>
+                                            {% for val in pat_data %}
+                                            <option value="{{val.Patient_Id}}">{{val.First_Name}} {{val.Surname}}
+                                            </option>
+                                            {% endfor%}
+                                        </select>
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                                        </div>
+                                    </div>
+                                    <!-- </div> -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-xl-12">
+                                    <!-- <h4 class="card-title">Personal Details</h4> -->
+                                    <div class="form-group">
+                                        <div class="change-avatar">
+                                            <div class="profile-img">
+                                                <img id="img_profile" src="{% static 'admin/assets/img/profiles/avatar.png' %}" alt="User Image">
+                                            </div>
+                                            <div class="upload-img">
+                                                <div class="change-photo-btn">
+                                                    <span><i class="fa fa-upload"></i> Upload Photo</span>
+                                                    {{form.Profile}}
+                                                </div>
+                                                <small class="form-text text-muted">Allowed JPG, GIF or PNG. Max size of 2MB</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-lg-3 col-form-label">Name</label>
+                                        <div class="col-lg-9">
+                                            <div class="row">
+                                                <div class="col-md-6 col-sm-6">
+                                                    <div class="">
+                                                        {{form.First_Name}}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-sm-6">
+                                                    {{form.Surname}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="col-lg-3 col-form-label">Gender</label>
+                                        <div class="col-lg-9">
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="gender"
+                                                    id="gender_male" value="Male" checked>
+                                                <label class="form-check-label" for="gender_male">
+                                                    Male
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="gender"
+                                                    id="gender_female" value="Female">
+                                                <label class="form-check-label" for="gender_female">
+                                                    Female
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="gender"
+                                                    id="gender_other" value="Other">
+                                                <label class="form-check-label" for="gender_other">
+                                                    Other
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-lg-3 col-form-label">Date Of Birth/Age</label>
+                                        <div class="col-lg-9">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="input-group input-group-md d-flex justify-content-between">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text"><i class="fa fa-calendar"></i></span>
+                                                        </div>
+                                                        {{form.DOB}}
+                                                    </div>
+                                                    <span class="form-text text-muted">dd-mm-yyyy</span>
+                                                </div>
+                                                <div class="col-md-6 col-sm-6">
+                                                    <div class="form-group">
+                                                        {{form.Age}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="col-lg-3 col-form-label">Tel/Emergency</label>
+                                        <div class="col-lg-9">
+                                            <div class="row">
+                                                <div class="col-md-6 col-sm-6">
+                                                    <div
+                                                        class="input-group input-group-md d-flex justify-content-between">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text"><i
+                                                                    class="fa fa-phone"></i></span>
+                                                        </div>
+                                                        {{form.Tel}}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-sm-6">
+                                                    <div class="form-group">
+                                                        {{form.Emergency_Tel}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row form-group">
+                                        <label class="col-lg-3 col-form-label">Nationality/Residence</label>
+                                        <div class="col-lg-9">
+                                            <div class="row">
+                                                <div class="col-md-6 col-sm-6">
+                                                    <div
+                                                        class="input-group input-group-md d-flex justify-content-between">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text"><i
+                                                                    class="fa fa-flag"></i></span>
+                                                        </div>
+                                                        {{form.Nationality}}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-sm-6">
+                                                    {{form.Residence}}
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="col-lg-3 col-form-label">Email/Occupation</label>
+                                        <div class="col-lg-9">
+                                            <div class="row">
+                                                <div class="col-md-6 col-6">
+                                                    <div
+                                                        class="input-group input-group-md d-flex justify-content-between">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text"><i
+                                                                    class="fa fa-envelope"></i></span>
+                                                        </div>
+                                                        {{form.Email}}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-6">
+                                                    <div class="form-group">
+                                                        {{form.Occupation}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <button type="submit" class="btn btn-md btn-primary">Submit Update</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}
+<!-- /page content -->
+
+{% block extra-js %}
+
+<!-- Sticky Sidebar JS -->
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/ResizeSensor.js' %}"></script>
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/theia-sticky-sidebar.js' %}"></script>
+
+<!-- Select2 JS -->
+<script src="{% static 'admin/assets/js/select2.min.js' %}"></script>
+
+<!-- Custom JS -->
+<script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+
+<!-- Mask JS -->
+<script src="{% static 'admin/assets/js/jquery.maskedinput.min.js' %}"></script>
+<script src="{% static 'admin/assets/js/mask.js' %}"></script>
+
+<script>
+    $(function () {
+        $("#id_Nationality").select2();
+        $("#searchPat").select2();
+    });
+
+    function searchPatient(patId) {
+                        
+        $.ajax({
+            type: "GET",
+            url: "{% url 'opd' 'search-patient' %}",
+            data: {
+                Patient_Id: patId,
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                dataType: "json",
+            },
+            beforeSend: function () {
+                // show progress whiles request in pregess to avoid many submission
+                swal({
+                    title: "Retrieving ",
+                    text: "please wait whiles we proccess your request",
+                    imageUrl: "{% static 'admin/assets/img/loading.gif' %}",
+                    showConfirmButton: false
+                });
+            },
+            success: function (data) {
+                swal.close();
+                const patient_data=JSON.parse(data.pat_data)
+                $('#id_First_Name').val(patient_data['First_Name']).change()
+                $('#id_Surname').val(patient_data['Surname']).change()
+                $('#id_DOB').val(patient_data['DOB']).change()
+                $('#id_Age').val(patient_data['Age']).change()
+                $('#id_Nationality').val(patient_data['Nationality']).change()
+                $('#id_Residence').val(patient_data['Residence']).change()
+                $('#id_Tel').val(patient_data['Tel']).change()
+                $('#id_Emergency_Tel').val(patient_data['Emergency_Tel']).change()
+                $('#id_Email').val(patient_data['Email']).change()
+                $('#id_Occupation').val(patient_data['Occupation']).change()
+                let image=patient_data['Profile']
+                var imgAttr = document.getElementById('img_profile');
+                imgAttr.src = image;
+                var gender=patient_data['Gender']
+                if (gender=='Male') {
+                    document.getElementById('gender_male').checked=true
+                    document.getElementById('gender_female').checked=false
+                    document.getElementById('gender_other').checked=false
+                }else if (gender=='Female'){
+                    document.getElementById('gender_male').checked=false
+                    document.getElementById('gender_other').checked=false
+                    document.getElementById('gender_female').checked=true
+                }else if (gender=='Other'){
+                    document.getElementById('gender_male').checked=false
+                    document.getElementById('gender_female').checked=false
+                    document.getElementById('gender_other').checked=true
+                }
+                // window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+            },
+            error: function (data) {
+                window.parent.showNotification(null, "Error occured whiles processing payment", 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                swal.close();
+            }
+
+        });
+   }
+    
+    function checkImage(event) {
+        var image = URL.createObjectURL(event.target.files[0]);
+        var imgAttr = document.getElementById('img_profile');
+        imgAttr.src = image;
+        // imgAttr.style.width = "100px";
+        // imgAttr.style.height = "100px";
+    }
+
+    function CalcAge(date) {
+        let result = date.trim().split('-');
+        result=String(result[2]).split('_')[0]
+        const curr_data= new Date().getFullYear()
+        let age=Number(curr_data)-Number(result)
+        if (String(result).length==0) {
+            age=0
+        }
+        $("#id_Age").val(age).change()
+    }
+
+</script>
+
+{% endblock extra-js %}
+
+</body>
+
+<!-- doccure/doctor-dashboard.html  30 Nov 2019 04:12:09 GMT -->
+
+</html>

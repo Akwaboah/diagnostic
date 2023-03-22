@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="utf-8">
+    <title>{{bus_info.Bus_Name}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+
+    <!-- Favicons -->
+    <link href="{% static 'web-assets/assets/img/favicon.ico' %}" rel="icon">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap.min.css' %}">
+
+    <!-- Bootstrap DatePicker Css -->
+    <link href="{% static 'admin/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}" rel="stylesheet" />
+
+    <!-- Sweet Alert  Animation Css -->
+    <link href="{% static 'admin/assets/plugins/animate-css/animate.css' %}" rel="stylesheet" />
+
+    <!-- Sweet Alert Css -->
+    <link href="{% static 'admin/assets/plugins/sweetalert/sweetalert.css' %}" rel="stylesheet" />
+
+    <!-- Datatables CSS -->
+    <link rel="stylesheet" href="{% static 'admin/assets/plugins/datatables/datatables.min.css' %}">
+
+    <!-- Fontawesome CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/all.min.css' %}">
+ 
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/style.css' %}">
+
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+			<script src="assets/js/html5shiv.min.js"></script>
+			<script src="assets/js/respond.min.js"></script>
+		<![endif]-->
+    <!-- <style>
+        /* Make the image fully responsive */
+        .carousel-inner img {
+            width: 100%;
+            height: 100%;
+        }
+    </style> -->
+    <script>
+        var timer = 0;
+        var PERIOD_VISIBLE =120000;
+        var PERIOD_NOT_VISIBLE = 60000;
+     
+        function onLoad() {
+            timer = setInterval(checkBirthDays, (document.hidden) ? PERIOD_NOT_VISIBLE : PERIOD_VISIBLE);
+            if(document.addEventListener) document.addEventListener("visibilitychange", visibilityChanged);
+        }
+     
+        function visibilityChanged() {
+            clearTimeout(timer);
+            timer = setInterval(checkBirthDays, (document.hidden) ? PERIOD_NOT_VISIBLE : PERIOD_VISIBLE);
+        }
+     
+        function checkBirthDays() { 
+            // Check server for today's birthdays
+            $.ajax({
+                type: "POST",
+                url: "{% url 'opd' 'birthdays' %}",
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    dataType: "json"
+                },
+                success: function (data) {
+                    // window.parent.showNotification(null, data['message'], 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                    // swal.close();
+                },
+                error: function (request,status,error) {
+                    // swal(`Error Occurred: ${request.responseText}, please try again :)`, "error");
+                }
+            });
+        }
+     
+    </script>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <!-- Include the nav -->
+        {% include 'I_CARE/admin/main-nav-staff.html' %}
+    </header>
+    <!-- /Header -->
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-12 col-12">
+                    <nav aria-label="breadcrumb" class="page-breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="#">Home</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{{page}}</li>
+                        </ol>
+                    </nav>
+                    <h2 class="breadcrumb-title">{{page}}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Breadcrumb -->
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Page Content -->
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card mb-5">
+                            <div class="card-header p-1">
+                                <div class="col">
+                                    <div class="row justify-content-start"> 
+                                        <button class="nav-link active bg-warning p-1 mr-2 text-white">All Departments</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive p-2">
+                                    <table id="patientTable" class="table table-bordered table-hover table-center mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Patient ID</th>
+                                                <th>Contact No. & Emergency No.</th>
+                                                {% comment %} <th>Modality</th> {% endcomment %}
+                                                <th>Procedure</th>
+                                                <th>Status</th>
+                                                <th>Technician</th>
+                                                <th>Attachment</th>
+                                                <th>Radiologist</th>
+                                                <th>Attachment</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for vit in vitalHist %}
+                                            <tr>
+                                                <td>
+                                                    <h2 class="table-avatar">
+                                                        <a href="javascript:void(0)">{{vit.Date|date:"D M d, Y"}}
+                                                            <span class="d-block text-info text-capitalize"><i class="fa fa-clock-o"></i> {{vit.Time}}</span></a>
+                                                    </h2>
+                                                </td>
+                                                <td>
+                                                    <h2 class="table-avatar">
+                                                        <a href="javascript:void(0);">{{vit.Patient_Id}}
+                                                            <span>#{{vit.Patient_Id.Patient_Id}}</span></a>
+                                                    </h2>
+                                                </td>
+                                                <td>{{vit.Patient_Id.Tel}}/{{vit.Patient_Id.Emergency_Tel}}</td>
+                                                {% comment %} <td>{{vit.Vitals.Procedure.Modality.Modality}}</td> {% endcomment %}
+                                                <td>{{vit.Vitals.Procedure}}</td>
+                                                <td>{{vit.Vitals.Status}}</td>
+                                                <td class="text-capitalize">{{vit.Tech_Instance}}</td>
+                                                <td class="text-left">
+                                                    <div class="table-action">
+                                                        <a target="_blank" href="{% if 'avatar' in vit.Tech_Report.url %}#{% else %}{{vit.Tech_Report.url}}{% endif %}" class="btn btn-sm bg-success-light">
+                                                            <i class="fa fa-file"></i> Preview
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                                <td class="text-capitalize">{{vit.Docs_Instance}}</td>
+                                                <td class="text-left">
+                                                    <div class="table-action">
+                                                        <a target="_blank" href="{% if 'avatar' in vit.Docs_Report.url %}#{% else %}{{vit.Docs_Report.url}}{% endif %}" class="btn btn-sm bg-success-light">
+                                                            <i class="fa fa-line-chart"></i> Print Out
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /Page Content -->
+    </div>
+    <!-- /Main Wrapper -->
+    
+    <!-- jQuery -->
+    <script src="{% static 'web-assets/assets/js/jquery.min.js' %}"></script>
+
+    <!-- Bootstrap Datepicker Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <!-- Date Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/custom-date.js' %}"></script>
+
+    <!-- Bootstrap Core JS -->
+    <script src="{% static 'web-assets/assets/js/popper.min.js' %}"></script>
+    <script src="{% static 'web-assets/assets/js/bootstrap.min.js' %}"></script>
+
+    <!-- Bootstrap Notify Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-notify/bootstrap-notify.js' %}"></script>
+
+    <!-- Sweet Alert Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/sweetalert/sweetalert.min.js' %}"></script>
+    
+    <!-- Slick JS -->
+    <script src="{% static 'web-assets/assets/js/slick.js' %}"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+
+    <!-- Sweet Notification Trigger-->
+    <script src="{% static 'admin/assets/plugins/sweetalert/notifications.js' %}"></script>
+
+    <!-- Datatables JS -->
+    <script src="{% static 'admin/assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'admin/assets/plugins/datatables/datatables.min.js' %}"></script>
+        
+    <!-- jquery-datatable.js -->
+    <script src="{% static 'admin/assets/js/pages/tables/jquery-datatable.js' %}"></script>
+
+
+    <!-- personal scripts -->
+    <script>
+
+        let patientTable;
+
+        $(document).ready(function () {
+
+            patientTable = $('#patientTable').DataTable({
+                // destroy : true,  
+                paging: true,
+                ordering: false,
+                info: true,
+                searching:true,
+                pageLength:15,
+                bLengthChange:false,
+                stateSave: true,
+                lengthMenu: [ [15, 30, 45, -1], [15, 30, 45, "All"] ]
+            });
+            
+        })
+        
+    </script>
+
+   
+    <!-- extends child js into this block tag -->
+    {% block extra-js %}
+    {% endblock extra-js %}
+
+    <!-- Messages Handler -->
+    {% for message in messages %} {% if message.tags == "info" %}
+    <script>
+        var text = '{{ message}}'
+        //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+        window.parent.showNotification(null, text, 'top', 'left', 'animated bounceIn', 'animated bounceOut');
+    </script>
+    {% elif message.tags == "success" %}
+    <script>
+        var text = '{{ message}}'
+        //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+        window.parent.showNotification(null, text, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+    </script>
+    {% endif %} {% endfor %}
+
+</body>
+
+</html>

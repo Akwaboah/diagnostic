@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="utf-8">
+    <title>{{bus_info.Bus_Name}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+
+    <!-- Favicons -->
+    <link href="{% static 'web-assets/assets/img/favicon.ico' %}" rel="icon">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap.min.css' %}">
+
+    <!-- Bootstrap DatePicker Css -->
+    <link href="{% static 'admin/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}"
+        rel="stylesheet" />
+
+    <!-- Sweet Alert  Animation Css -->
+    <link href="{% static 'admin/assets/plugins/animate-css/animate.css' %}" rel="stylesheet" />
+
+    <!-- Sweet Alert Css -->
+    <link href="{% static 'admin/assets/plugins/sweetalert/sweetalert.css' %}" rel="stylesheet" />
+
+    <!-- Fontawesome CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/all.min.css' %}">
+
+    <!-- Datatables CSS -->
+    <link rel="stylesheet" href="{% static 'admin/assets/plugins/datatables/datatables.min.css' %}">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/style.css' %}">
+
+    <!-- Table Length CSS -->
+    <link rel="stylesheet" href="{% static 'admin/assets/css/dr-consulting-tables.css' %}">
+
+    <!-- Select2 CSS -->
+    <link rel="stylesheet" href="{% static 'admin/assets/css/select2.min.css' %}">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+			<script src="assets/js/html5shiv.min.js"></script>
+			<script src="assets/js/respond.min.js"></script>
+		<![endif]-->
+    <!-- <style>
+        /* Make the image fully responsive */
+        .carousel-inner img {
+            width: 100%;
+            height: 100%;
+        }
+    </style> -->
+    <style>/* Set !important rule to override default colors */
+        .Tab_active {
+          background: gold !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <!-- Include the nav -->
+        {% include 'I_CARE/admin/main-nav-staff.html' %}
+    </header>
+    <!-- /Header -->
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-12 col-12">
+                    <nav aria-label="breadcrumb" class="page-breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'home-page' %}">Home</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{{page}}</li>
+                        </ol>
+                    </nav>
+                    <h2 class="breadcrumb-title">{{page}}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Breadcrumb -->
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Page Content -->
+        <div class="content">
+            <div class="col-md-12 col-lg-12 col-xl-12">
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="card mb-5">
+                            <div class="card-header p-0">
+                                <button id="tabCount" class="nav-link active bg-warning text-white"><span
+                                    style="font-weight: bolder; font-size: 16px">{{incoming_pats}}</span>
+                                </button>
+                            </div>
+                            <div class="card-body p-3">
+                                <div class="table-responsive">
+                                    <table id="patientsTable" class="table table-bordered table-hover mb-0"
+                                        style="cursor: pointer;">
+                                        <thead>
+                                            <tr class="tb_r">
+                                                <th>Patient Identity</th>
+                                                <th>Status</th>
+                                                <th>Modality</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="card pt-0 pb-0 mb-2">
+                            <!-- Lab Tab -->
+                                <div class="card-body p-1">
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <div class="info-widget m-2">
+                                            <h4 class="card-title" id="pat_det">Patient Details</h4>
+                                            <div class="row">
+                                                <div class="col-md-6 col-sm-6">
+                                                    <div class="form-group card-label" hidden>
+                                                        <label>Patient Id</label>
+                                                        <input name="Patient_Id" id="Patient_Id"
+                                                        required    class="form-control" type="text">
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6 col-sm-6">
+                                                            <div class="form-group card-label">
+                                                                <label>First Name</label>
+                                                                <input name="first_name" id="first_name"
+                                                                required class="form-control" type="text">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6 col-sm-6">
+                                                            <div class="form-group card-label">
+                                                                <label>Surname</label>
+                                                                <input name="surname" id="surname" class="form-control"
+                                                                required type="text">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <label><u>Test Description / Note From Consultation</u></label>
+                                                    <textarea id="test_description" name="test_description" rows="3" cols="3" class="form-control"
+                                                        placeholder="Doctor's request... "></textarea>
+                                                </div>
+                                                <div class="col-md-6 col-sm-6">
+                                                    <textarea id="Complaints" name="Complaints" rows="15" required cols="10" class="form-control"
+                                                    placeholder="Test Result"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12 col-sm-12 col-12">
+                                                <div class="submit-section pull-right">
+                                                <button type="submit"
+                                                    class="btn view-btn submit-btn">Save Test Result</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div> 
+                            <!-- /Lab Tab -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /Page Content -->
+
+        <!-- Footer -->
+        {% comment %} {% include 'I_CARE/web/footer.html' %} {% endcomment %}
+        <!-- /Footer -->
+
+    </div>
+    <!-- /Main Wrapper -->
+
+    <!-- jQuery -->
+    <script src="{% static 'web-assets/assets/js/jquery.min.js' %}"></script>
+
+    <!-- Bootstrap Datepicker Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <!-- Date Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/custom-date.js' %}"></script>
+
+    <!-- Bootstrap Core JS -->
+    <script src="{% static 'web-assets/assets/js/popper.min.js' %}"></script>
+    <script src="{% static 'web-assets/assets/js/bootstrap.min.js' %}"></script>
+
+    <!-- Bootstrap Notify Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-notify/bootstrap-notify.js' %}"></script>
+
+    <!-- Sweet Alert Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/sweetalert/sweetalert.min.js' %}"></script>
+
+    <!-- Slick JS -->
+    <!-- <script src="{% static 'web-assets/assets/js/slick.js' %}"></script> -->
+
+    <!-- Select2 JS -->
+    <script src="{% static 'admin/assets/js/select2.min.js' %}"></script>
+
+    <!-- Datatables JS -->
+    <script src="{% static 'admin/assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'admin/assets/plugins/datatables/datatables.min.js' %}"></script>
+
+    <!-- jquery-datatable.js -->
+    <script src="{% static 'admin/assets/js/pages/tables/jquery-datatable.js' %}"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'admin/assets/js/script.js' %}"></script>
+
+    <!-- Mask JS -->
+    <script src="{% static 'admin/assets/js/jquery.maskedinput.min.js' %}"></script>
+    <script src="{% static 'admin/assets/js/mask.js' %}"></script>
+
+    <!-- Sweet Notification Trigger-->
+    <script src="{% static 'admin/assets/plugins/sweetalert/notifications.js' %}"></script>
+
+    <script>
+        // pat tables var 
+        let patientsTable;
+        let Patient_Id = "None"; 
+        let vital_history;
+        $(document).ready(function () {
+        //     >> URINE R/E
+        
+        // Ph               =                 Casts=
+        // Protein          =                Crytals=
+        // Glucose          =                Yeast Cells(Candida)=
+        // Ketones          =                 T. Vaginalis =
+        // Nitrite          =                S. Heamatobium Ova =
+        // Blood            =                Bacteria =
+        // Leukocytes       =               =Others 
+        // Bilirubin        =                
+        // Urobilinogen     =               
+            $("#Complaints").val(">> URINE R/E"+
+            "\nAppearance =             Pus Cells =         HPF ="+
+            "\nColour =                      RBCs =              HPF ="+
+            "\nSpecific Gravity =        Epithelial Cells =       HPF ="+
+            "\nPh =                             Casts ="+
+            "\nProtein =                      Crytals =           "+
+            "\nGlucose =                    Yeast Cells(Candida) =  "+
+            "\nKetones =                    T. Vaginalis ="+
+            "\nNitrite =                        S. Heamatobium Ova ="+
+            "\nBlood =                        Bacteria ="+
+            "\nLeukocytes =               Others ="+
+            "\nBilirubin =               "+
+            "\nUrobilinogen =            ");
+
+            patientsTable=$('#patientsTable').DataTable({
+                processing: true,
+                // serverSide: true,
+                ajax: {
+                    url: "{% url 'web-links' 'patients-data' %}",
+                    type: "GET",
+                    dataType: 'json',
+                    data:{
+                        load:'laboratory'
+                    },
+                    dataSrc: "vitalHist",
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    complete: function(data) {
+                        json_obj=(JSON.parse(data.responseText))
+                        //re-instantiat all the histories records 
+                        vital_history = json_obj.vitalHist;
+                        document.getElementById('tabCount').innerHTML=json_obj.total_incoming;
+                    },
+                },
+                columns: [
+                    {"render": function (data, type, JsonResultRow, meta) {
+                            if (String(JsonResultRow.Profile).includes('avatar')) {
+                                return `<h2 class="table-avatar">
+                                        <a href="${JsonResultRow.Profile}" class="avatar avatar-sm mr-2">
+                                            <img class="avatar-img rounded-circle"  src="${JsonResultRow.Profile}" alt="User Image">
+                                        </a>
+                                        <a href="javascript:void(0);">${JsonResultRow.Fullname}<span>#${JsonResultRow.Patient_ID}</span></a>
+                                        </h2>`
+                            } else {
+                                return `<h2 class="table-avatar">
+                                        <a href="/media/${JsonResultRow.Profile}" class="avatar avatar-sm mr-2">
+                                            <img class="avatar-img rounded-circle"  src="/media/${JsonResultRow.Profile}" alt="User Image">
+                                        </a>
+                                        <a href="javascript:void(0);">${JsonResultRow.Fullname}<span>#${JsonResultRow.Patient_ID}</span></a>
+                                        </h2>`
+                            }
+                        }},
+                    { "data": "Status"},
+                    // { "data": "Last_Visit","orderable" : true },
+                    {"data": "Complaints" }],
+                paging: false,
+                ordering: true,
+                info: false,
+                searching: true,
+                bLengthChange: false,
+                pageLength: 6,
+                lengthMenu: [[6, 12, 18, -1], [6, 12, 18, "All"]],
+            });
+            // refresh patientsTable every 24 seconds to load new data
+            setInterval( function () {
+                patientsTable.ajax.reload(function(json){
+                    // add background color to the table if Pat Id was selected
+                    patientsTable.rows( function (idx, data, node ) {             
+                        if(data.Patient_ID === Patient_Id){
+                            // console.log(`Matched Id: ${Patient_Id}- Table ${data.Pat_Code}`)
+                            $(node).find("td").each(function(i) {
+                                //toggle between adding/removing the 'active' class
+                                $(this).addClass('Tab_active');
+                            });        
+                        }
+                        return false;
+                    });
+                },false ); // user paging is not reset on reload
+            }, 24000); // reload every 12 sec
+
+        });
+
+        // get table click    
+        $('#patientsTable tbody').on('click', 'tr', function() {
+            let data=patientsTable.row(this).data();
+            let Patient_Id = data.Patient_ID;
+            let Test_Id = data.id;
+            // console.log(`Clicked: Pat Id: ${Patient_Id}, Name: ${data.Fname}`)
+            document.getElementById('pat_det').innerHTML = `Patient Details #${Patient_Id}`;
+            $('#Patient_Id').val(Patient_Id) 
+            document.getElementById('first_name').value = data.First_Name;
+            document.getElementById('surname').value = data.Surname;
+            // GET PATIENT Lab descriptionHISTORY 
+            vital_history.forEach((data, index) => {
+                if (Test_Id == data.id) {
+                    $('#test_description').val(data.Push_Note) 
+                }
+            });
+            //# END OF GET PATIENT HISTORY
+
+            // remove background color from the rows table
+            patientsTable.rows().eq(0).each( function ( index ) {
+                $(this).find("td").each(function(i) {
+                    //toggle between adding/removing the 'active' class
+                    $(this).removeClass('Tab_active');
+                });
+            } );
+            
+            // add background clolor to the selected row
+            $(this).find("td").each(function(i) {
+                //toggle between adding/removing the 'active' class
+                $(this).addClass('Tab_active');
+            });
+             
+            
+        })
+        
+        // end of table click
+ 
+    </script>
+
+    <!-- Messages Handler -->
+    {% for message in messages %} {% if message.tags == "info" %}
+    <script>
+        var text = '{{ message}}'
+        //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+        window.parent.showNotification(null, text, 'top', 'left', 'animated bounceIn', 'animated bounceOut');
+    </script>
+    {% elif message.tags == "success" %}
+    <script>
+        var text = '{{ message}}'
+        //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+        window.parent.showNotification(null, text, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+    </script>
+    {% endif %} {% endfor %}
+
+</body>
+
+</html>

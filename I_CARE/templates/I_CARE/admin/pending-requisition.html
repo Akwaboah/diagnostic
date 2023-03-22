@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="utf-8">
+    <title>{{bus_info.Bus_Name}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+
+    <!-- Favicons -->
+    <link href="{% static 'web-assets/assets/img/favicon.ico' %}" rel="icon">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap.min.css' %}">
+
+    <!-- Bootstrap DatePicker Css -->
+    <link href="{% static 'admin/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}" rel="stylesheet" />
+
+    <!-- Sweet Alert  Animation Css -->
+    <link href="{% static 'admin/assets/plugins/animate-css/animate.css' %}" rel="stylesheet" />
+
+    <!-- Sweet Alert Css -->
+    <link href="{% static 'admin/assets/plugins/sweetalert/sweetalert.css' %}" rel="stylesheet" />
+
+    <!-- Datatables CSS -->
+    <link rel="stylesheet" href="{% static 'admin/assets/plugins/datatables/datatables.min.css' %}">
+
+    <!-- Fontawesome CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/all.min.css' %}">
+ 
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/style.css' %}">
+
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+			<script src="assets/js/html5shiv.min.js"></script>
+			<script src="assets/js/respond.min.js"></script>
+		<![endif]-->
+    <!-- <style>
+        /* Make the image fully responsive */
+        .carousel-inner img {
+            width: 100%;
+            height: 100%;
+        }
+    </style> -->
+    <script>
+        var timer = 0;
+        var PERIOD_VISIBLE =120000;
+        var PERIOD_NOT_VISIBLE = 60000;
+     
+        function onLoad() {
+            timer = setInterval(checkBirthDays, (document.hidden) ? PERIOD_NOT_VISIBLE : PERIOD_VISIBLE);
+            if(document.addEventListener) document.addEventListener("visibilitychange", visibilityChanged);
+        }
+     
+        function visibilityChanged() {
+            clearTimeout(timer);
+            timer = setInterval(checkBirthDays, (document.hidden) ? PERIOD_NOT_VISIBLE : PERIOD_VISIBLE);
+        }
+     
+        function checkBirthDays() { 
+            // Check server for today's birthdays
+            $.ajax({
+                type: "POST",
+                url: "{% url 'opd' 'birthdays' %}",
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    dataType: "json"
+                },
+                success: function (data) {
+                    // window.parent.showNotification(null, data['message'], 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                    // swal.close();
+                },
+                error: function (request,status,error) {
+                    // swal(`Error Occurred: ${request.responseText}, please try again :)`, "error");
+                }
+            });
+        }
+     
+    </script>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <!-- Include the nav -->
+        {% include 'I_CARE/admin/main-nav-staff.html' %}
+    </header>
+    <!-- /Header -->
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-12 col-12">
+                    <nav aria-label="breadcrumb" class="page-breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="#">{{bus_info.Bus_Name_Abbr}}</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{{page}}</li>
+                        </ol>
+                    </nav>
+                    <h2 class="breadcrumb-title">{{page}}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Breadcrumb -->
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Page Content -->
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card mb-5">
+                            <div class="card-header p-1">
+                                <div class="col">
+                                    <div class="row justify-content-start"> 
+                                        <button class="nav-link active bg-warning p-1 mr-2 text-white">Review Form</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-1">
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <input hidden id="Request_Id" name="Request_Id" required autocomplete="off" class="form-control" type="text">
+
+                                    <div class="row">
+                                        <div class="col-md-7 col-sm-7">
+                                            <div class="form-group card-label">
+                                                <label>Description</label>
+                                                <input name="Description" id="Description" required autocomplete="off" class="form-control" type="text">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5 col-sm-5">
+                                            <div class="form-group card-label">
+                                                <label>Delivery Timeline</label>
+                                                <input name="Delivery_Tm" id="Delivery_Tm" required autocomplete="off" class="form-control" type="text">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 col-sm-4">
+                                            <div class="form-group card-label">
+                                                <label>Quantity</label>
+                                                <input name="Quantity" id="Quantity" required class="form-control" type="number" onkeyup="calTotal();">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 col-sm-4">
+                                            <div class="form-group card-label">
+                                                <label>Price</label>
+                                                <input name="Price" id="Price" required step="any" class="form-control" type="number" onkeyup="calTotal();">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 col-sm-4">
+                                            <div class="form-group card-label">
+                                                <label>Total Cost</label>
+                                                <input name="Total_Cost" id="Total_Cost" required class="form-control" step="any" type="number">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 col-sm-12">
+                                            <div class="form-group">
+                                                <div class="submit-section pull-right">
+                                                    <button type="submit" class="btn btn-md btn-primary">Confirm Review</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card mb-5">
+                            <div class="card-header p-1">
+                                <div class="col">
+                                    <div class="row justify-content-start"> 
+                                        <button class="nav-link active bg-warning p-1 mr-2 text-white">Request History</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-1">
+                                <div class="table-responsive">
+                                    <table style="cursor: pointer" id="requisitionTable" class="table table-bordered table-hover table-center mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th hidden>Requisition ID</th>
+                                                <th>NO.</th>
+                                                <th>Date</th>
+                                                <th>Request From</th>
+                                                <th>Description</th>
+                                                <th>Timeline</th>
+                                                <th>Qty</th>
+                                                <th>Price</th>
+                                                <th>Cost</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for vit in reqHist %}
+                                            <tr>
+                                                <td hidden>{{vit.id}}</td>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>
+                                                    <h2 class="table-avatar">
+                                                        <a href="javascript:void(0)">{{vit.Date|date:"D M d, Y"}}
+                                                            <span class="d-block text-info text-capitalize"><i class="fa fa-clock-o"></i> {{vit.Time}}</span></a>
+                                                    </h2>
+                                                </td>
+                                                <td>{{vit.Placeholder}}</td>
+                                                <td>{{vit.Description}}</td>
+                                                <td>{{vit.Delivery_Timeline}}</td>
+                                                <td>{{vit.Quantity}}</td>
+                                                <td>{{vit.Price}}</td>
+                                                <td class="text-capitalize">{{vit.Total_Cost}}</td>
+                                                <td class="text-left">
+                                                    <div class="table-action">
+                                                        {% if vit.Delivery_Status == 'Pending' %}
+                                                            <a class="btn btn-sm bg-warning-light">
+                                                                {{vit.Delivery_Status}}
+                                                            </a>
+                                                        {% elif vit.Delivery_Status == 'Denied' %}
+                                                            <a class="btn btn-sm bg-danger-light">
+                                                                {{vit.Delivery_Status}}
+                                                            </a>
+                                                        {% else %}
+                                                            <a class="btn btn-sm bg-info-light">
+                                                                {{vit.Delivery_Status}}
+                                                            </a>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                                <td class="text-left">
+                                                    <div class="table-action">
+                                                        <a class="btn btn-sm bg-info-light">
+                                                            Approve
+                                                        </a>
+                                                        <a class="btn btn-sm bg-danger-light">
+                                                            Deny
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /Page Content -->
+    </div>
+    <!-- /Main Wrapper -->
+    
+    <!-- jQuery -->
+    <script src="{% static 'web-assets/assets/js/jquery.min.js' %}"></script>
+
+    <!-- Bootstrap Datepicker Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <!-- Date Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/custom-date.js' %}"></script>
+
+    <!-- Bootstrap Core JS -->
+    <script src="{% static 'web-assets/assets/js/popper.min.js' %}"></script>
+    <script src="{% static 'web-assets/assets/js/bootstrap.min.js' %}"></script>
+
+    <!-- Bootstrap Notify Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-notify/bootstrap-notify.js' %}"></script>
+
+    <!-- Sweet Alert Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/sweetalert/sweetalert.min.js' %}"></script>
+    
+    <!-- Slick JS -->
+    <script src="{% static 'web-assets/assets/js/slick.js' %}"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+
+    <!-- Sweet Notification Trigger-->
+    <script src="{% static 'admin/assets/plugins/sweetalert/notifications.js' %}"></script>
+
+    <!-- Datatables JS -->
+    <script src="{% static 'admin/assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'admin/assets/plugins/datatables/datatables.min.js' %}"></script>
+        
+    <!-- jquery-datatable.js -->
+    <script src="{% static 'admin/assets/js/pages/tables/jquery-datatable.js' %}"></script>
+
+
+    <!-- personal scripts -->
+    <script>
+        let requisitionTable;
+        $(document).ready(function () {
+
+            requisitionTable=$('#requisitionTable').DataTable({
+                // destroy : true,  
+                paging: true,
+                ordering: false,
+                info: false,
+                searching:true,
+                pageLength:15,
+                bLengthChange:false,
+                lengthMenu: [ [15, 30, 45, -1], [15, 30, 45, "All"] ]
+            });
+            
+        })
+        function calTotal(){
+            let price= Number($('#Price').val())
+            let qty= Number($('#Quantity').val())
+            let total=price*qty;
+            $('#Total_Cost').val(total)
+        }
+         // get table click    
+         $('#requisitionTable').on('click', 'tr', function() {
+            
+            var cells = document.getElementsByTagName('td');
+
+            for (var i = 0; i < cells.length; i++) {
+                // Take each cell
+                var cell = cells[i];
+                // do something on onclick event for cell
+                cell.onclick = function () {
+                    // Get the row id where the cell exists
+                    var rowId = this.parentNode.rowIndex;
+                    var rowsNotSelected = document.getElementsByTagName("tr");
+                    for (var row = 0; row < rowsNotSelected.length; row++) {
+                        rowsNotSelected[row].style.backgroundColor = "white";
+                        rowsNotSelected[row].classList.remove('selected');
+                    }
+                    var rowSelected = document.getElementsByTagName("tr")[rowId];
+                    rowSelected.style.backgroundColor = "#F5F5F5";
+                    rowSelected.className += " selected";
+
+                    $('#Request_Id').val(rowSelected.cells[0].innerHTML)
+                    $('#Description').val(rowSelected.cells[4].innerHTML)
+                    $('#Delivery_Tm').val(rowSelected.cells[5].innerHTML)
+                    $('#Quantity').val(rowSelected.cells[6].innerHTML)
+                    $('#Price').val(rowSelected.cells[7].innerHTML)
+                    $('#Total_Cost').val(rowSelected.cells[8].innerHTML)
+
+                }
+            }
+            
+        })
+        
+    </script>
+
+    <!-- Messages Handler -->
+    {% for message in messages %} {% if message.tags == "info" %}
+    <script>
+        var text = '{{ message}}'
+        //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+        window.parent.showNotification(null, text, 'top', 'left', 'animated bounceIn', 'animated bounceOut');
+    </script>
+    {% elif message.tags == "success" %}
+    <script>
+        var text = '{{ message}}'
+        //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+        window.parent.showNotification(null, text, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+    </script>
+    {% endif %} {% endfor %}
+
+</body>
+
+</html>

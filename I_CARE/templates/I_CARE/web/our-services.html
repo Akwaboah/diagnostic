@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- doccure/blank-page.html  30 Nov 2019 04:12:20 GMT -->
+
+<head>
+    <meta charset="utf-8">
+    <title>{{bus_info.Bus_Name}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+
+    <!-- Favicons -->
+    <link href="{% static 'web-assets/assets/img/favicon.ico' %}" rel="icon">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap.min.css' %}">
+
+    <!-- Sweet Alert  Animation Css -->
+    <link href="{% static 'admin/assets/plugins/animate-css/animate.css' %}" rel="stylesheet" />
+
+    <!-- Sweet Alert Css -->
+    <link href="{% static 'admin/assets/plugins/sweetalert/sweetalert.css' %}" rel="stylesheet" />
+ 
+    <!-- Fontawesome CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/all.min.css' %}">
+    <!-- <link rel="stylesheet" href="assets/plugins/fonts/font-awesome/css/font-awesome.min.css"> -->
+
+    <!-- Datetimepicker CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap-datetimepicker.min.css' %}">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/style.css' %}">
+    <!-- <link rel="stylesheet" href="assets/css/style2.css"> -->
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+			<script src="assets/js/html5shiv.min.js"></script>
+			<script src="assets/js/respond.min.js"></script>
+		<![endif]-->
+
+</head>
+
+<body>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Breadcrumb -->
+        {% include 'I_CARE/web/breadcrumb.html' %}
+        <!-- /Breadcrumb -->
+
+        <!-- Header -->
+        <header class="header">
+            <!-- Include the nav -->
+            {% include 'I_CARE/web/main-nav.html' %}
+        </header>
+        <!-- /Header -->
+
+        <!-- Breadcrumb -->
+        <!-- <div class="breadcrumb-bar">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-md-12 col-12">
+                        <nav aria-label="breadcrumb" class="page-breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="#">Home</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Our Service</li>
+                            </ol>
+                        </nav>
+                        <h2 class="breadcrumb-title">Our Services</h2>
+                    </div>
+                </div>
+            </div>
+        </div> -->
+        <!-- /Breadcrumb -->
+
+        <!-- Page Content -->
+        <section class="site-content-area">
+            <div class="uni-single-departments-body">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-8 col-md-12 col-sm-12">
+                            <div class="uni-single-departments-right">
+                                <div class="uni-single-departments-cardiology">
+                                    <!--TREATMENTS INVENSTIGATION-->
+                                    <div class="col">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="uni-single-departments-treatments-investigation">
+                                                    <h3 class="uni-single-departments-right-title">
+                                                        General Services
+                                                    </h3>
+                                                    <div class="uni-divider"></div>
+                                                    <ul> 
+                                                        <li>
+                                                            Dental Consultation
+                                                        </li>
+                                                        <li>
+                                                            Scaling and Polishing
+                                                        </li>
+                                                        <li>
+                                                            Tooth Restorations / Fillings
+                                                        </li>
+                                                        <li>
+                                                            Tooth Extraction / Fillings
+                                                        </li>
+                                                        <li>
+                                                            Root Canal Therapy
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="uni-single-departments-treatments-investigation">
+                                                    <h3 class="uni-single-departments-right-title">
+                                                        Orthodontic Services</h3>
+                                                    <div class="uni-divider"></div>
+                                                    <ul>
+                                                        <li>
+                                                            Orthodontic Treatments (Braces)
+                                                            <!-- <span>$200</span> -->
+                                                        </li>
+                                                        <li>
+                                                            Orthodontic appliances
+                                                        </li>
+                                                        <li>
+                                                            Invisalign
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="uni-single-departments-treatments-investigation">
+                                                    <h3 class="uni-single-departments-right-title">
+                                                        Cosmetic Dentistry
+                                                    </h3>
+                                                    <div class="uni-divider"></div>
+                                                    <ul> 
+                                                        <li>
+                                                            Teeth whitening
+                                                        </li>
+                                                        <li>
+                                                            Gum recontouring
+                                                        </li>
+                                                        <li>
+                                                            Veeners
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="uni-single-departments-treatments-investigation">
+                                                    <h3 class="uni-single-departments-right-title">
+                                                        Other Services
+                                                    </h3>
+                                                    <div class="uni-divider"></div>
+                                                    <ul> 
+                                                        <li>
+                                                            Dental Implants
+                                                        </li>
+                                                        <li>
+                                                            Principal Xray
+                                                        </li>
+                                                        <li>
+                                                            Oral Surgery Services
+                                                        </li>
+                                                        <li>
+                                                            Prosthodontic Services
+                                                        </li>
+                                                        <li>
+                                                            Pediatric Dentistry Services
+                                                        </li>
+                                                        <li>
+                                                            Dental Laboratory services
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <div class="col-lg-4 col-md-12 col-sm-12">
+                            <div class="uni-single-departments-left">
+                                <!--Opening hours-->
+                                <div class="uni-single-department-open-hours">
+                                    <h3 class="uni-single-department-left-title">
+                                        Opening hours
+                                    </h3>
+                                    <div class="uni-single-department-left-table">
+                                        <table class="table">
+                                            <tr>
+                                                <td>Monday</td>
+                                                <td>8:00 - 17:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>tuesday</td>
+                                                <td>8:00 - 17:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>wednesday</td>
+                                                <td>8:00 - 17:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>thursday</td>
+                                                <td>8:00 - 17:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>friday</td>
+                                                <td>8:00 - 17:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>saturday</td>
+                                                <td>8:00 - 17:00</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </section>
+        <!-- /Page Content -->
+
+         <!-- Availabe Features -->
+         <section class="section section-features">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-4 col-md-12 col-sm-12">
+                        <div class="uni-single-departments-left">
+                            <!--Contact us-->
+                            <div class="uni-single-department-contact-info">
+                                <h3 class="uni-single-department-left-title">
+                                    CONTACT INFO
+                                </h3>
+                                <ul>
+                                    <li>
+                                        <i class="fa fa-map-marker" aria-hidden="true"></i>
+                                       {{bus_info.GPS_Address}}
+                                    </li>
+                                    <li>
+                                        <i class="fa fa-phone" aria-hidden="true"></i>
+                                        {{bus_info.Gen_Tel}}
+                                    </li>
+                                    <li>
+                                        <i class="fa fa-envelope" aria-hidden="true"></i>
+                                        {{bus_info.Email}}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-8 col-md-12 col-sm-12">
+                        <div class="uni-single-departments-right">
+                            <!--APPOINTMENTS-->
+                            <div class="uni-single-department-appointment">
+                                <h3 class="uni-single-departments-right-title">Book Appointment
+                                </h3>
+                                <div class="uni-divider"></div>
+                                <div class="uni-single-department-appointment-form">
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <div class="row">
+                                            <div class="col-md-5">
+                                                <div class="input-group form-group">
+                                                    <span class="input-group-addon"><i class="fa fa-user"
+                                                            aria-hidden="true"></i></span>
+                                                    <input type="text" class="form-control" name="name" value=""
+                                                    required placeholder="your name">
+                                                </div>
+                                                <div class="input-group form-group">
+                                                    <span class="input-group-addon"><i class="fa fa-phone"
+                                                            aria-hidden="true"></i></span>
+                                                    <input type="tel" class="form-control" name="phone" value=""
+                                                    required placeholder="phone number">
+                                                </div>
+                                                <div class="input-group form-group">
+                                                    <span class="input-group-addon"><i class="fa fa-envelope"
+                                                            aria-hidden="true"></i></span>
+                                                    <input type="email" class="form-control" name="email" value=""
+                                                    required placeholder="email">
+                                                </div>
+                                                <div class="input-group form-group">
+                                                    <div class="input-group date date-check-in">
+                                                        <span class="input-group-addon"><i class="fa fa-calendar"
+                                                            aria-hidden="true"></i></span>
+                                                        <input type="text" class="form-control datetimepicker" required
+                                                        name="date"  placeholder="PREFERRED DATE" data-date-format="Y-M-DD">
+                                                        <span class="input-group-addon btn"><i
+                                                            class="fa fa-calendar" id="ti-calendar1" aria-hidden="true"></i></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-7">
+                                                <div class="input-group form-group">
+                                                    <textarea name="message" class="form-control"
+                                                    required placeholder="message"></textarea>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <input type="text" class="form-control form-control-md" name="patient_id"
+                                                            placeholder="Patient ID (optional)">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="form-group">
+                                                            <select name="preferred_time" required class="form-control form-control-md">
+                                                                <option value="" selected>PREFERRED TIME</option>
+                                                                <option value="MORNING">MORNING</option>
+                                                                <option value="AFTERNOON">AFTERNOON</option>
+                                                                <option value="EVENING">EVENING</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <button class="btn btn-md btn-primary">CONFIRM</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Availabe Features -->
+
+        <!-- Availabe Features -->
+        <!-- <section class="section section-features">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-5 features-img">
+                        <img src="{% static 'web-assets/assets/img/features/feature.png' %}" class="img-fluid"
+                            alt="Feature">
+                    </div>
+                    <div class="col-md-7">
+                        <div class="section-header">
+                            <h2 class="mt-2">Availabe Features in Our Clinic</h2>
+                            <p>It is a long established fact that a reader will be distracted by the readable content of
+                                a page when looking at its layout. </p>
+                        </div>
+                        <div class="features-slider slider"> -->
+                            <!-- Slider Item -->
+                            <!-- <div class="feature-item text-center">
+                                <img src="{% static 'web-assets/assets/img/features/feature-01.jpg' %}"
+                                    class="img-fluid" alt="Feature">
+                                <p>Patient Ward</p>
+                            </div> -->
+                            <!-- /Slider Item -->
+
+                            <!-- Slider Item -->
+                            <!-- <div class="feature-item text-center">
+                                <img src="{% static 'web-assets/assets/img/features/feature-02.jpg' %}"
+                                    class="img-fluid" alt="Feature">
+                                <p>Test Room</p>
+                            </div> -->
+                            <!-- /Slider Item -->
+
+                            <!-- Slider Item -->
+                            <!-- <div class="feature-item text-center">
+                                <img src="{% static 'web-assets/assets/img/features/feature-03.jpg' %}"
+                                    class="img-fluid" alt="Feature">
+                                <p>ICU</p>
+                            </div> -->
+                            <!-- /Slider Item -->
+
+                            <!-- Slider Item -->
+                            <!-- <div class="feature-item text-center">
+                                <img src="{% static 'web-assets/assets/img/features/feature-04.jpg' %}"
+                                    class="img-fluid" alt="Feature">
+                                <p>Laboratory</p>
+                            </div> -->
+                            <!-- /Slider Item -->
+
+                            <!-- Slider Item -->
+                            <!-- <div class="feature-item text-center">
+                                <img src="{% static 'web-assets/assets/img/features/feature-05.jpg' %}"
+                                    class="img-fluid" alt="Feature">
+                                <p>Operation</p>
+                            </div> -->
+                            <!-- /Slider Item -->
+
+                            <!-- Slider Item -->
+                            <!-- <div class="feature-item text-center">
+                                <img src="{% static 'web-assets/assets/img/features/feature-06.jpg' %}"
+                                    class="img-fluid" alt="Feature">
+                                <p>Medical</p>
+                            </div> -->
+                            <!-- /Slider Item -->
+                        <!-- </div>
+                    </div>
+                </div>
+            </div>
+        </section> -->
+        <!-- Availabe Features -->
+
+
+        <!-- Footer -->
+        {% include 'I_CARE/web/footer.html' %}
+        <!-- /Footer -->
+
+    </div>
+    <!-- /Main Wrapper -->
+
+    <!-- jQuery -->
+    <script src="{% static 'web-assets/assets/js/jquery.min.js' %}"></script>
+
+    <!-- Bootstrap Core JS -->
+    <script src="{% static 'web-assets/assets/js/popper.min.js' %}"></script>
+    <script src="{% static 'web-assets/assets/js/bootstrap.min.js' %}"></script>
+
+    <!-- Bootstrap Notify Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-notify/bootstrap-notify.js' %}"></script>
+
+    <!-- Sweet Alert Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/sweetalert/sweetalert.min.js' %}"></script>
+
+    <!-- Slick JS -->
+    <script src="{% static 'web-assets/assets/js/slick.js' %}"></script>
+
+    <!-- Datetimepicker JS -->
+    <script src="{% static 'web-assets/assets/js/moment.min.js' %}"></script>
+    <script src="{% static 'web-assets/assets/js/bootstrap-datetimepicker.min.js' %}"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+
+    <!-- Sweet Notification Trigger-->
+    <script src="{% static 'admin/assets/plugins/sweetalert/notifications.js' %}"></script>
+    {% for message in messages %}
+    <script>
+        var text = '{{ message}}'
+        //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+        window.parent.showNotification(null, text, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+    </script>
+    {% endfor %}
+</body>
+
+<!-- doccure/blank-page.html  30 Nov 2019 04:12:20 GMT -->
+
+</html>

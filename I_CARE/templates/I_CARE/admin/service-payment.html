@@ -1,0 +1,323 @@
+{% extends 'I_CARE/admin/index.html' %}
+ 
+{% block extra-css %}
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'admin/assets/css/select2.min.css' %}">
+<!-- Datatables CSS -->
+<link rel="stylesheet" href="{% static 'admin/assets/plugins/datatables/datatables.min.css' %}">
+
+{% endblock extra-css %}
+
+<!--dashboard-menu -->
+{% block dashboard-menu %}
+<nav class="dashboard-menu">
+	<ul>
+        <li>
+            <a href="{% url 'nursing' 'dashboard' %}">
+                <i class="fas fa-columns"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+		<li class="active">
+            <a href="{% url 'nursing' 'pat-journal' %}">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Payment</span>
+				<small class="unread-msg">{{debt_pat}}</small>
+            </a>
+        </li>
+        <li >
+            <a data-toggle="modal" href="#modal-alert">
+                <i class="fas fa-mail-bulk"></i>
+                <span>Send Message</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endblock dashboard-menu %}
+<!-- /dashboard-menu -->
+ 
+<!-- page content -->
+{% block content %}
+<div class="row">
+	<div class="col-md-12">
+		<div class="card card-table mb-5">
+			<div class="card-header p-1">
+				<div class="col">
+                    <div class="row justify-content-start"> 
+                        <button class="nav-link active bg-warning p-1 mr-2 text-white">Patient & Journal List</button>
+                    </div>
+                </div>
+			</div>
+			<div class="card-body">
+				<div class="table-responsive p-2">
+					<table id="patientTable" class="table table-bordered table-hover table-center mb-0">
+						<thead>
+							<tr>
+                                <th>Date Joined</th>
+								<th>Patient ID</th>
+                                <th>Phone Contact</th>
+								<th>Residence</th>
+								<th>Last Seen</th>
+                                <th>Balance</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for vit in pat_data %}
+							<tr>
+                                <td>
+									<h2 class="table-avatar">
+										<a href="javascript:void(0)">{{vit.Date_Joined|date:"D M d, Y"}}
+											<span class="d-block text-info text-capitalize"><i class="fa fa-clock-o"></i> {{vit.Time}}</span></a>
+									</h2>
+								</td>
+								<td>
+									<h2 class="table-avatar">
+										{% if 'avatar' in vit.Profile.url %}
+										<a href="{{vit.Profile}}" class="avatar avatar-sm mr-2"><img
+											class="avatar-img rounded-circle"
+											src="{{vit.Profile}}" alt="User Image"></a>
+										{% else %}
+										<a href="{{vit.Profile.url}}" class="avatar avatar-sm mr-2"><img
+											class="avatar-img rounded-circle"
+											src="{{vit.Profile.url}}" alt="User Image"></a>
+										{% endif %}
+						
+										<a href="javascript:void(0);">{{vit}}
+											<span>#{{vit.Patient_Id}}</span></a>
+									</h2>
+								</td>
+								<td>{{vit.Tel}}</td>
+                                <td class="text-capitalize">{{vit.Residence}}
+									<span class="d-block text-info">{{vit.Nationality}}</span>
+								</td>
+                                <td>
+									<h2 class="table-avatar">
+										<a href="javascript:void(0)">{{vit.Last_Visit|date:"D M d, Y"}}
+											<span class="d-block text-info text-capitalize"><i class="fa fa-clock-o"></i> {{vit.Last_Visit|date:"H:m a"}}</span></a>
+									</h2>
+								</td>
+                                <td class="text-center">{{vit.Balance}}</td>
+                                <td class="text-right">
+									<div class="table-action">
+										<a class="btn btn-sm bg-success-light" 
+                                        href="javascript:showPayment('{{vit.Patient_Id}}','{{vit.First_Name}}','{{vit.Surname}}','{{vit.Gender}}',
+                                        '{{vit.Age}}','{{vit.Nationality}}','{{vit.Residence}}','{{vit.Tel}}','{{vit.Occupation}}','{{vit.Balance}}',
+                                        '{{vit.Insurance_Type.Name}}','{{vit.Insurance_Id}}','{{vit.Profile.url}}');"
+                                         class="btn btn-sm bg-success-light">
+											<i class="fas fa-money-bill"></i> Payment
+										</a>
+                                        <a  href="javascript:deletePatient('{{vit.Patient_Id}}','{{vit.First_Name}}','{{vit.Surname}}');" class="btn btn-sm bg-danger-light">
+											<i class="fa fa-user-injured"></i> Delete
+										</a>
+									</div>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock content %}
+<!-- /page content -->
+
+{% block extra-js %}
+ 
+<!-- Sticky Sidebar JS -->
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/ResizeSensor.js' %}"></script>
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/theia-sticky-sidebar.js' %}"></script>
+
+<!-- Select2 JS -->
+<script src="{% static 'admin/assets/js/select2.min.js' %}"></script>
+
+
+<!-- Datatables JS -->
+<script src="{% static 'admin/assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'admin/assets/plugins/datatables/datatables.min.js' %}"></script>
+    
+<!-- jquery-datatable.js -->
+<script src="{% static 'admin/assets/js/pages/tables/jquery-datatable.js' %}"></script>
+
+<!-- Custom JS -->
+<script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+
+<script>
+    
+    let journalEntryTable;
+    let patientTable;
+    let Patient_Ref_Id;
+    let Patient_Bal;
+    let Fname;
+    let PTel;
+
+    $(document).ready(function () {
+
+        patientTable = $('#patientTable').DataTable({
+            // destroy : true,  
+            paging: true,
+            ordering: false,
+            info: false,
+            searching:true,
+            pageLength:7,
+            bLengthChange:false,
+            stateSave: true,
+            lengthMenu: [ [7, 14, 21, -1], [7, 14, 21, "All"] ]
+        });
+        
+        journalEntryTable = $('#journalTable').DataTable({
+            paging: true,
+            ordering: false,
+            info: false,
+            searching: false,
+            bLengthChange: false,
+            pageLength: 7,
+            lengthMenu: [[7, 14, 21, -1], [7, 14, 21, "All"]]
+        });
+        
+        $('#tm_type').select2({
+            dropdownAutoWidth: true,
+            multiple: true,
+            width: '100%',
+            height: '30px',
+            placeholder: "Add Treatments/Procedures",
+            allowClear: true,
+            // tags: true , //helps for adding new data which is not in option
+            // tokenSeparators: [',', ' '], // entering a space or a comma will create tag
+        });
+        
+        $('.select2-search__field').css('width', '100%'); // select2 placeholder css
+    })
+    
+    // bills/jurnal data
+    const journalData=(JSON.parse ('{{journalData|safe}}'))
+     
+    function showPayment(patient_id,fname,sname,gender,age,nat,res,tel,occup,bal,insur_name,insur_id,profile_image) {
+        journalEntryTable.clear().draw();
+        let posNo=0
+        for (var i = 0; i < journalData.length; i++) {
+            if (journalData[i].Patient_Ref==patient_id) {
+                posNo+=1
+                journalEntryTable.row.add([posNo,journalData[i].Date,journalData[i].Treatment_Name,journalData[i].Treatment_Amount,journalData[i].Paid_Amount,journalData[i].Balance,journalData[i].Logger_Instance_Ref]).draw(false);
+            }
+        }
+        // set patient details
+        document.getElementById('JName').innerText=fname+" "+sname+"/"+patient_id;
+        document.getElementById('JGender').innerText=gender+"/"+age;
+        document.getElementById('JAddress').innerText=nat+"/"+res;
+        document.getElementById('JContact').innerText=tel+"/"+occup;
+        document.getElementById('JBalance').innerText=bal+" ¢";
+        document.getElementById('Insurance').innerText=`${insur_name}(${insur_id})`;
+
+        // 
+        var imgAttr = document.getElementById('JProfile');
+        if (!String(profile_image).includes('avatar')) {
+            imgAttr.src = profile_image;
+        }else{
+            imgAttr.src = "{% static 'admin/assets/img/profiles/avatar.png' %}"
+        }
+        
+        $('#paymentModal').modal('show')
+        Patient_Ref_Id=patient_id;
+        Patient_Bal=Math.abs(bal);
+        Fname=fname;
+        PTel=tel;
+        
+    }
+
+    function validatePay() {
+        const amount = document.getElementById('journalAmount');
+        if (parseFloat(amount.value)!=parseFloat(Patient_Bal)) {
+            amount.setCustomValidity(`Total amount to be paid for all procedures is ${Patient_Bal}¢`)
+            return false
+        }else{
+            amount.setCustomValidity('')
+        }
+    }
+
+    $("#journalPaymentForm").on('submit',function (e) {
+        e.preventDefault()
+        $.ajax({
+            type: "POST",
+            url: "{% url 'nursing' 'journal-payment' %}",
+            data: {
+                Amount: $('#journalAmount').val(),
+                Mode: $('#journalMode').val(),
+                PaymentDate:$('#journalDate').val(),
+                Comment: $('#journalComment').val(),
+                Patient_Id: Patient_Ref_Id,
+                First_Name:Fname,
+                Tel:PTel,
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                dataType: "json",
+            },
+            beforeSend: function () {
+                // show progress whiles request in pregess to avoid many submission
+                swal({
+                    title: "Processing Payment Request... ",
+                    text: "please wait whiles we proccess your request",
+                    imageUrl: "{% static 'admin/assets/img/loading.gif' %}",
+                    showConfirmButton: false
+                });
+            },
+            success: function (data) {
+                // $("#patientTable").load(window.location.href + " #patientTable>*", "");
+                swal.close();
+                window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                setTimeout(function() {
+                    window.location.reload()
+                },1500);
+            },
+            error: function (request,status,error) {
+                window.parent.showNotification(null, `Error occured: ${request.responseText}`, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                swal.close();
+            }
+        });
+    });
+
+    function deletePatient(pat_id,fname,surname) {
+        
+        swal({
+                title: "Are you sure?",
+                text: `You want to delete ${fname} ${surname} with ID:${pat_id}, folder and all other docs?`,
+                // imageUrl: '',
+                showCancelButton: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Yes, delete",
+                cancelButtonText: "No, cancel",
+                closeOnConfirm: false,
+                closeOnCancel: true
+            }, function (isConfirm) {
+                if (isConfirm) {
+
+                    $.ajax({
+                        type: "POST",
+                        url: "{% url 'nursing' 'del-folder' %}",
+                        data: {
+                            Patient_Id: pat_id,
+                            Name: `${fname} ${surname}`,
+                            csrfmiddlewaretoken: '{{ csrf_token }}',
+                            dataType: "json"
+                        },
+                        success: function (data) {
+                            // window.parent.showNotification(null, data['message'], 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                            // swal.close();
+                            window.location.reload()
+                        },
+                        error: function (data) {
+                            swal("Error Occured", "Request aborted, please try again :)", "error");
+                        }
+                    });
+                }
+            });
+        
+    }
+
+</script>
+
+{% endblock extra-js %}
+
+</body>
+</html>

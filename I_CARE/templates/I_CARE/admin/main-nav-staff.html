@@ -1,0 +1,122 @@
+<nav class="navbar navbar-expand-lg header-nav">
+    <div class="navbar-header">
+        <a id="mobile_btn" href="javascript:void(0);">
+            <span class="bar-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </span>
+        </a>
+        <a href="{% url 'home-page' %}" class="navbar-brand logo">
+            <img src="{{bus_info.Web_Logo.url}}" class="img-fluid" alt="Logo">
+        </a>
+    </div>
+    <div class="main-menu-wrapper">
+        <div class="menu-header">
+            <a href="{% url 'home-page' %}" class="menu-logo">
+                <img src="{{bus_info.Web_Logo.url}}" class="img-fluid" alt="Logo">
+            </a>
+            <a id="menu_close" class="menu-close" href="javascript:void(0);">
+                <i class="fas fa-times"></i>
+            </a>
+        </div>
+        <ul class="main-nav">
+            <li class="has-submenu {% if 'Registration' in page %}active{% endif %}">
+                <a href="{% url 'opd' 'dashboard' %}">Registration<i class="fas fa-chevron-down"></i></a>
+                <ul class="submenu">
+                    <li><a href="{% url 'opd' 'pat-reg' %}">Patient Registration</a></li>
+                    <li><a href="{% url 'opd' 'pat-update' %}">Patient Demographics</a></li>
+                    <li><a href="{% url 'opd' 'pat-complaints' %}">Existing Patients</a></li>
+                </ul>
+            </li>
+            <li class="has-submenu {% if 'Payment' in page %}active{% endif %}">
+                <a href="{% url 'nursing' 'pat-journal' %}">Payment</a>
+            </li>
+            <li class="has-submenu {% if 'Doctors' in page %}active{% endif %}">
+                <a href="#">Physician Specialist<i class="fas fa-chevron-down"></i></a>
+                <ul class="submenu">
+                    {% comment %} <li><a href="#">Appointments</a></li> {% endcomment %}
+                    <li><a href="{% url 'doc' 'consulting' %}">Radiologist</a></li>
+                    <!-- <li><a href="schedule-timings.html">Schedule Timing</a></li> -->
+                    <!-- <li><a href="my-patients.html">Invoices</a></li> -->
+                </ul>
+            </li>	
+            <li class="has-submenu {% if 'Imaging' in page %}active{% elif 'Laboratory' in page %}active{% endif %}">
+                <a href="javascript:void(0)">Departments<i class="fas fa-chevron-down"></i></a>
+                <ul class="submenu">
+                    <li><a href="{% url 'lab' 'test' %}">Laboratory</a></li>
+                    <li><a href="{% url 'radiology' 'test' %}">Imaging</a></li>
+                    <li><a href="{% url 'reporting' 'test' 'report-history' %}">Reporting</a></li>
+                </ul>
+            </li>		
+            <li class="has-submenu {% if 'Pharmacy' in page %}active{% endif %}">
+                <a href="{% url 'pharm' 'dashboard' %}">Pharmacy<i class="fas fa-chevron-down"></i></a>
+                <ul class="submenu">
+                    <li><a href="{% url 'pharm' 'list' %}">Drugs List</a></li>
+                    <li><a href="{% url 'pharm' 'stocking' %}">Manage Drugs</a></li>
+                    <li><a href="{% url 'pharm' 'cash-form' %}">Prescriptions</a></li>
+                    <li><a href="javascript:void(0);" data-toggle="modal"
+                            data-target="#modal-inventory-rep">
+                            General Reporting
+                        </a>
+                    </li>
+                </ul>
+            </li>	
+            <li class="has-submenu {% if 'Requisition' in page %}active{% endif %}">
+                <a href="javascript:void(0)">Requisition<i class="fas fa-chevron-down"></i></a>
+                <ul class="submenu">
+                    <li><a href="{% url 'requisition' 'place-request' %}">Request & More</a></li>
+                    <li><a href="{% url 'requisition' 'pending-request' %}">Pending Request</a></li>
+                </ul>
+            </li>	
+            {% comment %} <li><a data-toggle="modal" href="#modal-opd-report">General Reporting</a></li> {% endcomment %}
+        </ul>
+    </div>
+    <ul class="nav header-navbar-rht">
+        {% comment %} <li class="nav-item contact-item">
+            <div class="header-contact-img">
+                <i class="far fa-hospital"></i>							
+            </div>
+            <div class="header-contact-detail">
+                <p class="contact-header">Contact Support</p>
+                <p class="contact-info-header"> +233 55 334 3092</p>
+            </div>
+        </li> {% endcomment %}
+        <!-- User Menu -->
+        <li class="nav-item dropdown has-arrow logged-item">
+            <a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown">
+                <span class="user-img">
+                    {% if user_info.Profile.url %}
+                    <img src="{{user_info.Profile.url}}" alt="User Image">
+                    {% else %}
+                    <img src="{% static 'admin/assets/img/profiles/avatar.png' %}" alt="User Image">
+                    {% endif %}              
+                </span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right">
+                <div class="user-header">
+                    <div class="avatar avatar-sm">
+                        {% if user_info.Profile.url %}
+                        <img src="{{user_info.Profile.url}}" alt="User Image">
+                        {% else %}
+                        <img src="{% static 'admin/assets/img/profiles/avatar.png' %}" alt="User Image">
+                        {% endif %}
+                    </div>
+                    <div class="user-text">
+                        <h6>{{request.user.username}}</h6>
+                        <p class="text-muted mb-0">{{user_info.Level}}</p>
+                    </div>
+                </div>
+                <a class="dropdown-item" href="{% url 'auth-staff' 'logout' %}">Logout</a>
+                <a class="dropdown-item" href="{% url 'auth-staff' 'profile' %}">Profile Settings</a>
+                {% if page != 'Profile Settings' %}
+                {% if request.user.is_superuser %}
+                <a class="dropdown-item" data-toggle="modal" href="#add_new_user">Add New User</a>
+                {% endif %}
+                {% endif %}
+            </div>
+        </li>
+        <!-- /User Menu -->
+    </ul>
+</nav>
+

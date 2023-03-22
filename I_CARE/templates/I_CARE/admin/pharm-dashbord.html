@@ -1,0 +1,198 @@
+{% extends 'I_CARE/admin/index.html' %}
+
+{% block extra-css %}
+{% load akwaboah_filter %}
+<!-- Datatables CSS -->
+<link rel="stylesheet" href="{% static 'admin/assets/plugins/datatables/datatables.min.css' %}">
+<style>
+    /* Make the image fully responsive */
+    .carousel-inner img {
+        width: 100%;
+        height: 100%;
+    }
+</style>
+{% endblock extra-css %}
+
+<!--dashboard-menu -->
+{% block dashboard-menu %}
+<nav class="dashboard-menu">
+	<ul>
+		<li class="active">
+			<a href="{% url 'pharm' 'dashboard' %}">
+				<i class="fas fa-columns"></i>
+				<span>Dashboard</span>
+			</a>
+		</li>
+		<li>
+            <a href="{% url 'pharm' 'list' %}">
+                <i class="fas fa-list"></i>
+                <span>Drugs List</span>
+            </a>
+        </li>
+		<li>
+			<a href="{% url 'pharm' 'stocking' %}">
+				<i class="fas fa-pills"></i>
+				<span>Manage Drugs</span>
+			</a>
+		</li>
+		<li>
+			<a href="{% url 'pharm' 'cash-form' %}">
+				<i class="fas fa-cart-plus"></i>
+				<span>Prescriptions</span>
+			</a>
+		</li>
+		<li>
+			<a  href="javascript:void(0);" data-color="red" data-toggle="modal"
+				data-target="#modal-inventory-rep">
+				<i class="fas fa-file-pdf-o"></i>
+				<span>General Reporting</span>
+			</a>
+		</li>
+	</ul>
+</nav>
+{% endblock dashboard-menu %}
+<!-- /dashboard-menu -->
+
+<!-- page content -->
+{% block content %}
+<div class="row">
+	<div class="col-md-12">
+		<div class="card dash-card">
+			<div class="card-body p-2">
+				<div class="row">
+					<div class="col-md-12 col-lg-4">
+						<div class="dash-widget">
+							<div class="circle-bar circle-bar3">
+								<div class="circle-graph3" data-percent="{{total_pres}}">
+									<img src="{% static 'web-assets/assets/img/icon-03.png' %}" class="img-fluid" alt="Patient">
+								</div>
+							</div>
+							<div class="dash-widget-info">
+								<h6>Prescriptions</h6>
+								<h3>{{total_pres}}</h3>
+								<p class="text-muted">{% now "D, M jS,Y" %}</p>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-md-12 col-lg-4">
+						<div class="dash-widget dct-border-rht">
+							<div class="circle-bar circle-bar1">
+								<div class="circle-graph1" data-percent="{{total_sales|divFILL}}">
+									<img src="{% static 'web-assets/assets/img/icon-01.png' %}" class="img-fluid" alt="patient">
+								</div>
+							</div>
+							<div class="dash-widget-info">
+								<h6>Today's Sales</h6>
+								<h3>{{total_sales}}</h3>
+								<p class="text-muted">{% now "jS F Y" %}</p>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-md-12 col-lg-4">
+						<div class="dash-widget dct-border-rht">
+							<div class="circle-bar circle-bar2">
+								<div class="circle-graph2" data-percent="{{balance|divFILL}}">
+									<img src="{% static 'web-assets/assets/img/icon-02.png' %}" class="img-fluid" alt="Patient">
+								</div>
+							</div>
+							<div class="dash-widget-info">
+								<h6>Sales On Credit</h6>
+								<h3>{{balance}}</h3>
+								<p class="text-muted">{% now "jS F Y" %}</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- Home Banner -->
+<div class="row clearfix">
+    <!-- With Captions -->
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card dash-card">
+			<div id="demo" class="carousel slide" data-ride="carousel">
+				<!-- Indicators -->
+				<ul class="carousel-indicators">
+					<li data-target="#demo" data-slide-to="0" class="active"></li>
+					<li data-target="#demo" data-slide-to="1"></li>
+					<li data-target="#demo" data-slide-to="2"></li>
+					<li data-target="#demo" data-slide-to="3"></li>
+					<li data-target="#demo" data-slide-to="4"></li>
+				</ul>
+				<!-- Wrapper for slides -->
+				<div class="carousel-inner" role="listbox">
+					<div class="carousel-item active">
+						<img src="{% static 'web-assets/assets/img/landing-page/feature-01.jpg' %}" />
+						<div class="carousel-caption">
+							<h3>WELCOME TO FRAMADA DENTAL CLINIC</h3>
+							<!-- <p>Welcome to FRAMADA DENTAL CLINIC, our practice resolves around our passion for high quality dentistry and the artistry skills that can improve a person’s health, smile, confidence and even their life</p> -->
+						</div>
+					</div>
+					<div class="carousel-item ">
+						<img src="{% static 'web-assets/assets/img/landing-page/feature-02.jpg' %}" />
+						<div class="carousel-caption">
+							<h3>OUR ATMOSPHERE</h3>
+							<p>At FRAMADA DENTAL CLINIC, we designed our office with our patients in mind by combining a calm atmosphere with the latest technology we have created a place where patients receive the level of dental care they need and deserve</p>
+						</div>
+					</div>
+					<div class="carousel-item">
+						<img src="{% static 'web-assets/assets/img/landing-page/feature-03.jpg' %}" />
+						<div class="carousel-caption">
+							<h3>OUR PHILOSOPHY</h3>
+							<p>Because oral health is integral to overall health we strive to provide comprehensive lifetime care to our patients and we will work with you to develop a treatment plan that meets your immediate needs and establish preventive dental care that ensures your smile will last a life time</p>
+						</div>
+					</div>
+					<div class="carousel-item">
+						<img src="{% static 'web-assets/assets/img/landing-page/feature-04.jpg' %}" />
+						<div class="carousel-caption">
+						</div>
+					</div>
+					<div class="carousel-item">
+						<img src="{% static 'web-assets/assets/img/landing-page/feature-05.jpg' %}" />
+						<div class="carousel-caption">
+							
+						</div>
+					</div>
+				</div>
+				<!-- Controls -->
+				<!-- Left and right controls -->
+				<a class="carousel-control-prev" href="#demo" data-slide="prev">
+					<span class="carousel-control-prev-icon"></span>
+				</a>
+				<a class="carousel-control-next" href="#demo" data-slide="next">
+					<span class="carousel-control-next-icon"></span>
+				</a>
+			</div>
+        </div>
+    </div>
+    <!-- #END# With Captions -->
+</div>
+<!-- /Home Banner -->
+{% endblock content %}
+<!-- /page content -->
+
+{% block extra-js %}
+
+ 
+<!-- Sticky Sidebar JS -->
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/ResizeSensor.js' %}"></script>
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/theia-sticky-sidebar.js' %}"></script>
+
+<!-- Circle Progress JS -->
+<script src="{% static 'web-assets/assets/js/circle-progress.min.js' %}"></script>
+ 
+<!-- jquery-datatable.js -->
+<script src="{% static 'admin/assets/js/pages/tables/jquery-datatable.js' %}"></script>
+
+<!-- Custom JS -->
+<script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+  
+{% endblock extra-js %}
+
+</body>
+
+</html>

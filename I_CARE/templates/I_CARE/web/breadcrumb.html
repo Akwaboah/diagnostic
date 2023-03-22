@@ -1,0 +1,29 @@
+<div class="breadcrumb-bar">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="col-md-12 col-12">
+                    <div class="row justify-content-between footer-contact-info">
+                        <nav aria-label="breadcrumb" class="page-breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="d-lg-block d-md-block d-none"><a href="javascript:void(0);"><i
+                                            class="fas fa-map-marker-alt"></i>&nbsp;{{bus_info.GPS_Address}}</a>
+                                </li>
+                                <li><a
+                                        href="tel:{{bus_info.Gen_Tel}}">&nbsp;&nbsp;<i class="fas fa-phone-alt"></i>&nbsp;{{bus_info.Gen_Tel}}</a>
+                                </li>
+                                <li class="d-lg-block d-md-block d-none"><a
+                                        href="mailto:{{bus_info.Email}}">&nbsp;&nbsp;<i
+                                            class="fas fa-envelope"></i>&nbsp;{{bus_info.Email}}</a>
+                                </li>
+                            </ol>
+                        </nav>
+                        <nav aria-label="breadcrumb" class="page-breadcrumb d-xl-block d-md-block d-none">
+                            <a class="btn-primary btn-sm" href="{% url 'web-links' 'our-services' %}">Book Appointment</a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

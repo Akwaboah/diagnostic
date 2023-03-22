@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta http-equiv="Content-Language" content="en">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no , shrink-to-fit=no"
+        name="viewport">
+    <meta charset="UTF-8">
+    <title>{{bus_info.Bus_Name}}</title>
+
+    <!-- Favicons -->
+    <link href="{% static 'web-assets/assets/img/favicon.ico' %}" rel="icon">
+ 
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap.min.css' %}">
+
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 0cm;
+            height: 100%;
+        }
+
+        @media print {
+            body {
+                size: A4 portrait;
+                margin: 0cm;
+                height: 100%;
+            }
+        }
+
+        body {
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        .info-area {
+            margin-top: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<div class="body">
+
+    <div class="container-fluid">
+
+        <div class="info-area col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <h6 style="font-size: x-large;font-weight: bold;margin: 0px;">{{bus_info.Bus_Name}}</h6>
+            <h6  style="font-size: medium;margin: 0px;">{{bus_info.Postal}}</h6>
+            <h6  style="font-size: medium;margin: 0px;">Tel:{{bus_info.App_Tel}},{{bus_info.Gen_Tel}}</h6>
+        </div> 
+
+        <div class="row clearfix" style="border-top:solid;border-width:thin;">
+            <div class="info-area col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <h4>{{stocks_type}}</h4>
+            </div>
+        </div>
+
+        <div class="row clearfix">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>NO</th>
+                        <th>ITEM NAME</th>
+                        <th class="text-center">QTY</th>
+                        <th class="text-center">RETAIL</th>
+                        <th class="text-center">WHOLESALE</th>
+                        <!-- <th>SUPPLIER</th> -->
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for val in items %}
+                    <tr>
+                        <td>{{forloop.counter}}</td>
+                        <td>{{val.Product_Name}}</td>
+                        <td class="text-center">{{val.Quantity}}</td>
+                        <td class="text-center">{{val.Retail}}</td>
+                        <td class="text-center">{{val.Whole_Sale}}</td>
+                        <!-- <th>{{val.Suppliers}}</th> -->
+                    </tr>
+                    {% endfor %}
+                    <tfoot>
+                        <td colspan="3"></td>
+                        <th class="text-center">{{total_ret}}¢</th>
+                        <th class="text-center">{{total_whosales}}¢</th>
+                    </tfoot>
+                </tbody>
+            </table>
+        </div>
+         
+    </div>
+
+    <!-- Bootstrap Core Js -->
+    <script src="{% static 'sms_assets/plugins/bootstrap/js/bootstrap.js' %}"></script>
+
+    <script type="text/javascript">
+        window.addEventListener("load", window.print());
+    </script>
+
+</div>
+</html>

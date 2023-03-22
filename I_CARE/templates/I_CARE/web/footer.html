@@ -1,0 +1,135 @@
+<!-- Footer -->
+<footer class="footer">
+
+    <!-- Footer Top -->
+    {% comment %} <div class="footer-top">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-3 col-md-6">
+
+                    <!-- Footer Widget -->
+                    <div class="footer-widget footer-about">
+                        <div class="footer-logo">
+                            <img src="{{bus_info.Footer_Logo.url}}" alt="logo">
+                        </div>
+                        <div class="footer-about-content">
+                            <p>Our radiology team is ready to help you achieve and maintain the smile you've always dreamed of having.
+                                Call us today at {{bus_info.App_Tel}} to schedule an appointment for your comprehensive " " care.
+                                </p>
+                            <div class="social-icon">
+                                <ul>
+                                    <li>
+                                        <a href="{{bus_info.Facebook}}" target="_blank"><i class="fab fa-facebook-f"></i> </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{bus_info.Twitter}}" target="_blank"><i class="fab fa-twitter"></i> </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{bus_info.Linkedin}}" target="_blank"><i class="fab fa-linkedin-in"></i></a>
+                                    </li>
+                                    <li>
+                                        <a href="{{bus_info.Instagram}}" target="_blank"><i class="fab fa-instagram"></i></a>
+                                    </li>
+                                    <li>
+                                        <a href="{{bus_info.Youtube}}" target="_blank"><i class="fab fa-youtube-square"></i> </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /Footer Widget -->
+
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+
+                    <!-- Footer Widget -->
+                     <div class="footer-widget footer-menu">
+                        <h2 class="footer-title">For Patients</h2>
+                        <ul>
+                            <li><a href="{% url 'auth-patient' 'login' %}"><i class="fas fa-angle-double-right"></i>Login</a></li>
+                            <li><a href="javascript:void(0);"><i class="fas fa-angle-double-right"></i>Chat</a></li>
+                            <li><a href="javascript:void(0);"><i class="fas fa-angle-double-right"></i>Booking</a></li>
+                            <li><a href="javascript:void(0);"><i class="fas fa-angle-double-right"></i>Patient Dashboard</a></li>
+                        </ul>
+                    </div>
+                    <!-- /Footer Widget -->
+
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+
+                    <!-- Footer Widget -->
+                    <div class="footer-widget footer-menu">
+                        <h2 class="footer-title">For Staff</h2>
+                        <ul>
+                            <li><a href="{% url 'auth-staff' 'login' %}"><i class="fas fa-angle-double-right"></i> Login</a></li>
+                        </ul>
+                    </div>
+                    <!-- /Footer Widget -->
+
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+
+                    <!-- Footer Widget -->
+                    <div class="footer-widget footer-contact">
+                        <h2 class="footer-title">Contact Us</h2>
+                        <div class="footer-contact-info">
+                            <div class="footer-address">
+                                <span><i class="fas fa-map-marker-alt"></i></span>
+                                <p>{{bus_info.GPS_Address}}<br>{{bus_info.City}}</p>
+                            </div>
+                            <p>
+                                <i class="fas fa-phone-alt"></i>
+                                {{bus_info.Gen_Tel}}
+                            </p>
+                            <p class="mb-0">
+                                <i class="fas fa-envelope"></i>
+                                {{bus_info.Email}}
+                            </p>
+                        </div>
+                    </div>
+                    <!-- /Footer Widget -->
+
+                </div>
+            </div>
+        </div>
+    </div>  {% endcomment %}
+   
+    <!-- /Footer Top -->
+
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+        <div class="container-fluid">
+
+            <!-- Copyright -->
+            <div class="copyright">
+                <div class="row">
+                    <div class="col-md-6 col-lg-6">
+                        <div class="copyright-text">
+                            <p class="mb-0"><a href="javascript:void(0);">developed by: Rootmetrics Company LTD.</a></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-6">
+
+                        <!-- Copyright Menu -->
+                        <div class="copyright-menu">
+                            <ul class="policy-menu">
+                                <li><a href="tel:+233553343092">Tel: +233 55 334 3092</a></li>
+                                <li><a href="tel:+233546249443">+233 24 483 1161</a></li>
+                            </ul>
+                        </div>
+                        <!-- /Copyright Menu -->
+
+                    </div>
+                </div>
+            </div>
+            <!-- /Copyright -->
+
+        </div>
+    </div>
+    <!-- /Footer Bottom -->
+
+</footer>
+<!-- /Footer -->

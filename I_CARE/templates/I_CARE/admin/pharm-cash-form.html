@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="utf-8">
+    <title>{{bus_info.Bus_Name}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+
+    <!-- Favicons -->
+    <link href="{% static 'web-assets/assets/img/favicon.ico' %}" rel="icon">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap.min.css' %}">
+
+    <!-- Bootstrap DatePicker Css -->
+    <link href="{% static 'admin/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}"
+        rel="stylesheet" />
+
+    <!-- Sweet Alert  Animation Css -->
+    <link href="{% static 'admin/assets/plugins/animate-css/animate.css' %}" rel="stylesheet" />
+
+    <!-- Sweet Alert Css -->
+    <link href="{% static 'admin/assets/plugins/sweetalert/sweetalert.css' %}" rel="stylesheet" />
+
+    <!-- Fontawesome CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'web-assets/assets/plugins/fontawesome/css/all.min.css' %}">
+
+    <!-- Datatables CSS -->
+    <link rel="stylesheet" href="{% static 'admin/assets/plugins/datatables/datatables.min.css' %}">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'web-assets/assets/css/style.css' %}">
+
+    <!-- Table Length CSS -->
+    <link rel="stylesheet" href="{% static 'admin/assets/css/dr-consulting-tables.css' %}">
+
+    <!-- Select2 CSS -->
+    <link rel="stylesheet" href="{% static 'admin/assets/css/select2.min.css' %}">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+			<script src="assets/js/html5shiv.min.js"></script>
+			<script src="assets/js/respond.min.js"></script>
+		<![endif]-->
+    <!-- <style>
+        /* Make the image fully responsive */
+        .carousel-inner img {
+            width: 100%;
+            height: 100%;
+        }
+    </style> -->
+    <style>/* Set !important rule to override default colors */
+        .Tab_active {
+          background: gold !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <!-- Include the nav -->
+        {% include 'I_CARE/admin/main-nav-staff.html' %}
+    </header>
+    <!-- /Header -->
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-12 col-12">
+                    <nav aria-label="breadcrumb" class="page-breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'home-page' %}">Home</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{{page}}</li>
+                        </ol>
+                    </nav>
+                    <h2 class="breadcrumb-title">{{page}}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Breadcrumb -->
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+
+        <!-- Page Content -->
+        <div class="content">
+            <div class="col-md-12 col-lg-12 col-xl-12">
+                <div class="row">
+                    <div class="col-lg-5">
+                        <div class="card card-table mb-5">
+                            <div class="card-header p-0">
+                                <button id="tabCount" class="nav-link active bg-warning"><span
+                                    style="font-weight: bolder; font-size: 16px">{{incoming_pats}}</span>
+                                </button>
+                            </div>
+                            <div class="card-body p-3">
+                                <div class="table-responsive">
+                                    <table id="patientsTable" class="table table-bordered table-hover mb-0"
+                                        style="cursor: pointer;">
+                                        <thead>
+                                            <tr class="tb_r">
+                                                <th>Patient Name</th>
+                                                <th>Gender</th>
+                                                <th>Age</th>
+                                                <!-- <th>Room</th> -->
+                                                <th>Balance</th>
+                                                <!-- <th></th> -->
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="card">
+                            <div class="card-body" style="margin: 0px; padding: 5px;">
+                                <div class="table-responsive">
+                                    <!-- dataTable js-basic-example -->
+                                    <table id="drugsListTable"
+                                        class="table table-bordered table-striped table-hover customTable">
+                                        <thead>
+                                            <tr>
+                                                <th hidden>ID</th>
+                                                <th>DRUG NAME</th>
+                                                <th>DEPARTMENT</th>
+                                                <th>QTY</th>
+                                                <th>RETAIL PRICE</th>
+                                                <th hidden>W. PRICE</th>
+                                                <th>VAT</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for val in stocks_list %}
+                                            <tr>
+                                                <td hidden>{{val.Product_Id}}</td>
+                                                <td>{{val.Product_Name}}</td>
+                                                <td class="text-center">{{val.Department}}</td>
+                                                <td class="text-center">{{val.Quantity}}</td>
+                                                <td class="text-center">{{val.Retail}}</td>
+                                                <td hidden>{{val.Whole_Sale}}</td>
+                                                <td class="text-center">{{val.Vat}}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-5">
+                        <div class="card">
+                            <div class="header" style="margin: 0px; padding: 2px;"><label>ITEM DETAILS</label></div>
+                            <div class="card-body" style="margin: 0px; padding: 5px;">
+                                <form id="addToCartForm"> 
+                                    <div class="col-lg-12" hidden>
+                                        <div class="form-group" >
+                                            <div for="product_id" class="col-sm-3 control-label">
+                                                <div class="row">ID:</div>
+                                            </div>
+                                            <div class="col-sm-9">
+                                                <div class="form-line">
+                                                    <input type="text" class="form-control text-center" id="product_id"
+                                                        name="product_id" placeholder="Product ID" required readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <div class="col-lg-8">
+                                                <div class="col-sm-12">
+                                                    <div for="product_name" class="col-sm-12 control-label">
+                                                        <div class="row">ITEM NAME:</div>
+                                                    </div>
+                                                    <div class="form-line">
+                                                        <input type="text" class="form-control form-control-sm text-center" id="product_name"
+                                                            name="product_name" placeholder="Product/Item Name" required
+                                                            readonly>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-4">
+                                                <div class="col-sm-12">
+                                                    <div for="product_price_unit" class="col-sm-12 control-label">
+                                                        <div class="row">QUANTITY LEFT:</div>
+                                                    </div>
+                                                    <div class="form-line">
+                                                        <input type="text" class="form-control form-control-sm text-center"
+                                                            id="product_qnt_left" name="product_qnt_left" placeholder="0"
+                                                            required readonly>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="col-sm-12">
+                                                    <div for="product_qnt_left" class="col-sm-12 control-label">
+                                                        <div class="row">UNIT PRICE:</div>
+                                                    </div>
+                                                    <div class="form-line">
+                                                        <input type="text" class="form-control form-control-sm text-center"
+                                                        id="product_price_unit" name="product_price_unit"
+                                                        placeholder="0.00" required readonly>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="col-sm-12">
+                                                    <div for="product_qnt_left" class="col-sm-12 control-label">
+                                                        <div class="row">PRICE TAG:</div>
+                                                    </div>
+                                                    <div class="form-line">
+                                                        <select class="form-control form-control-sm" onchange="calTotal();"
+                                                            name="purchase_type" id="price_type">
+                                                            <option value="Retail Price" selected>Retail Price</option>
+                                                            <!-- <option value="Wholesale Price">Wholesale Price</option> -->
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="col-sm-12">
+                                                    <div for="product_name" class="col-sm-12 control-label">
+                                                        <div class="row">QUANTITY NEEDED:</div>
+                                                    </div>
+                                                    <div class="form-line">
+                                                        <input type="number" min="1" onfocus="this.value=''" required
+                                                            onchange="calTotal();" onkeyup="calTotal();"
+                                                            class="form-control form-control-sm text-center" name="qnt_ordered" id="qnt_ordered"
+                                                            placeholder="0">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="col-sm-12">
+                                                    <div for="product_name" class="col-sm-12 control-label">
+                                                        <div class="row">TOTAL:</div>
+                                                    </div>
+                                                    <div class="form-line">
+                                                        <div class="form-line">
+                                                            <input type="number" class="form-control form-control-sm text-center" id="total_price"
+                                                                name="total_price" placeholder="0.00" required readonly>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr style="margin: 6px;">
+                                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                        <button class="btn btn-primary" type="submit">ADD TO
+                                            CART</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="card">
+                            <div class="card-body" style="margin: 5px; padding: 5px;">
+                                <div class="cart-table-wrapper">
+                                    <!-- dataTable js-basic-example -->
+                                    <table id="cartTable"
+                                        class="table table-bordered table-striped table-hover customTable">
+                                        <thead>
+                                            <tr>
+                                                <th>DRUG NAME</th>
+                                                <th>QUANTITY</th>
+                                                <th>UNIT PRICE</th>
+                                                <th>TOTAL COST</th>
+                                                <th>TOTAL PAID</th>
+                                                <th>DEL</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <form id="confirmSales">
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                                                <div class="form-line">
+                                                    <input type="text" class="form-control-sm form-control text-center"
+                                                        id="sales_total" placeholder="Total Cost" required readonly>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                                                <div class="form-line">
+                                                    <input type="text" class="form-control-sm form-control text-center" readonly required step="any"
+                                                    id="total_paid" onchange="calcSummary();" onkeyup="calcSummary();" placeholder="Total Paid" autocomplete="off">
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                                                <div class="form-line">
+                                                    <input type="text" class="form-control-sm form-control text-center" onfocus="this.value=''" required step="any"
+                                                    id="sales_paid" onchange="calcSummary();" onkeyup="calcSummary();" placeholder="Payment Received" autocomplete="off">
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-3">
+                                                <div class="form-line">
+                                                    <input type="text" class="form-control-sm form-control text-center"
+                                                    id="sales_balance" placeholder="Balance" required readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr style="margin: 7px;">   
+                                        <div class="row">
+                                            <div class="col-lg-4 col-md-4 col-sm-4 col-xs-3">
+                                                <div class="form-line">
+                                                    <input type="text" class="form-control-sm form-control text-center" 
+                                                    id="customer_name" placeholder="Patient/Customer Name" readonly autocomplete="off">
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                                                <div class="form-line">
+                                                    <select class="form-control-sm form-control" required id="payment_type">
+                                                        <option selected value="">Paid As ?</option>
+                                                        <option value="CASH">CASH</option>
+                                                        <option value="CHEQUE">CHEQUE</option>
+                                                        <option value="MOMO">MOMO</option>
+                                                        <option value="BANK">BANK</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                                                <div class="form-line">
+                                                    <input type="text" class="form-control-sm form-control text-center"
+                                                    id="bank_det" placeholder="Bank Details">
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-3">
+                                                <button class="btn btn-sm btn-primary"  type="submit">CONFIRM</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /Page Content -->
+
+        <!-- Footer -->
+        {% include 'I_CARE/web/footer.html' %}
+        <!-- /Footer -->
+
+    </div>
+    <!-- /Main Wrapper -->
+ 
+    <!-- jQuery -->
+    <script src="{% static 'web-assets/assets/js/jquery.min.js' %}"></script>
+
+    <!-- Bootstrap Datepicker Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <!-- Date Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/custom-date.js' %}"></script>
+
+    <!-- Bootstrap Core JS -->
+    <script src="{% static 'web-assets/assets/js/popper.min.js' %}"></script>
+    <script src="{% static 'web-assets/assets/js/bootstrap.min.js' %}"></script>
+
+    <!-- Bootstrap Notify Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/bootstrap-notify/bootstrap-notify.js' %}"></script>
+
+    <!-- Sweet Alert Plugin Js -->
+    <script src="{% static 'admin/assets/plugins/sweetalert/sweetalert.min.js' %}"></script>
+
+    <!-- Slick JS -->
+    <!-- <script src="{% static 'web-assets/assets/js/slick.js' %}"></script> -->
+
+    <!-- Select2 JS -->
+    <script src="{% static 'admin/assets/js/select2.min.js' %}"></script>
+
+    <!-- Datatables JS -->
+    <script src="{% static 'admin/assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'admin/assets/plugins/datatables/datatables.min.js' %}"></script>
+
+    <!-- jquery-datatable.js -->
+    <script src="{% static 'admin/assets/js/pages/tables/jquery-datatable.js' %}"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'admin/assets/js/script.js' %}"></script>
+
+    <!-- Mask JS -->
+    <script src="{% static 'admin/assets/js/jquery.maskedinput.min.js' %}"></script>
+    <script src="{% static 'admin/assets/js/mask.js' %}"></script>
+
+    <!-- Sweet Notification Trigger-->
+    <script src="{% static 'admin/assets/plugins/sweetalert/notifications.js' %}"></script>
+
+    <script>
+
+        let drugsListTable;
+        let patientsTable;
+        let drugsToSell;
+        let cartTable;
+
+        //  
+        let Patient_Id = "None";  
+        let CartList=[]
+        // 
+        let totalCost=0;
+        let totalPaid=0;
+
+        $(document).ready(function () {
+            
+            patientsTable=$('#patientsTable').DataTable({
+                processing: true,
+                serverSide: false,
+                ajax: {
+                    url: "{% url 'web-links' 'patients-data' %}",
+                    type: "GET",
+                    dataType: 'json',
+                    data:{
+                        load:'pharmacy'
+                    },
+                    dataSrc: "waiting_list",
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    complete: function(data) {
+                        json_obj=(JSON.parse(data.responseText))
+                        //re-instantiat all the histories records
+                        drugsToSell = json_obj.prescHist;
+                        document.getElementById('tabCount').innerHTML=json_obj.total_incoming;
+                    },
+                },
+                columns: [
+                    {"render": function (data, type, JsonResultRow, meta) {
+                            if (String(JsonResultRow.Profile).includes('avatar')) {
+                                return `<h2 class="table-avatar">
+                                        <a href="${JsonResultRow.Profile}" class="avatar avatar-sm mr-2">
+                                            <img class="avatar-img rounded-circle"  src="${JsonResultRow.Profile}" alt="User Image">
+                                        </a>
+                                        <a href="javascript:void(0);">${JsonResultRow.Fullname}<span>#${JsonResultRow.Patient_ID}</span></a>
+                                        </h2>`
+                            } else {
+                                return `<h2 class="table-avatar">
+                                        <a href="/media/${JsonResultRow.Profile}" class="avatar avatar-sm mr-2">
+                                            <img class="avatar-img rounded-circle"  src="/media/${JsonResultRow.Profile}" alt="User Image">
+                                        </a>
+                                        <a href="javascript:void(0);">${JsonResultRow.Fullname}<span>#${JsonResultRow.Patient_ID}</span></a>
+                                        </h2>`
+                            }
+                        }},
+                    // { "data": "Patient_Type" ,"orderable" : true },
+                    { "data": "Gender"},
+                    { "data": "Age"},
+                    {"data": "Balance" }],
+                paging: true,
+                ordering: true,
+                info: false,
+                searching: true,
+                bLengthChange: false,
+                pageLength: 6,
+                lengthMenu: [[6, 12, 18, -1], [6, 12, 18, "All"]],
+            });
+            // refresh patientsTable every 12 seconds to load new data
+            setInterval( function () {
+                patientsTable.ajax.reload(function(json){
+                    // add background color to the table if Pat Id was selected
+                    patientsTable.rows( function (idx, data, node ) {             
+                        if(data.Patient_ID === Patient_Id){
+                            // console.log(`Matched Id: ${Patient_Id}- Table ${data.Pat_Code}`)
+                            $(node).find("td").each(function(i) {
+                                //toggle between adding/removing the 'active' class
+                                $(this).addClass('Tab_active');
+                            });        
+                        }
+                        return false;
+                    });
+                },false ); // user paging is not reset on reload
+            }, 12000); // reload every 12 sec
+
+            // add search to customTable
+            drugsListTable= $('#drugsListTable').DataTable({
+                paging: true,
+                ordering: false,
+                info: false,
+                searching: true,
+                bLengthChange: false,
+                pageLength: 8,
+                lengthMenu: [[8, 16, 32, -1], [8, 16, 32, "All"]],
+            });
+ 
+            cartTable = $('#cartTable').DataTable({
+                paging: true,
+                ordering: false,
+                info: false,
+                searching: false,
+                bLengthChange: false,
+                pageLength: 5,
+                lengthMenu: [[5, 10, 15, -1], [5, 10, 15, "All"]],
+            });
+        });
+ 
+        // get table click    
+        $('#patientsTable tbody').on('click', 'tr', function() {
+            let data=patientsTable.row(this).data();
+            Patient_Id = data.Patient_ID;
+            CartList=[]
+            $('#customer_name').val(data.Fullname);
+            drugsToSell.forEach((data, index) => {
+                if (Patient_Id == data.Patient_ID) {
+                    // Build CartList
+                    CartList.push(JSON.stringify({'ID':data.Product_Id,'Drug_Name':data.Drug_Name,'Quantity':data.Quantity,
+                                            'Retail':data.Price,'Cost':data.Cost,'Amount_Paid':data.Amount_Paid,'Journal_ID':data.Journal_ID}))
+                }
+            });
+            populateCartTable();
+            // remove background color from the rows table
+            patientsTable.rows().eq(0).each( function ( index ) {
+                $(this).find("td").each(function(i) {
+                    //toggle between adding/removing the 'active' class
+                    $(this).removeClass('Tab_active');
+                });
+            } );
+            
+            // add background clolor to the selected row
+            $(this).find("td").each(function(i) {
+                //toggle between adding/removing the 'active' class
+                $(this).addClass('Tab_active');
+            });
+            
+        })
+        
+        $('#drugsListTable tbody').on('click', 'tr', function() {
+            let data=drugsListTable.row(this).data();
+            $('#product_id').val(data[0]);
+            $('#product_name').val(data[1]);
+            $('#product_qnt_left').val(data[3]);
+            $('#product_price_unit').val(data[4]);
+          
+            // remove background color from the rows table
+            drugsListTable.rows().eq(0).each( function ( index ) {
+                $(this).find("td").each(function(i,d) {
+                    //toggle between adding/removing the 'active' class
+                    $(this).removeClass('Tab_active');
+                });
+            } );
+            // add background clolor to the selected row
+            $(this).find("td").each(function(i) {
+                //toggle between adding/removing the 'active' class
+                $(this).addClass('Tab_active');
+            });
+             
+        })
+        
+        // end of table click
+
+        function populateCartTable() {
+            cartTable.clear().draw();
+            totalCost=0;
+            totalPaid=0;
+            CartList.forEach((element,index) => {
+                let data=JSON.parse(element)
+                cartTable.row.add([data.Drug_Name, data.Quantity, data.Retail, data.Cost, data.Amount_Paid, "<a class='btn btn-sm  text-white' href='javascript:void(0)' role='button' onclick=removeCartItem(" + "'" + "" + data.ID + "" + "'" + "); aria-haspopup='false' aria-expanded='false'> <i class='fa fa-trash text-danger'></i></a>"]).draw(false);
+                totalCost+=Number(data.Cost);
+                totalPaid+=Number(data.Amount_Paid);
+            });
+            
+            $('#sales_total').val(totalCost);
+            $('#total_paid').val(totalPaid);
+            
+            calcSummary();
+        }
+
+        function removeCartItem(drug_id) {
+            CartList.forEach((element,index) => {
+                let data=JSON.parse(element)
+                if (data.ID==drug_id) {
+                   delete CartList[index]
+                }
+            });
+            populateCartTable()
+        }
+   
+        function calTotal() {
+            // re-calculate the total price
+            var totalItemCost=parseFloat(0);
+            var price_unit = Number($("#product_price_unit").val());
+            var qnt_left = Number($("#product_qnt_left").val());
+            var qnt_ordered = Number($("#qnt_ordered").val());
+            if (qnt_ordered > 0) {
+                if (qnt_ordered <= qnt_left) {
+                    totalItemCost= parseFloat(price_unit) * parseFloat(qnt_ordered);
+                }  
+            } 
+            $("#total_price").val(totalItemCost.toFixed(2))
+        }
+
+        function calcSummary() {
+            let sales_paid=Number($('#sales_paid').val()) + Number($('#total_paid').val());
+            let sales_balance=parseFloat(totalCost)-parseFloat(sales_paid);
+            if (sales_balance>0) {
+                $('#sales_balance').val(sales_balance);
+            }else{
+                $('#sales_balance').val(0.00);
+            }
+            
+        }
+        
+        $('#addToCartForm').on('submit', function (e) {
+            e.preventDefault();
+            const product_name = document.getElementById('product_name').value;
+            const cost = document.querySelector('input[id=total_price]');
+            if (cost.value == 0 || cost.value == '') {
+                cost.setCustomValidity('');
+                return
+            }
+
+            let itemID=$('#product_id').val();
+            let mapItems = {
+                'ID':itemID,
+                'Drug_Name':$('#product_name').val(),
+                'Quantity':$('#qnt_ordered').val(),
+                'Retail':$('#product_price_unit').val(),
+                'Cost':$('#total_price').val(),
+                'Amount_Paid':0.00,
+                'Journal_ID':'None'}
+            let msgNote = product_name + " added to prescription list";
+            //remove if item already exist then add it back
+            CartList.forEach((element,index) => {
+                let data=JSON.parse(element)
+                if (data.ID === itemID) {
+                    delete CartList[index];
+                    msgNote = product_name + " updated in your list items";
+                }
+            });
+            // add json data to cartItems
+            CartList.push(JSON.stringify(mapItems))
+            populateCartTable()
+            window.parent.showNotification(null, msgNote, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+
+            $('#addToCartForm')[0].reset()
+
+        });
+
+        $('#confirmSales').on('submit', function (e) {
+            e.preventDefault();
+            if (CartList.length<1) {
+                window.parent.showNotification(null, 'Please shop to cart and try again.', 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                return
+            }
+            
+            if (Patient_Id=='None') {
+                $("#customer_name").val('General Patient')
+            }
+            let cus_name=$("#customer_name").val()
+
+            let amount_paid=$('#sales_paid').val();
+            let balRem=$("#sales_balance").val();
+
+            swal({
+                title: "Are you sure?",
+                text: `To confirm a sales of ${totalCost} GH¢ and the sum of ${amount_paid} GH¢ Being Paid with a Balance of ${balRem} GH¢ remaining for ${cus_name}?`,
+                // imageUrl: '',
+                showCancelButton: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Yes, complete",
+                cancelButtonText: "No, review",
+                closeOnConfirm: false,
+                closeOnCancel: true
+            }, function (isConfirm) {
+                if (isConfirm) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{% url 'pharm' 'sales-form' %}",
+                        data: {
+                            Items: CartList,
+                            Cost:totalCost,
+                            Amount_Paid: amount_paid,
+                            Balance: balRem,
+                            Office_Payment: totalPaid,
+                            Customer: cus_name,
+                            Patient_Id: Patient_Id,
+                            Pay_Mode: $("#payment_type").val(),
+                            Bank_Details: $("#bank_det").val(),
+                            csrfmiddlewaretoken: '{{ csrf_token }}',
+                            dataType: "json",
+                        },
+                         
+                        success: function (data) {
+                            window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                            swal.close();
+                            // clear the table 
+                            cartTable.clear().draw();
+                            CartList=[];
+                            Patient_Id="None"
+                            $('#sales_total').val("").change()
+                            $("#sales_paid").val("").change()
+                            $("#sales_balance").val("").change()
+                            $("#customer_name").val("").change()
+                            $("#payment_type").val("").change()
+                            $("#bank_det").val("").change()
+                            // window.location="/receipt/sales/"+data.customer_id;
+                        },
+                        
+                        error: function (data) {
+                            window.parent.showNotification(null, "Error occured whiles processing payment", 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                            swal.close();
+                        }
+                    
+                    });
+                }
+            });
+        });
+        
+    </script>
+
+    <!-- Messages Handler -->
+    {% for message in messages %} {% if message.tags == "info" %}
+    <script>
+        var text = '{{ message}}'
+        //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+        window.parent.showNotification(null, text, 'top', 'left', 'animated bounceIn', 'animated bounceOut');
+    </script>
+    {% elif message.tags == "success" %}
+    <script>
+        var text = '{{ message}}'
+        //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
+        window.parent.showNotification(null, text, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+    </script>
+    {% endif %} {% endfor %}
+
+</body>
+
+</html>
