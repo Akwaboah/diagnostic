@@ -1,6 +1,6 @@
 from django.http import HttpResponse
 from django.shortcuts import redirect
-from datetime import datetime
+from django.contrib import messages
 # Django password hashing and validating imports 
 from django.contrib.auth.hashers import check_password
  
@@ -34,14 +34,11 @@ def class_allow_users(allowed_levels=[]):
     def decorator(view_func):
         def wrapper_fun(request, *args, **kwargs):
             if request.user.groups.exists():
-                # doctors
                 if request.user.groups.filter(name__in=allowed_levels):
                     return view_func(request, *args, **kwargs)
-                # opd
-                elif request.user.groups.filter(name__in=['Security']):
-                    return redirect('/info/no-response')
                 else:
-                    return redirect('/opd/dashboard')
+                    messages.success(request, "Access denied for this page.")
+                    return redirect(request.META.get('HTTP_REFERER'))
             else:
                 return HttpResponse('No User Account Level Specified')
         return wrapper_fun

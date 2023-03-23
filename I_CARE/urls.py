@@ -8,7 +8,7 @@ urlpatterns = [
      path(route='opd/<str:page>',view=views.OPD.as_view(),name='opd'),
      path(route='nursing/<str:page>',view=views.Payment_Department.as_view(),name='nursing'),
      path(route='lab/<str:page>',view=views.Laboratory.as_view(),name='lab'),
-     path(route='radiology/<str:page>',view=views.Radiology.as_view(),name='radiology'),
+     path(route='radiology/<str:page>',view=views.Imaging.as_view(),name='radiology'),
      path(route='doc/<str:page>',view=views.Doctors.as_view(),name='doc'),
      path(route='pharm/<str:page>',view=views.Pharmacy.as_view(),name='pharm'),
      path(route='reporting/<str:page>/<str:type>',view=views.General_Reports.as_view(),name='reporting'),

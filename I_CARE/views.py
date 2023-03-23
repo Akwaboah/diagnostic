@@ -22,7 +22,7 @@ from django.db.models import F,Value,CharField,Sum,ExpressionWrapper,DecimalFiel
 from I_CARE.models import Business_Info, Patients, User_Details,Patients_Checker,Vitals,\
     Appoitment,Message,Procedures,Presenting_Complaints,Journal_History,Treatment_Alert,\
     Birthday_Wishes,Stocks_Department,Supplier,Stocks,New_Stocks,Stocks_Checker,Drugs_Prescriptions,\
-    Insurance,Referring_Facilities,Requisition,Approval_Authority,Journal_History_Checker
+    Insurance,Referring_Facilities,Requisition,Approval_Authority,Journal_History_Checker,Payment_Journal
 
 from I_CARE.forms import Patients_Form,Staff_Form,Stocks_Form
 from I_CARE.decorators import class_allow_users, unauthenticated_staffs
@@ -137,16 +137,14 @@ class SMS:
             # raise SystemExit(e)
             pass
  
-    def getWLM_MSG(self,first_name,patient_id):
+    def getWLM_MSG(self,first_name):
         # time_sent=str(datetime.now().strftime("%H:%M:%S"))
         # date_sent=str(datetime.now().strftime("%Y-%m-%d"))
-        msg="Hi %s, welcome to %s. We are committed in providing our patients the exceptional dental care, a relaxing environment, patient education and preventive dentistry expertise they deserve by using the latest dental technology and cosmetic dentistry procedures. Our goal is to partner with our patients to help them achieve and maintain excellent oral health throughout their lifetime. Discover more on our website at Link:%s with your Patient ID:%s Thank You."%(first_name,self.bus_info.Bus_Name,self.bus_info.Website,patient_id)
+        msg="Hi %s, welcome to %s. We are committed in providing our patients the exceptional diagnosis services, a relaxing environment, patient education and expertise they deserve by using the latest diagnosis technology and procedures. Our goal is to partner with our patients to help them achieve and maintain excellent health throughout their lifetime. Discover more on our website at Link:%s, Thank You."%(first_name,self.bus_info.Bus_Name,self.bus_info.Website)
         return msg
     
-    def getPAYMENT_MSG(self,first_name,patient_id):
-        # time_sent=str(datetime.now().strftime("%H:%M:%S"))
-        # date_sent=str(datetime.now().strftime("%Y-%m-%d"))
-        msg='Hi %s, This is a confirmation message for your payment. A copy of a detailed invoice can be found here Link:%s with your Patient ID:%s Thank You.'%(first_name,self.bus_info.Website,patient_id)
+    def getPAYMENT_MSG(self,first_name,amount):
+        msg='Hi %s, your payment of %s has been comfirmed, Thank You.'%(first_name,amount)
         return msg
 
 class CUS_SMS(View):
@@ -360,7 +358,7 @@ class OPD(View):
             pass
         if kwargs['page']=='pat-reg' or isinstance(kwargs['page'],int):
             form = Patients_Form(request.POST,request.FILES)
-            msg='Process initiated at the nursing department...'
+            msg='Process initiated at the payment department...'
             if form.is_valid():
                 procedure_list=request.POST.getlist('Procedure_Name')
                 procedure_data=Procedures.objects.filter(id__in=procedure_list)
@@ -392,7 +390,7 @@ class OPD(View):
                 # check referring facility if saved already or not
                 saveFacility(referred_facility)
                 sms=SMS()
-                msg_bdy=sms.getWLM_MSG(request.POST['First_Name'],patient_init_id)
+                msg_bdy=sms.getWLM_MSG(request.POST['First_Name'])
                 asyncio.run(sms.SEND_ALERT([request.POST['Tel']],msg_bdy))
                 messages.success(request,msg)
             else:
@@ -464,6 +462,7 @@ class OPD(View):
         return redirect(request.META.get('HTTP_REFERER'))
 
 @method_decorator(unauthenticated_staffs,name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Finance Manager','Receptionist','Secretary']),name='get')
 class Payment_Department(View):
     
     def dispatch(self,  *args, **kwargs):
@@ -512,9 +511,9 @@ class Payment_Department(View):
             Patients.objects.filter(Patient_Id=request.POST['Patient_Id']).update(Balance=F('Balance')+Amount)
             Journal_History_Checker.objects.create(Trans_Id=transID,Cashier=Loged_User(request))
             sms=SMS()
-            msg_bdy=sms.getPAYMENT_MSG(request.POST['First_Name'],request.POST['Patient_Id'])
+            msg_bdy=sms.getPAYMENT_MSG(request.POST['First_Name'])
             asyncio.run(sms.SEND_ALERT([request.POST['Tel']],msg_bdy))
-            return HttpResponse(json.dumps({'message':'Payment recorded successfully','patientID':patientID}),content_type='application/json')
+            return HttpResponse(json.dumps({'message':'Payment recorded successfully','transID':transID}),content_type='application/json')
         elif kwargs['page']=='del-folder':
             Patients.objects.filter(Patient_Id=request.POST['Patient_Id']).delete()
             return HttpResponse(json.dumps({'message':request.POST['Name']}),content_type='application/json')
@@ -522,10 +521,11 @@ class Payment_Department(View):
         return redirect(request.META.get('HTTP_REFERER'))
 
 @method_decorator(unauthenticated_staffs,name='get')
-class Radiology(View):
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer','Lab Scientist']),name='get')
+class Imaging(View):
     
     def dispatch(self, request, *args, **kwargs):
-        return super(Radiology,self).dispatch(request, *args, **kwargs)
+        return super(Imaging,self).dispatch(request, *args, **kwargs)
 
     def get(self,request,*args,**kwargs):
         context={'page':'Imaging Department',
@@ -570,6 +570,7 @@ class Radiology(View):
             return redirect(request.META.get('HTTP_REFERER'))
         
 @method_decorator(unauthenticated_staffs,name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Lab Scientist']),name='get')
 class Laboratory(View):
 
     def dispatch(self, request, *args, **kwargs):
@@ -598,7 +599,7 @@ class Laboratory(View):
             return redirect(request.META.get('HTTP_REFERER'))
 
 @method_decorator(unauthenticated_staffs,name='get')
-# @method_decorator(class_allow_users(allowed_levels=['Admin','Medical Superintendant','Administrator / HR', 'Snr Doctor']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer']),name='get')
 class Doctors(View):
 
     def dispatch(self,  *args, **kwargs):
@@ -690,6 +691,7 @@ class Requisition_Form(View):
         return redirect(request.META.get('HTTP_REFERER'))
 
 @method_decorator(unauthenticated_staffs,name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer','Lab Scientist','Nurse']),name='get')
 class General_Reports(View):
     
     def dispatch(self, request, *args, **kwargs):
@@ -703,7 +705,8 @@ class General_Reports(View):
                 context={'page':'Test Reports','vitalHist':vitalHist}
                 return render(request,'I_CARE/admin/approved-reports.html',context)
         elif kwargs['page']=='receipt':
-            jnrData=Journal_History.objects.filter(Payment_Journal__Patient_Id__Patient_Id=kwargs['type'])
+            transID=kwargs['type']
+            jnrData=Journal_History.objects.filter(Payment_Journal__Trans_Id=transID)
             paymentData=jnrData.first()
             patData=paymentData.Payment_Journal.Patient_Id
             totalCost=jnrData.aggregate(sum=Sum('Payment_Journal__Treatment_Amount'))['sum']
@@ -711,14 +714,14 @@ class General_Reports(View):
             totalPaid=jnrData.aggregate(sum=Sum('Paid_Amount'))['sum']
             totalPaid=totalPaid if totalPaid else Decimal(0)
             totalBalance=totalCost-totalPaid
-            invoce_id=str(paymentData.Payment_Journal.id).zfill(3)
             context={'patData':patData,'jnrData':jnrData,'totalCost':totalCost,'totalPaid':totalPaid,
-                     'totalBalance':totalBalance,'paymentData':paymentData,'invoce_id':invoce_id}
+                     'totalBalance':totalBalance,'paymentData':paymentData,'invoce_id':transID}
             return render(request,'I_CARE/admin/invoice.html',context)
         else:
             return redirect(request.META.get('HTTP_REFERER'))
             
 @method_decorator(unauthenticated_staffs,name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Pharmacist']),name='get')
 class Pharmacy(View):
     context={'page':'Pharmacy'}
 

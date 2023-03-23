@@ -267,7 +267,7 @@
                 swal.close();
                 window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
                 setTimeout(function() {
-                    window.location="/reporting/receipt/"+data.patientID;
+                    window.location="/reporting/receipt/"+data.transID;
                 },1500);
             },
             error: function (request,status,error) {
