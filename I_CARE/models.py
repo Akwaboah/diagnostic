@@ -303,6 +303,7 @@ class Vitals(models.Model):
     # payment side
     Treatment_Amount = models.DecimalField(max_digits=50,decimal_places=2)
     Paid_Amount = models.DecimalField(max_digits=50,decimal_places=2,default=0)
+    Trans_Id=models.CharField(max_length=250,unique=True)
     # 
     Logger=models.CharField(max_length=50)
     Date=models.DateField(auto_now=True)
@@ -381,6 +382,18 @@ class Journal_History(models.Model):
 
     class Meta:
         db_table = "journal_history"
+
+# Journal History Checker
+class Journal_History_Checker(models.Model):
+    Trans_Id = models.CharField(max_length=250, primary_key=True, unique=True)
+    Cashier = models.CharField(max_length=50)
+    Date = models.DateField(auto_now=True)
+
+    class Meta:
+        db_table = "journal_history_checker"
+
+    def __str__(self):
+        return '{0}-{1}'.format(self.Cashier,self.Trans_Id)
 
 # Requisition Approval_Authority
 class Approval_Authority(models.Model):

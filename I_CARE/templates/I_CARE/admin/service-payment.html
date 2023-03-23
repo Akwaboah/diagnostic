@@ -263,11 +263,11 @@
                 });
             },
             success: function (data) {
-                // $("#patientTable").load(window.location.href + " #patientTable>*", "");
+                $('#paymentModal').modal('hide');
                 swal.close();
                 window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
                 setTimeout(function() {
-                    window.location.reload()
+                    window.location="/reporting/receipt/"+data.patientID;
                 },1500);
             },
             error: function (request,status,error) {

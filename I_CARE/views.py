@@ -22,7 +22,7 @@ from django.db.models import F,Value,CharField,Sum,ExpressionWrapper,DecimalFiel
 from I_CARE.models import Business_Info, Patients, User_Details,Patients_Checker,Vitals,\
     Appoitment,Message,Procedures,Presenting_Complaints,Journal_History,Treatment_Alert,\
     Birthday_Wishes,Stocks_Department,Supplier,Stocks,New_Stocks,Stocks_Checker,Drugs_Prescriptions,\
-    Insurance,Referring_Facilities,Requisition,Approval_Authority
+    Insurance,Referring_Facilities,Requisition,Approval_Authority,Journal_History_Checker
 
 from I_CARE.forms import Patients_Form,Staff_Form,Stocks_Form
 from I_CARE.decorators import class_allow_users, unauthenticated_staffs
@@ -77,7 +77,7 @@ def Loged_User_Instance(request):
 def gen_pat_id():
     pat_id=Patients_Checker.objects.all().values('Patient_Id').distinct().count() + 1
     pat_id=str(pat_id).zfill(3)
-    return '%s%s'%('FMD',pat_id)
+    return '%s%s'%('OLV',pat_id)
      
 def getBusInfo():
     return Business_Info.objects.first()
@@ -290,6 +290,11 @@ class Auth_Staffs(View):
         
         return redirect(request.META.get("HTTP_REFERER"))
 
+def create_trans_id():
+    transId=Journal_History_Checker.objects.all().values('Trans_Id').distinct().count() + 1
+    transId=str(transId).zfill(3)
+    return transId
+
 @method_decorator(unauthenticated_staffs,name='get')
 class OPD(View):
     
@@ -459,10 +464,10 @@ class OPD(View):
         return redirect(request.META.get('HTTP_REFERER'))
 
 @method_decorator(unauthenticated_staffs,name='get')
-class Nursing_Department(View):
+class Payment_Department(View):
     
     def dispatch(self,  *args, **kwargs):
-        return super(Nursing_Department,self).dispatch(*args, **kwargs)
+        return super(Payment_Department,self).dispatch(*args, **kwargs)
 
     def get(self,request,*args,**kwargs):
         context={'page':'Payment'}
@@ -489,6 +494,7 @@ class Nursing_Department(View):
     def post(self,request,*args,**kwargs):
        
         if kwargs['page']=='journal-payment':
+            transID=create_trans_id()
             patientID=request.POST['Patient_Id']
             Amount=Decimal(request.POST['Amount'])
             jData=Vitals.objects.exclude(Paid_Amount=F('Treatment_Amount')).filter(Patient_Id__Patient_Id=patientID)
@@ -501,13 +507,14 @@ class Nursing_Department(View):
                 )
                 data.Paid_Amount=F('Treatment_Amount')
                 data.Department=data.Procedure.Tag
-            Vitals.objects.bulk_update(jData,['Paid_Amount','Department'])
-            
+                data.Trans_Id=transID
+            Vitals.objects.bulk_update(jData,['Paid_Amount','Department','Trans_Id'])
             Patients.objects.filter(Patient_Id=request.POST['Patient_Id']).update(Balance=F('Balance')+Amount)
+            Journal_History_Checker.objects.create(Trans_Id=transID,Cashier=Loged_User(request))
             sms=SMS()
             msg_bdy=sms.getPAYMENT_MSG(request.POST['First_Name'],request.POST['Patient_Id'])
             asyncio.run(sms.SEND_ALERT([request.POST['Tel']],msg_bdy))
-            return HttpResponse(json.dumps({'message':'Payment recorded successfully'}),content_type='application/json')
+            return HttpResponse(json.dumps({'message':'Payment recorded successfully','patientID':patientID}),content_type='application/json')
         elif kwargs['page']=='del-folder':
             Patients.objects.filter(Patient_Id=request.POST['Patient_Id']).delete()
             return HttpResponse(json.dumps({'message':request.POST['Name']}),content_type='application/json')
@@ -695,6 +702,19 @@ class General_Reports(View):
                 vitalHist=Presenting_Complaints.objects.all().order_by('-Date')
                 context={'page':'Test Reports','vitalHist':vitalHist}
                 return render(request,'I_CARE/admin/approved-reports.html',context)
+        elif kwargs['page']=='receipt':
+            jnrData=Journal_History.objects.filter(Payment_Journal__Patient_Id__Patient_Id=kwargs['type'])
+            paymentData=jnrData.first()
+            patData=paymentData.Payment_Journal.Patient_Id
+            totalCost=jnrData.aggregate(sum=Sum('Payment_Journal__Treatment_Amount'))['sum']
+            totalCost=totalCost if totalCost else Decimal(0)
+            totalPaid=jnrData.aggregate(sum=Sum('Paid_Amount'))['sum']
+            totalPaid=totalPaid if totalPaid else Decimal(0)
+            totalBalance=totalCost-totalPaid
+            invoce_id=str(paymentData.Payment_Journal.id).zfill(3)
+            context={'patData':patData,'jnrData':jnrData,'totalCost':totalCost,'totalPaid':totalPaid,
+                     'totalBalance':totalBalance,'paymentData':paymentData,'invoce_id':invoce_id}
+            return render(request,'I_CARE/admin/invoice.html',context)
         else:
             return redirect(request.META.get('HTTP_REFERER'))
             
@@ -1093,10 +1113,10 @@ class Home_Page_Links(View):
                 Message =request.POST['message'],
                 Preferred_Time=request.POST['preferred_time']
             )
-            fullname = str(request.POST["name"])
-            first, *last = fullname.split()
-            name1 = "{first}".format(first=first)
-            messages.success(request,'Hi %s, your appointment has been noted. Thank You'%(str(name1).title()))
+            # fullname = str(request.POST["name"])
+            # first, *last = fullname.split()
+            # name1 = "{first}".format(first=first)
+            messages.success(request,'Hi there, your appointment has been noted. Thank You')
         elif kwargs['page']=="message":
             Message.objects.create(
                 Name=request.POST['name'],Phone=request.POST['phone'],

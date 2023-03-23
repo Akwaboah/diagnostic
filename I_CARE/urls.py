@@ -6,7 +6,7 @@ urlpatterns = [
      path(route='info/<str:page>',view=views.Home_Page_Links.as_view(),name='web-links'),
      path(route='staff/<str:page>',view=views.Auth_Staffs.as_view(),name='auth-staff'),
      path(route='opd/<str:page>',view=views.OPD.as_view(),name='opd'),
-     path(route='nursing/<str:page>',view=views.Nursing_Department.as_view(),name='nursing'),
+     path(route='nursing/<str:page>',view=views.Payment_Department.as_view(),name='nursing'),
      path(route='lab/<str:page>',view=views.Laboratory.as_view(),name='lab'),
      path(route='radiology/<str:page>',view=views.Radiology.as_view(),name='radiology'),
      path(route='doc/<str:page>',view=views.Doctors.as_view(),name='doc'),
