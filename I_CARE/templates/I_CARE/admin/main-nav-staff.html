@@ -32,21 +32,18 @@
             <li class="has-submenu {% if 'Payment' in page %}active{% endif %}">
                 <a href="{% url 'nursing' 'pat-journal' %}">Payment</a>
             </li>
-            <li class="has-submenu {% if 'Doctors' in page %}active{% endif %}">
-                <a href="#">Physician Specialist<i class="fas fa-chevron-down"></i></a>
-                <ul class="submenu">
-                    {% comment %} <li><a href="#">Appointments</a></li> {% endcomment %}
-                    <li><a href="{% url 'doc' 'consulting' %}">Radiologist</a></li>
-                    <!-- <li><a href="schedule-timings.html">Schedule Timing</a></li> -->
-                    <!-- <li><a href="my-patients.html">Invoices</a></li> -->
-                </ul>
-            </li>	
             <li class="has-submenu {% if 'Imaging' in page %}active{% elif 'Laboratory' in page %}active{% endif %}">
                 <a href="javascript:void(0)">Departments<i class="fas fa-chevron-down"></i></a>
                 <ul class="submenu">
                     <li><a href="{% url 'lab' 'test' %}">Laboratory</a></li>
                     <li><a href="{% url 'radiology' 'test' %}">Imaging</a></li>
-                    <li><a href="{% url 'reporting' 'test' 'report-history' %}">Reporting</a></li>
+                    <li><a href="{% url 'reporting' 'test' 'report-history' %}">Reports</a></li>
+                </ul>
+            </li>
+            <li class="has-submenu {% if 'Doctors' in page %}active{% endif %}">
+                <a href="#">Physician Specialist<i class="fas fa-chevron-down"></i></a>
+                <ul class="submenu">
+                    <li><a href="{% url 'doc' 'consulting' %}">Radiologist</a></li>
                 </ul>
             </li>		
             <li class="has-submenu {% if 'Pharmacy' in page %}active{% endif %}">
@@ -62,13 +59,17 @@
                     </li>
                 </ul>
             </li>	
+            {% if request.user.is_superuser == True %}
             <li class="has-submenu {% if 'Requisition' in page %}active{% endif %}">
                 <a href="javascript:void(0)">Requisition<i class="fas fa-chevron-down"></i></a>
                 <ul class="submenu">
                     <li><a href="{% url 'requisition' 'place-request' %}">Request & More</a></li>
                     <li><a href="{% url 'requisition' 'pending-request' %}">Pending Request</a></li>
                 </ul>
-            </li>	
+            </li>
+            {% else %}
+            <li class="{% if 'Requisition' in page %}active{% endif %}"><a href="{% url 'requisition' 'place-request' %}">Requisition</a></li>
+            {% endif %}	
             {% comment %} <li><a data-toggle="modal" href="#modal-opd-report">General Reporting</a></li> {% endcomment %}
         </ul>
     </div>

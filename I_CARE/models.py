@@ -8,7 +8,6 @@ import os,sys
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.db.models import F
-from I_CARE.utils import investigations_types,med_dent_types,hospital_departments
 # Create your models here.
 
 def valid_extension(_img):
@@ -296,13 +295,15 @@ def post_save_image(sender, instance, *args, **kwargs):
 
 class Vitals(models.Model):
     Patient_Id= models.ForeignKey(Patients,on_delete=models.CASCADE,db_column='Patient_Id')
-    Complaints = models.TextField(blank=True)
-    Push_Note = models.TextField(null=True)
     Procedure = models.ForeignKey(Procedures,on_delete=models.CASCADE,db_column='Procedure')
-    Department=models.CharField(max_length=50,default='Services') #This field is use to check where patient is
+    Department=models.CharField(max_length=50,default='Bill Payment') #This field is use to check where patient is
     Status=models.CharField(max_length=50,default='Waiting')
     Referring_Facility=models.CharField(max_length=100,null=True,default='None')
     Referred_Doctor=models.CharField(max_length=50,null=True,default='None')
+    # payment side
+    Treatment_Amount = models.DecimalField(max_digits=50,decimal_places=2)
+    Paid_Amount = models.DecimalField(max_digits=50,decimal_places=2,default=0)
+    # 
     Logger=models.CharField(max_length=50)
     Date=models.DateField(auto_now=True)
     Time=models.TimeField(auto_now=True)
@@ -367,7 +368,7 @@ class Payment_Journal(models.Model):
 
 # Payment Journal History 
 class Journal_History(models.Model):
-    Payment_Journal = models.ForeignKey(Payment_Journal,on_delete=models.CASCADE,db_column='Payment_Journal')
+    Payment_Journal = models.ForeignKey(Vitals,on_delete=models.CASCADE,db_column='Payment_Journal')
     Paid_Amount = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Payment_Type=models.CharField(max_length=20)
     Approved_By=models.CharField(max_length=50)
@@ -376,7 +377,7 @@ class Journal_History(models.Model):
     Time=models.TimeField(auto_now=True)
 
     def __str__(self):
-        return ('%s(%s)-%s'%(self.Payment_Journal.Patient_Id,self.Payment_Journal.Treatment_Name,self.Paid_Amount))
+        return ('%s(%s)-%s'%(self.Payment_Journal.Patient_Id,self.Payment_Journal.Treatment_Amount,self.Paid_Amount))
 
     class Meta:
         db_table = "journal_history"
@@ -405,6 +406,7 @@ class Requisition(models.Model):
     Price = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Total_Cost = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Approval_Authority=models.ForeignKey(Approval_Authority, on_delete=models.CASCADE, db_column="Approval_Authority")
+    Approval_Status=models.CharField(max_length=50,default='Pending')
     Delivery_Status=models.CharField(max_length=50,default='Pending')
     Date=models.DateField(auto_now=True)
     Time=models.TimeField(auto_now=True)
@@ -416,7 +418,6 @@ class Requisition(models.Model):
 # Web Models
 class Appoitment(models.Model):
     Name=models.CharField(max_length=50)
-    Patient_Id=models.CharField(max_length=50,default='None')
     Phone=models.CharField(max_length=50)
     Email=models.CharField(max_length=50)
     Preferred_Date=models.DateField(auto_now=False)
@@ -456,7 +457,6 @@ class Message(models.Model):
         self.Message=str(self.Message).replace('\r\n','\\n')
         self.Message=str(self.Message).replace('\n','\\n')
         super(Message, self).save(*args, **kwargs)
-
 
 # PHARMACY MODELS
 class Stocks_Department(models.Model):

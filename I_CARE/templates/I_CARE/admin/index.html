@@ -287,95 +287,6 @@
     </div>
     <!-- /Add New User Modal -->
 
-    <!-- Add Procedures Modal -->
-    <div class="modal fade" id="add-procedure-modal" aria-hidden="true" role="dialog">
-        <div class="modal-dialog modal-dialog-centered modal-md" role="document" >
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Procedures</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="add_procedure_form">
-                        <div class="row form-row">
-                            <div class="col-7 col-sm-7">
-                                <div class="form-group">
-                                    <input id="procedure_name" placeholder="Enter procedure" required type="text" class="form-control">
-                                </div>
-                            </div>
-                            <div class="col-5 col-sm-5">
-                                <div class="form-group">
-                                    <input id="procedure_charge" placeholder="Procedure Charge" required type="number" class="form-control">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row form-row">
-                            <div class="col-6 col-sm-6">
-                                <div class="form-group">
-                                    <select id="modality_tag" required class="form-control">
-                                        <option select value="">Procedure Modality</option>
-                                        {% for mod in modalities %}
-                                        <option value="{{mod.Modality}}">{{mod}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-6 col-sm-6">
-                                <div class="form-group">
-                                    <select id="procedure_tag" required class="form-control">
-                                        <option select value="">Modality Department</option>
-                                        {% for dept in hospital_departments %}
-                                        <option value="{{dept}}">{{dept}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block">Add Procedure</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- /ADD Modal -->
-
-    <!-- Add Rooms Modal -->
-    <div class="modal fade" id="add_consulting_room" aria-hidden="true" role="dialog">
-        <div class="modal-dialog modal-dialog-centered" role="document" >
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Ward/Room</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="add_consulting_room_form">
-                        <div class="row form-row">
-                            <div class="col-12 col-sm-6">
-                                <div class="form-group">
-                                    <label>Ward/Room Name</label>
-                                    <input id="room_name" placeholder="Males Ward, Room 1, etc" required type="text" class="form-control">
-                                </div>
-                            </div>
-                            <div class="col-12 col-sm-6">
-                                <div class="form-group">
-                                    <label>Ward/Room Description</label>
-                                    <input id="room_desc" placeholder="Dedicated for males, 18 beds etc" required type="text"  class="form-control">
-                                </div>
-                            </div>
-                            
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block">Save Ward/Room</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- /ADD Modal -->
-
     <!-- Add Insurance Modal -->
     <div class="modal fade" id="modal_add_insurance" aria-hidden="true" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document" >
@@ -434,7 +345,7 @@
                                                         Nationality/Residence:<b id="JAddress">_ _ _ _ _ _ _ _ _ _ _</b> <br>
                                                         Tel/Occupation:<b id="JContact">_ _ _ _ _ _ _ _ _ _ _</b><br>
                                                         Insurance:<b id="Insurance">_ _ _ _ _ _ _ _ _ _ _</b><br>
-                                                        Account Balance:<b id="JBalance"> 0.00¢</b>
+                                                        Account Balance:<b id="JBalance"> 0.00 GHS</b>
                                                     </label>
                                                 </div>
                                             </div>
@@ -532,53 +443,6 @@
                                 </div>
                                 <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
                                     <button class="btn btn-md btn-primary" type="submit">SEND ALERT</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!--Treatment alert Model -->
-    <div class="modal fade" id="modal-treatement-msg" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <form id="treatementAlertForm">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title" id="defaultModalLabel">TREATMENT MESSAGES (WHAT TO DO ?)</h4>
-                    </div>
-                    <div class="modal-body">
-                        <div class="input-group form-group">
-                            <textarea id="todo_msg" name="todo_msg" style="height: 150px;" class="form-control"
-                            required placeholder="What to do after treatment?"></textarea>
-                        </div>
-                        <div class="input-group">
-                            <span class="input-group-addon">
-                                <i class="material-icons">list</i>
-                            </span>
-                            <div class="form-line">
-                                <select style="width: 100%" id="tm_type" name="tm_type" multiple="multiple"
-                                    required class="js-states form-control">
-                                    {% for val in procedures %}
-                                    <option value="{{val}}">{{val}}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <div class="col">
-                            <div class="row">
-                                <div class="col-lg-8 col-md-8 col-sm-8 col-xs-8">
-                                    <select required id="when_to" class="form-control">
-                                        <option value="">When to send alert?</option>
-                                        <option value="After treatment">After treatment</option>
-                                    </select>
-                                </div>
-                                <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
-                                    <button class="btn btn-md btn-primary" type="submit">SAVE ALERT</button>
                                 </div>
                             </div>
                         </div>
@@ -858,39 +722,7 @@
     <!-- personal scripts -->
     <script>
 
-        $("#add_consulting_room_form").on('submit',function (e) {
-            e.preventDefault()
-            // let data=$("#add_consulting_room_form").serialize()
-            $.ajax({
-                type: "POST",
-                url: "{% url 'web-links' 'add-consulting-room' %}",
-                data: {
-                    Room_Name: $('#room_name').val(),
-                    Room_Desc: $('#room_desc').val(),
-                    csrfmiddlewaretoken: '{{ csrf_token }}',
-                    dataType: "json",
-                },
-                beforeSend: function () {
-                    // show progress whiles request in pregess to avoid many submission
-                    swal({
-                        title: "Performing Request... ",
-                        text: "please wait whiles we proccess your request",
-                        imageUrl: "{% static 'admin/assets/img/loading.gif' %}",
-                        showConfirmButton: false
-                    });
-                },
-                success: function (data) {
-                    $("#room_of_service").load(window.location.href + " #room_of_service>*", "");
-                    swal.close();
-                    window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
-                },
-                error: function (data) {
-                    window.parent.showNotification(null, "Error occurred whiles processing request", 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
-                    swal.close();
-                }
-            });
-        });
-
+        
         $("#modal_add_insurance").on('submit',function (e) {
             e.preventDefault()
             $.ajax({
@@ -1027,39 +859,6 @@
 
         });
         
-        $('#treatementAlertForm').on('submit', function (e) {
-            e.preventDefault();
-            $.ajax({
-                type: "POST",
-                url: "{% url 'alerts' 'tm-msg' %}",
-                data: {
-                    custom_msg: $("#todo_msg").val(),
-                    tm_type: $("#tm_type").val(),
-                    when_to: $("#when_to").val(),
-                    csrfmiddlewaretoken: '{{ csrf_token }}',
-                    dataType: "json",
-                },
-                beforeSend: function () {
-                    // show progress whiles request in pregess to avoid many submission
-                    swal({
-                        title: "Processing Request",
-                        text: "please wait whiles we proccess your request",
-                        imageUrl: "{% static 'admin/assets/img/loading.gif' %}",
-                        showConfirmButton: false
-                    });
-                },
-                success: function (data) {
-                    window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
-                    swal.close();
-                },
-                error: function (request,status,error) {
-                    window.parent.showNotification(null, `Error occurred: ${request.responseText}`, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
-                    swal.close();
-                }
-            });
-
-        });
-
     </script>
 
    

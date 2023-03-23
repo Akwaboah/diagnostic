@@ -198,7 +198,7 @@
                                                 <th>Timeline</th>
                                                 <th>Qty</th>
                                                 <th>Price</th>
-                                                <th>Cost</th>
+                                                <th>Total Cost</th>
                                                 <th>Status</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -222,27 +222,29 @@
                                                 <td class="text-capitalize">{{vit.Total_Cost}}</td>
                                                 <td class="text-left">
                                                     <div class="table-action">
-                                                        {% if vit.Delivery_Status == 'Pending' %}
+                                                        {% if vit.Approval_Status == 'Pending' %}
                                                             <a class="btn btn-sm bg-warning-light">
-                                                                {{vit.Delivery_Status}}
+                                                                {{vit.Approval_Status}}
                                                             </a>
-                                                        {% elif vit.Delivery_Status == 'Denied' %}
+                                                        {% elif vit.Approval_Status == 'Denied' %}
                                                             <a class="btn btn-sm bg-danger-light">
-                                                                {{vit.Delivery_Status}}
+                                                                {{vit.Approval_Status}}
                                                             </a>
                                                         {% else %}
                                                             <a class="btn btn-sm bg-info-light">
-                                                                {{vit.Delivery_Status}}
+                                                                {{vit.Approval_Status}}
                                                             </a>
                                                         {% endif %}
                                                     </div>
                                                 </td>
                                                 <td class="text-left">
                                                     <div class="table-action">
-                                                        <a class="btn btn-sm bg-info-light">
+                                                        <a class="btn btn-sm bg-info-light" 
+                                                        onclick='acctionRequest("{{vit.id}}","{{vit.Placeholder}}","{{vit.Description}}","{{vit.Delivery_Timeline}}","{{vit.Total_Cost}}","Approved","aprrove")'>
                                                             Approve
                                                         </a>
-                                                        <a class="btn btn-sm bg-danger-light">
+                                                        <a class="btn btn-sm bg-danger-light"
+                                                        onclick='acctionRequest("{{vit.id}}","{{vit.Placeholder}}","{{vit.Description}}","{{vit.Delivery_Timeline}}","{{vit.Total_Cost}}","Denied","deny")'>
                                                             Deny
                                                         </a>
                                                     </div>
@@ -353,6 +355,48 @@
             
         })
         
+        function acctionRequest(reqID,placeHolder,description,timeLine,totalCost,newStatus,note) {
+            let color="#DD6B55";
+            if (note != 'deny') {
+                color="#41B9B5"
+            }
+            swal({
+                    title: "Are you sure?",
+                    text: `You want to ${note} a request From:${placeHolder}, Description:${description}, DeliveryTimeline:${timeLine} with the Total Cost of ${totalCost} GHS?`,
+                    // imageUrl: '',
+                    showCancelButton: true,
+                    confirmButtonColor: color,
+                    confirmButtonText: `Yes, ${note}`,
+                    cancelButtonText: "No, cancel",
+                    closeOnConfirm: false,
+                    closeOnCancel: true
+                }, function (isConfirm) {
+                    if (isConfirm) {
+    
+                        $.ajax({
+                            type: "POST",
+                            url: "{% url 'requisition' 'alter-request' %}",
+                            data: {
+                                requestID: reqID,
+                                newStaus: newStatus,
+                                csrfmiddlewaretoken: '{{ csrf_token }}',
+                                dataType: "json"
+                            },
+                            success: function (data) {
+                                // window.parent.showNotification(null, data['message'], 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                                // swal.close();
+                                window.location.reload()
+                            },
+                            error: function (data) {
+                                swal("Error Occured", "Request aborted, please try again :)", "error");
+                            }
+                        });
+                    }
+                });
+            
+        }
+    
+
     </script>
 
     <!-- Messages Handler -->

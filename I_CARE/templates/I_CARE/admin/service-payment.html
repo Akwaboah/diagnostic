@@ -173,8 +173,8 @@
             info: false,
             searching: false,
             bLengthChange: false,
-            pageLength: 7,
-            lengthMenu: [[7, 14, 21, -1], [7, 14, 21, "All"]]
+            pageLength: 5,
+            lengthMenu: [[5, 10, 15, -1], [5, 10, 15, "All"]]
         });
         
         $('#tm_type').select2({
@@ -200,7 +200,7 @@
         for (var i = 0; i < journalData.length; i++) {
             if (journalData[i].Patient_Ref==patient_id) {
                 posNo+=1
-                journalEntryTable.row.add([posNo,journalData[i].Date,journalData[i].Treatment_Name,journalData[i].Treatment_Amount,journalData[i].Paid_Amount,journalData[i].Balance,journalData[i].Logger_Instance_Ref]).draw(false);
+                journalEntryTable.row.add([posNo,journalData[i].Date,journalData[i].Treatment_Name,journalData[i].Treatment_Amount,journalData[i].Paid_Amount,journalData[i].Balance,journalData[i].Logger]).draw(false);
             }
         }
         // set patient details
@@ -208,7 +208,7 @@
         document.getElementById('JGender').innerText=gender+"/"+age;
         document.getElementById('JAddress').innerText=nat+"/"+res;
         document.getElementById('JContact').innerText=tel+"/"+occup;
-        document.getElementById('JBalance').innerText=bal+" ¢";
+        document.getElementById('JBalance').innerText=bal+" GHS";
         document.getElementById('Insurance').innerText=`${insur_name}(${insur_id})`;
 
         // 

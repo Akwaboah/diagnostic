@@ -159,7 +159,7 @@
                                                 <th>Timeline</th>
                                                 <th>Qty</th>
                                                 <th>Price</th>
-                                                <th>Cost</th>
+                                                <th>Total Cost</th>
                                                 <th>Approval Authority</th>
                                                 <th>Status</th>
                                             </tr>
@@ -186,17 +186,17 @@
                                                 <td class="text-capitalize">{{vit.Approval_Authority.Authorizer}}</td>
                                                 <td class="text-left">
                                                     <div class="table-action">
-                                                        {% if vit.Delivery_Status == 'Pending' %}
+                                                        {% if vit.Approval_Status == 'Pending' %}
                                                             <a class="btn btn-sm bg-warning-light">
-                                                                {{vit.Delivery_Status}}
+                                                                {{vit.Approval_Status}}
                                                             </a>
-                                                        {% elif vit.Delivery_Status == 'Denied' %}
+                                                        {% elif vit.Approval_Status == 'Denied' %}
                                                             <a class="btn btn-sm bg-danger-light">
-                                                                {{vit.Delivery_Status}}
+                                                                {{vit.Approval_Status}}
                                                             </a>
                                                         {% else %}
                                                             <a class="btn btn-sm bg-info-light">
-                                                                {{vit.Delivery_Status}}
+                                                                {{vit.Approval_Status}}
                                                             </a>
                                                         {% endif %}
                                                     </div>

@@ -19,8 +19,8 @@ from django.utils.decorators import method_decorator
 from django.contrib import messages
 from django.db.models.functions import Concat,Cast
 from django.db.models import F,Value,CharField,Sum,ExpressionWrapper,DecimalField,DateField,Q
-from I_CARE.models import Business_Info, Consulting_Room, Patients, User_Details,Patients_Checker,Vitals,\
-    Payment_Journal,Appoitment,Message,Procedures,Presenting_Complaints,Journal_History,Treatment_Alert,\
+from I_CARE.models import Business_Info, Patients, User_Details,Patients_Checker,Vitals,\
+    Appoitment,Message,Procedures,Presenting_Complaints,Journal_History,Treatment_Alert,\
     Birthday_Wishes,Stocks_Department,Supplier,Stocks,New_Stocks,Stocks_Checker,Drugs_Prescriptions,\
     Insurance,Referring_Facilities,Requisition,Approval_Authority
 
@@ -353,43 +353,37 @@ class OPD(View):
             kwargs['page']=int(kwargs['page'])
         except ValueError:
             pass
-        
         if kwargs['page']=='pat-reg' or isinstance(kwargs['page'],int):
             form = Patients_Form(request.POST,request.FILES)
             msg='Process initiated at the nursing department...'
             if form.is_valid():
+                procedure_list=request.POST.getlist('Procedure_Name')
+                procedure_data=Procedures.objects.filter(id__in=procedure_list)
+                totalCost=procedure_data.aggregate(sum=Sum('Charge'))['sum']
+                totalCost= totalCost if totalCost else Decimal(0)
                 referred_facility=request.POST['Referring_Facility'] or None
                 patient_init_id=gen_pat_id()
                 commit_form=form.save(commit=False)
                 commit_form.Patient_Id=patient_init_id
+                commit_form.Balance=-totalCost
                 commit_form.Gender=request.POST['gender']
                 commit_form.Date_Joined=datetime.now().date()
                 commit_form.Last_Visit=timezone.now()
                 form.save()
-                procedure_list=request.POST.getlist('Procedure_Name')
-                for index,value in enumerate(procedure_list):
-                    hist_data=Procedures.objects.get(id=value)
-                    if hist_data.Charge>0:
-                        Payment_Journal.objects.create(
-                            Patient_Id=  form.instance,Treatment_Amount = hist_data.Charge,
-                            Treatment_Name = hist_data,Logger_Instance=Loged_User_Instance(request))
                 Patients_Checker.objects.create(Patient_Id=patient_init_id)
                 # check if patient been registered from appointment then update patient id
                 if isinstance(kwargs['page'],int):
                     Appoitment.objects.filter(Phone=request.POST['Tel']).update(Patient_Id=patient_init_id)
-                
-                # Check the service department then forward the patient there straight
-                procedure_data=Procedures.objects.filter(id__in=procedure_list)
                 for data in procedure_data:
                     Vitals.objects.create(
                         Patient_Id=form.instance,
                         Procedure=data,
-                        Department=data.Tag,
                         Referring_Facility=referred_facility,
                         Referred_Doctor=request.POST['Reffered_Doctor'],
+                        Treatment_Amount=data.Charge,
                         Logger=Loged_User(request))
-            
-                msg='Process initiated at the %s department...'%(str(procedure_data.first().Tag).lower())
+                  
+                msg='Process initiated at the payment department...'
                 # check referring facility if saved already or not
                 saveFacility(referred_facility)
                 sms=SMS()
@@ -407,27 +401,22 @@ class OPD(View):
                 messages.success(request,'%s demo. updated successfully'%(request.POST['First_Name']))
             else:
                 messages.success(request,'Error occured:%s'%form.errors)
-        if kwargs['page']=='pat-complaints':
+        elif kwargs['page']=='pat-complaints':
+            procedure_list=request.POST.getlist('Procedure_Name')
+            procedure_data=Procedures.objects.filter(id__in=procedure_list)
+            totalCost=procedure_data.aggregate(sum=Sum('Charge'))['sum']
+            totalCost= totalCost if totalCost else Decimal(0)
             patData=Patients.objects.filter(Patient_Id=request.POST['searchPat'])
             patient_init_id=patData.first()
             referred_facility=request.POST['Referring_Facility'] or None
             # check procedures and apply bill to patient
-            procedure_list=request.POST.getlist('Procedure_Name')
-            for index,value in enumerate(procedure_list):
-                hist_data=Procedures.objects.get(id=value)
-                if hist_data.Charge>0:
-                    Payment_Journal.objects.create(
-                        Patient_Id=patient_init_id,Treatment_Amount = hist_data.Charge,
-                        Treatment_Name = hist_data,Logger_Instance=Loged_User_Instance(request))
-            # Check the service department then forward the patient there straight
-            procedure_data=Procedures.objects.filter(id__in=procedure_list)
             for data in procedure_data:
                 Vitals.objects.create(
                     Patient_Id=patient_init_id,
                     Procedure=data,
-                    Department=data.Tag,
                     Referring_Facility=referred_facility,
                     Referred_Doctor=request.POST['Reffered_Doctor'],
+                    Treatment_Amount=data.Charge,
                     Logger=Loged_User(request))
             # update insurance details
             updatingFields={}
@@ -438,26 +427,12 @@ class OPD(View):
             # check if there is a field to update then apply update
             if updatingFields:
                 patData.update(**updatingFields)
+            patData.update(Balance=F('Balance')-totalCost)
            
-            msg='Process initiated at the %s department...'%(str(procedure_data.first().Tag).lower())
+            msg='Process initiated at the payment department...'
             # check referring facility if saved already or not
             saveFacility(referred_facility)
             messages.success(request,msg)
-        elif kwargs['page']=='add-journal':
-            pat_data=Patients.objects.get(Patient_Id=request.POST['Patient_Id'])
-            # check if billing is from consulting room
-            if 'Consulting_Billing' in request.POST.copy():
-                procedure_list=request.POST.getlist('Procedure_Name[]')
-                amount_list=request.POST.getlist('Charge_Amount[]')
-                for index,value in enumerate(procedure_list):
-                    Payment_Journal.objects.create(
-                    Patient_Id= pat_data,Treatment_Amount = amount_list[index],
-                    Treatment_Name = value,Logger_Instance=Loged_User_Instance(request))
-            else:
-                Payment_Journal.objects.create(
-                    Patient_Id=pat_data,Treatment_Amount = request.POST['Charge_Amount'],
-                    Treatment_Name = request.POST['Procedure_Name'],Logger_Instance=Loged_User_Instance(request))
-            return HttpResponse(json.dumps({'message':'Bill passed successfully...'}),content_type='application/json')
         elif kwargs['page']=='birthdays':
             crl_date=datetime.now()
             clr_day=crl_date.day
@@ -503,10 +478,10 @@ class Nursing_Department(View):
             return render(request,'I_CARE/admin/service-dashboard.html',context)
         elif kwargs['page']=='pat-journal':
             # load patients journal 
-            journal=(Payment_Journal.objects.all().order_by('-Date').annotate(Patient_Ref=F('Patient_Id__Patient_Id'),Balance=F('Treatment_Amount')-F('Paid_Amount'),Logger_Instance_Ref=F('Logger_Instance__User')).values())
+            journal=(Vitals.objects.all().order_by('-Date','Treatment_Amount').annotate(Patient_Ref=F('Patient_Id__Patient_Id'),Balance=F('Treatment_Amount')-F('Paid_Amount'),Treatment_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym'),output_field=CharField())).values())
             journal=json.dumps(list(journal), cls=DjangoJSONEncoder)
             # journal = serializers.serialize('json', journal)
-            pat_data=Patients.objects.all().order_by('Balance')
+            pat_data=Patients.objects.all().order_by('-Date_Joined','Balance')
             context.update({'journalData': journal,'pat_data':pat_data})
             return render(request,'I_CARE/admin/service-payment.html',context)
         
@@ -516,7 +491,7 @@ class Nursing_Department(View):
         if kwargs['page']=='journal-payment':
             patientID=request.POST['Patient_Id']
             Amount=Decimal(request.POST['Amount'])
-            jData=Payment_Journal.objects.exclude(Paid_Amount=F('Treatment_Amount')).filter(Patient_Id__Patient_Id=patientID)
+            jData=Vitals.objects.exclude(Paid_Amount=F('Treatment_Amount')).filter(Patient_Id__Patient_Id=patientID)
             for data in jData:
                 # record payment history
                 Journal_History.objects.create(
@@ -525,22 +500,8 @@ class Nursing_Department(View):
                     Payment_Comment=request.POST['Comment'],Date=request.POST['PaymentDate']
                 )
                 data.Paid_Amount=F('Treatment_Amount')
-                # # now check if payment is for pharmacy then update amount_paid for each product 
-                # # base on the drugs
-                # if data.Treatment_Name=='Pharmacy':
-                #     cart_data=Drugs_Prescriptions.objects.filter(Journal_Id=data).exclude(Cost=F('Amount_Paid'),Sales_Status='Denied').order_by('Cost')
-                #     for data in cart_data:
-                #         data.Amount_Paid=data.Cost
-                #         # reduce stock quantity and balance the total cost of the item if still on pending
-                #         if data.Sales_Status=='Pending':
-                #             drug_data=data.Drug_Id
-                #             newQty=drug_data.Quantity-data.Quantity
-                #             drug_data.Quantity=newQty
-                #             drug_data.Total=newQty*drug_data.Purchase
-                #             drug_data.save()
-                #             data.Sales_Status='Sold'
-                #     Drugs_Prescriptions.objects.bulk_update(cart_data,['Amount_Paid','Sales_Status'])
-            Payment_Journal.objects.bulk_update(jData,['Paid_Amount'])
+                data.Department=data.Procedure.Tag
+            Vitals.objects.bulk_update(jData,['Paid_Amount','Department'])
             
             Patients.objects.filter(Patient_Id=request.POST['Patient_Id']).update(Balance=F('Balance')+Amount)
             sms=SMS()
@@ -560,7 +521,6 @@ class Radiology(View):
         return super(Radiology,self).dispatch(request, *args, **kwargs)
 
     def get(self,request,*args,**kwargs):
-
         context={'page':'Imaging Department',
                 'scan_types':Procedures.objects.filter(Tag='Radiology')}
         if kwargs['page']=='test':
@@ -572,37 +532,34 @@ class Radiology(View):
     def post(self,request,*args,**kwargs):
          
         if kwargs['page']=='test':
-            vit_data=Vitals.objects.get(id=request.POST['Vital_Id'])
-            pat_data=vit_data.Patient_Id
+            vitData=Vitals.objects.get(id=request.POST['Vital_Id'])
+            patData=vitData.Patient_Id
             # record complaints
+            msg='Completed'
             file = request.FILES.get('Docs', None)
             if file:
                 Presenting_Complaints.objects.create(
-                    Patient_Id= pat_data,Complaint_Category=request.POST['procedure_name'],
+                    Patient_Id= patData,Complaint_Category=request.POST['procedure_name'],
                     Complaint_Type='RADIOLOGY',Complaints = request.POST['Complaints'],
                     Tech_Instance=Loged_User_Instance(request),
                     Tech_Report=file,Tech_Report_Name=file.name,
-                    Vitals=vit_data
+                    Vitals=vitData
                 )
+                vitData.Department='Consultation'
+                vitData.Status='Waiting'
+                msg='Test recorded and pushed to radiologist'
             else:
                 Presenting_Complaints.objects.create(
-                    Patient_Id= pat_data,Complaint_Category=request.POST['procedure_name'],
+                    Patient_Id= patData,Complaint_Category=request.POST['procedure_name'],
                     Complaint_Type='RADIOLOGY',Complaints = request.POST['Complaints'],
                     Tech_Instance=Loged_User_Instance(request),
-                    Vitals=vit_data
+                    Vitals=vitData
                 )
-            # send patient back to Consultation(Doctors Side) 
-            pat_data.Status='Waiting'
-            pat_data.save()
-
-            # Update vitals Department to Consultation and Status to Waiting so if patient is doing double procedures
-            # that one will be of from the table
-            vit_data.Department='Consultation'
-            vit_data.Status='Waiting'
-            vit_data.save()
-
-            messages.success(request,'Test recorded and pushed to doctor for review')
-            
+                vitData.Status='Done'
+                msg='Test recorded successfully'
+            # save status 
+            vitData.save()
+            messages.success(request,msg)
             return redirect(request.META.get('HTTP_REFERER'))
         
 @method_decorator(unauthenticated_staffs,name='get')
@@ -629,11 +586,6 @@ class Laboratory(View):
                 Complaint_Type='LAB TEST',Complaints = request.POST['Complaints'],
                 Logger_Instance=Loged_User_Instance(request)
             )
-            # send patient back to Consultation 
-            pat_data.Department='Consultation'
-            pat_data.Status='Waiting'
-            pat_data.save()
-            
             messages.success(request,'Test recorded and pushed to doctor for review')
             
             return redirect(request.META.get('HTTP_REFERER'))
@@ -647,13 +599,7 @@ class Doctors(View):
 
     def get(self,request,*args,**kwargs):
         context={'page':'Doctors Page'}
-        if kwargs['page']=='dashboard':
-            incoming_patient=Patients.objects.filter(Status__in=['Waiting','Admission','Detained'],Department__in=['Consultation','Maternity','Ward'])
-            context.update({'vit_tday':incoming_patient})
-            return render(request,"I_CARE/admin/doc-dashboard.html",context)
-        elif kwargs['page']=='consulting':
-            stocks_list = Stocks.objects.all().order_by('Product_Name')
-            context.update({'drugsList':stocks_list})
+        if kwargs['page']=='consulting':
             return render(request,"I_CARE/admin/doc-consultation.html",context)
        
     @transaction.atomic(using=None, savepoint=True, durable=True)
@@ -662,7 +608,7 @@ class Doctors(View):
         if kwargs['page']=='approve-test':
             vit_data=Vitals.objects.get(id=request.POST['Vital_Id'])
             # pat_data=vit_data.Patient_Id
-            presHist=Presenting_Complaints.objects.get(Vitals= vit_data)
+            presHist=Presenting_Complaints.objects.get(Vitals=vit_data)
             # update presHist
             file = request.FILES['Report']
             presHist.Docs_Complaints=request.POST['Docs_Complaints']
@@ -677,18 +623,9 @@ class Doctors(View):
             vit_data.Status='Reviewed'
             vit_data.Department=procedure_data.Tag
             vit_data.save()
-            # # Before ending patient session, make sure he/she doesn't have any pending or waiting procedure
-            # vitalHist=Vitals.objects.filter(Patient_Id=pat_data,Department__in=['Laboratory','Radiology'],Status='Waiting')
-            # if not vitalHist:
-            #     # remove patient from Consultation(Doctors Side) to Nursing Department
-            #     pat_data.Department='Nursing Department'
-            #     pat_data.Procedure=None
-            #     pat_data.Status='Waiting'
-            #     pat_data.save()
             messages.success(request,'Report approved and available to print')
             return redirect(request.META.get('HTTP_REFERER'))
         
-
 class Requisition_Form(View):
 
     def dispatch(self,  *args, **kwargs):
@@ -697,7 +634,7 @@ class Requisition_Form(View):
     def get(self,request,*args,**kwargs):
         context={'page':'Requisition'}
         if kwargs['page']=='place-request':
-            reqHist=Requisition.objects.all().order_by('Date')
+            reqHist=Requisition.objects.filter(Placeholder=User_Details.objects.get(User=request.user))
             context.update({'reqHist':reqHist})
             return render(request,'I_CARE/admin/requisition-form.html',context)
         elif kwargs['page']=='pending-request':
@@ -723,7 +660,6 @@ class Requisition_Form(View):
                 messages.success(request,'Request placed successful')
             else:
                 messages.success(request,'Your request is above limit')
-            return redirect(request.META.get('HTTP_REFERER'))
         elif kwargs['page']=='pending-request':
             total_cost=(Decimal(request.POST['Total_Cost']))
             authorizer=Approval_Authority.objects.filter(Q(Min_Amount__lte=total_cost) & Q(Max_Amount__gte=total_cost)).first()
@@ -739,8 +675,13 @@ class Requisition_Form(View):
                 messages.success(request,'Request update successful')
             else:
                 messages.success(request,'Your request is above limit')
-            return redirect(request.META.get('HTTP_REFERER'))
-        
+        elif kwargs['page']=='alter-request':
+            Requisition.objects.filter(id=request.POST['requestID']).update(
+                Approval_Status=request.POST['newStaus']
+            )
+            messages.success(request,'Request processed successfully')
+        return redirect(request.META.get('HTTP_REFERER'))
+
 @method_decorator(unauthenticated_staffs,name='get')
 class General_Reports(View):
     
@@ -751,7 +692,7 @@ class General_Reports(View):
 
         if kwargs['page']=='test':
             if kwargs['type']=='report-history':
-                vitalHist=Presenting_Complaints.objects.all()
+                vitalHist=Presenting_Complaints.objects.all().order_by('-Date')
                 context={'page':'Test Reports','vitalHist':vitalHist}
                 return render(request,'I_CARE/admin/approved-reports.html',context)
         else:
@@ -1088,10 +1029,6 @@ class Home_Page_Links(View):
                     Doctor=Concat(F('Docs_Instance__User__first_name'),Value(' '),F("Docs_Instance__User__last_name"),output_field=CharField()),Docs_Report_Url=Concat(Value('/media/'), 'Docs_Report',output_field=CharField()),Vital_ID=F('Vitals__id')).values()
                 pc_hist=list(pc_hist)
                 
-                # Drugs test records
-                prescHist=Drugs_Prescriptions.objects.filter(Patient_Id__Patient_Id__in=vitalWaiting.values('Patient_Id__Patient_Id')).order_by('-Date').annotate(Patient_ID=F('Patient_Id__Patient_Id'),Drug_Name=F('Drug_Id__Product_Name'),Dosing_Form=F('Drug_Id__Department__Name'),Doctor=Concat(F('Logger_Instance__User__first_name'),Value(' '),F("Logger_Instance__User__last_name"),output_field=CharField())).values()
-                prescHist=list(prescHist)
-
                 # vitals
                 vitalHist=vitalWaiting.annotate(Patient_ID=F('Patient_Id__Patient_Id'),Balance=F('Patient_Id__Balance'),Age=F('Patient_Id__Age'),Last_Seen=Cast('Patient_Id__Last_Visit', output_field=DateField()),
                     Fullname=Concat(F('Patient_Id__First_Name'),Value(' '),F("Patient_Id__Surname"),output_field=CharField()),Profile=F('Patient_Id__Profile'),First_Name=F('Patient_Id__First_Name'),
@@ -1099,7 +1036,7 @@ class Home_Page_Links(View):
                 vitalHist=list(vitalHist)
 
                 context.update({'total_incoming':f'Active Patients({len(vitalHist)})',
-                        'vitalHist':vitalHist,'pc_hist':pc_hist,'prescHist':prescHist})
+                        'vitalHist':vitalHist,'pc_hist':pc_hist})
 
             elif load_data in ['laboratory','radiology']:
                 vitalHist=Vitals.objects.filter(Department__in=['Laboratory','Radiology'],Status='Waiting')
@@ -1139,14 +1076,7 @@ class Home_Page_Links(View):
 
     @transaction.atomic(using=None, savepoint=True)
     def post(self,request,*args,**kwargs):
-        if kwargs['page']=='add-consulting-room':
-            try:
-                Consulting_Room.objects.create(Room_Name=request.POST['Room_Name'],Description=request.POST['Room_Desc'])
-                msg='Ward/Room added successfully...'
-            except IntegrityError:
-                msg='Ward/Room already exist, try something new'
-
-            return HttpResponse(json.dumps({'message':msg}),content_type='application/json')
+    
         if kwargs['page']=='add-insurance':
             try:
                 Insurance.objects.create(Name=request.POST['Name'])
