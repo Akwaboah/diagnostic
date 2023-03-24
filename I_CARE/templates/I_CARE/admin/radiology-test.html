@@ -7,16 +7,18 @@
     <title>{{bus_info.Bus_Name}}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
 
+    {% comment %} <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>	
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script> {% endcomment %}
+
     <!-- Favicons -->
     <link href="{% static 'web-assets/assets/img/favicon.ico' %}" rel="icon">
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap.min.css' %}">
-
-    <!-- Bootstrap DatePicker Css -->
-    <link href="{% static 'admin/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}"
-        rel="stylesheet" />
-
+ 
     <!-- Sweet Alert  Animation Css -->
     <link href="{% static 'admin/assets/plugins/animate-css/animate.css' %}" rel="stylesheet" />
 
@@ -33,26 +35,22 @@
     <!-- Main CSS -->
     <link rel="stylesheet" href="{% static 'web-assets/assets/css/style.css' %}">
 
-    <!-- Table Length CSS -->
-    <link rel="stylesheet" href="{% static 'admin/assets/css/dr-consulting-tables.css' %}">
-
-    <!-- Select2 CSS -->
-    <link rel="stylesheet" href="{% static 'admin/assets/css/select2.min.css' %}">
+    
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
 			<script src="assets/js/html5shiv.min.js"></script>
 			<script src="assets/js/respond.min.js"></script>
 		<![endif]-->
-    <!-- <style>
+     <style>
         /* Make the image fully responsive */
-        .carousel-inner img {
-            width: 100%;
-            height: 100%;
+       .dataTables_wrapper .dataTables_filter {
+            display: none;
         }
-    </style> -->
+
+    </style>  
     <style>/* Set !important rule to override default colors */
         .Tab_active {
-          background: gold !important;
+          background: #ECECEC !important;
         }
     </style>
 </head>
@@ -109,7 +107,16 @@
                                                 <th>Procedure</th>
                                             </tr>
                                         </thead>
+                                        {% comment %} <tfoot>
+                                            <tr>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                            </tr>
+                                        </tfoot> {% endcomment %}
                                         <tbody></tbody>
+                                        
                                     </table>
                                 </div>
                             </div>
@@ -124,11 +131,6 @@
                                         <h4 class="card-title" id="pat_det">Patient Details</h4>
                                         <div class="row">
                                             <div class="col-md-12 col-sm-12">
-                                                <div class="form-group card-label" hidden>
-                                                    <label>Patient Id</label>
-                                                    <input name="Patient_Id" id="Patient_Id"
-                                                    required    class="form-control" type="text">
-                                                </div>
                                                 <div class="form-group card-label" hidden>
                                                     <label>Vital Id</label>
                                                     <input name="Vital_Id" id="Vital_Id"
@@ -199,11 +201,6 @@
     <!-- jQuery -->
     <script src="{% static 'web-assets/assets/js/jquery.min.js' %}"></script>
 
-    <!-- Bootstrap Datepicker Plugin Js -->
-    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
-    <!-- Date Plugin Js -->
-    <script src="{% static 'admin/assets/plugins/bootstrap-datepicker/js/custom-date.js' %}"></script>
-
     <!-- Bootstrap Core JS -->
     <script src="{% static 'web-assets/assets/js/popper.min.js' %}"></script>
     <script src="{% static 'web-assets/assets/js/bootstrap.min.js' %}"></script>
@@ -213,13 +210,7 @@
 
     <!-- Sweet Alert Plugin Js -->
     <script src="{% static 'admin/assets/plugins/sweetalert/sweetalert.min.js' %}"></script>
-
-    <!-- Slick JS -->
-    <!-- <script src="{% static 'web-assets/assets/js/slick.js' %}"></script> -->
-
-    <!-- Select2 JS -->
-    <script src="{% static 'admin/assets/js/select2.min.js' %}"></script>
-
+ 
     <!-- Datatables JS -->
     <script src="{% static 'admin/assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
     <script src="{% static 'admin/assets/plugins/datatables/datatables.min.js' %}"></script>
@@ -229,11 +220,7 @@
 
     <!-- Custom JS -->
     <script src="{% static 'admin/assets/js/script.js' %}"></script>
-
-    <!-- Mask JS -->
-    <script src="{% static 'admin/assets/js/jquery.maskedinput.min.js' %}"></script>
-    <script src="{% static 'admin/assets/js/mask.js' %}"></script>
-
+ 
     <!-- Sweet Notification Trigger-->
     <script src="{% static 'admin/assets/plugins/sweetalert/notifications.js' %}"></script>
 
@@ -241,6 +228,7 @@
         // pat tables var 
         let patientsTable;
         let Patient_Id = "None"; 
+        let Data_Id="None";
         let vital_history;
         let pc_history;
         $(document).ready(function () {
@@ -287,19 +275,47 @@
                     {"data": "Modality"},
                     {"data": "Procedure_Name"}],
                 paging: false,
-                ordering: true,
+                ordering: false,
                 info: false,
                 searching: true,
                 bLengthChange: false,
                 pageLength: 6,
                 lengthMenu: [[6, 12, 18, -1], [6, 12, 18, "All"]],
+                {% comment %} dom: '<"top"i>rt<"bottom"flp><"clear">', {% endcomment %}
+                dom: '<"top"f>rt<"bottom"lp><"clear">',
+                initComplete: function () {
+                    this.api()
+                        .columns([2])
+                        .every(function () {
+                            var column = this;
+                            var select = $('<select class="form-control form-control-sm"><option value=""></option></select>')
+                                .appendTo($(column.header()).empty())
+                                {% comment %} .appendTo($(column.footer()).empty()) {% endcomment %}
+                                .on('change', function () {
+                                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
+         
+                                    column.search(val ? '^' + val + '$' : '', true, false).draw();
+                                });
+         
+                            column
+                                .data()
+                                .unique()
+                                .sort()
+                                .each(function (d, j) {
+                                    select.append('<option value="' + d + '">' + d + '</option>');
+                                });
+                            {% comment %} select.prepend('<option value="" disabled selected>Sort ' + column.header().innerHTML + '</option>'); {% endcomment %}
+                            select.prepend('<option value="" disabled selected>Modality</option>');
+
+                        });
+                },
             });
             // refresh patientsTable every 24 seconds to load new data
             setInterval( function () {
                 patientsTable.ajax.reload(function(json){
                     // add background color to the table if Pat Id was selected
                     patientsTable.rows( function (idx, data, node ) {             
-                        if(data.Patient_ID === Patient_Id){
+                        if(data.id === Data_Id){
                             // console.log(`Matched Id: ${Patient_Id}- Table ${data.Pat_Code}`)
                             $(node).find("td").each(function(i) {
                                 //toggle between adding/removing the 'active' class
@@ -316,11 +332,10 @@
         // get table click    
         $('#patientsTable tbody').on('click', 'tr', function() {
             let data=patientsTable.row(this).data();
-            let Patient_Id = data.Patient_ID;
-            let Data_Id = data.id; //Vitals Id
+            Patient_Id = data.Patient_ID;
+            Data_Id = data.id; //Vitals Id
             // console.log(`Clicked: Pat Id: ${Patient_Id}, Name: ${data.Fname}`)
-            document.getElementById('pat_det').innerHTML = `Patient Details #${Patient_Id}`;
-            $('#Patient_Id').val(Patient_Id) 
+            document.getElementById('pat_det').innerHTML = `Patient Details #${Patient_Id}`; 
             $('#Vital_Id').val(data.id) 
             document.getElementById('first_name').value = data.First_Name;
             document.getElementById('surname').value = data.Surname;

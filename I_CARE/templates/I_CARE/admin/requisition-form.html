@@ -160,7 +160,8 @@
                                                 <th>Qty</th>
                                                 <th>Price</th>
                                                 <th>Total Cost</th>
-                                                <th>Approval Authority</th>
+                                                <th>Approval Authorities</th>
+                                                <th>Approved By</th>
                                                 <th>Status</th>
                                             </tr>
                                         </thead>
@@ -183,14 +184,19 @@
                                                 <td>{{vit.Quantity}}</td>
                                                 <td>{{vit.Price}}</td>
                                                 <td class="text-capitalize">{{vit.Total_Cost}}</td>
-                                                <td class="text-capitalize">{{vit.Approval_Authority.Authorizer}}</td>
+                                                <td class="text-capitalize">
+                                                    {% for auth in vit.Approval_Authority.all %}
+                                                    <li>{{ auth.Authorizer }}</li>
+                                                    {% endfor %}
+                                                </td>
+                                                <td>{{vit.Approved_By}}</td>
                                                 <td class="text-left">
                                                     <div class="table-action">
                                                         {% if vit.Approval_Status == 'Pending' %}
                                                             <a class="btn btn-sm bg-warning-light">
                                                                 {{vit.Approval_Status}}
                                                             </a>
-                                                        {% elif vit.Approval_Status == 'Denied' %}
+                                                        {% elif vit.Approval_Status == 'Reject' %}
                                                             <a class="btn btn-sm bg-danger-light">
                                                                 {{vit.Approval_Status}}
                                                             </a>
