@@ -1,0 +1,137 @@
+<script>
+    'use strict';
+    function generateColors(num) {
+        var colors = [];
+        var letters = '0123456789ABCDEF';
+        for (var i = 0; i < num; i++) {
+            var color = '#';
+            for (var j = 0; j < 6; j++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            colors.push(color);
+        }
+        return colors;
+    }
+    var colors = generateColors(20);
+
+    const size = 350;
+    $(document).ready(function () {
+        // Chart for Procedures within a week
+        if ($('#procedure').length > 0) {
+            var chartData = JSON.parse('{{ visitors|escapejs }}');
+            var labels = [];
+            var others = [];
+            var days = [];
+            var data = [];
+            for (let i = 0; i < chartData.length; i++) {
+                labels.push(chartData[i].procedure);
+                days.push(chartData[i].day);
+                data.push(chartData[i].count);
+                var dt = {
+                    name: chartData[i].day,
+                    color: colors[i],
+                    data: [chartData[i].count],
+                };
+                others.push(dt);
+            }
+
+            var optionsBar = {
+                chart: {
+                    type: 'bar',
+                    height: 250,
+                    width: '100%',
+                    stacked: false,
+                    toolbar: {
+                        show: true
+                    },
+                },
+
+                dataLabels: {
+                    enabled: false
+                },
+                plotOptions: {
+                    bar: {
+                        columnWidth: '45%',
+                        horizontal: true,
+                    }
+                },
+
+                series: others,
+                labels: labels,
+                xaxis: {
+                    labels: {
+                        show: true
+                    },
+                    axisBorder: {
+                        show: false
+                    },
+                    axisTicks: {
+                        show: true
+                    },
+                },
+                yaxis: {
+                    axisBorder: {
+                        show: false
+                    },
+                    axisTicks: {
+                        show: false
+                    },
+                    labels: {
+                        style: {
+                            colors: '#777'
+                        }
+                    }
+                },
+                title: {
+                    text: '',
+                    align: 'left',
+                    style: {
+                        fontSize: '18px'
+                    }
+                }
+
+            };
+
+
+
+            var chartBar = new ApexCharts(document.querySelector('#procedure'), optionsBar);
+            chartBar.render();
+
+            // Bar chart on visitors
+            var options = {
+                series: [{
+                    data
+                }],
+                chart: {
+                    type: 'bar',
+                    height: 250,
+                    toolbar: {
+                        show: true,
+                    },
+                },
+                plotOptions: {
+                    bar: {
+                        distributed: true,
+                        borderRadius: 4,
+                        horizontal: false,
+                    }
+                },
+                colors: colors,
+                dataLabels: {
+                    enabled: false
+                },
+                xaxis: {
+
+                    categories: days,
+                }
+
+            };
+
+            var chart = new ApexCharts(document.querySelector("#visitors"), options);
+            chart.render();
+        }
+
+    });
+
+
+</script>

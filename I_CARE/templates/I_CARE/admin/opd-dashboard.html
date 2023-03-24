@@ -105,338 +105,44 @@
 		</div>
 	</div>
 </div>
+<!-- charts start -->
 <div class="row">
-	<div class="col-md-12">
-		<!-- <h4 class="mb-1">Patient Appoinment</h4> -->
-		<div class="appointment-tab">
-			<!-- Appointment Tab -->
-			<ul class="nav nav-tabs nav-tabs-solid nav-tabs-justified p-1">
-				<li class="nav-item">
-					<a class="nav-link active" href="#new_booking" data-toggle="tab">
-						Book
-					</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="#today-appointments" data-toggle="tab">
-						Today's Appointment
-						<small class="unread-msg-tap text-white">{{tdApp}}</small>
-					</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="#upcoming-appointments" data-toggle="tab">
-						Upcoming Appointment
-						<small class="unread-msg-tap text-white">{{tupApp}}</small>
-					</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="#past-app" data-toggle="tab">
-						Previous Appointment
-						<small class="unread-msg-tap text-white">{{tpastApp}}</small>
-					</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="#messages" data-toggle="tab">
-						Messages & Enquiries 
-						<small class="unread-msg-tap text-white">{{tmsgRec}}</small>
-					</a>
-				</li>
-			</ul>
-			<!-- /Appointment Tab -->
-			<div class="tab-content">
-				
-				<!-- Booking Appointment Tab -->
-				<div class="tab-pane show active" id="new_booking">
-					<div class="card card-table mb-0">
-						<div class="card-body">
-							<div class="container-fluid">
-								<div class="row">
-									<div class="col-lg-12 col-md-12 col-sm-12">
-										<div class="uni-single-departments-right">
-											<!--APPOINTMENTS-->
-											<div class="uni-single-department-appointment">
-												<h3 class="uni-single-departments-right-title">Book Appointment</h3>
-												<div class="uni-divider"></div>
-												<div class="uni-single-department-appointment-form">
-													<form method="POST" action="{% url 'web-links' 'our-services' %}">
-														{% csrf_token %}
-														<div class="row">
-															<div class="col-md-5">
-																<div class="input-group form-group">
-																	<span class="input-group-addon"><i class="fa fa-user"
-																			aria-hidden="true"></i></span>
-																	<input type="text" class="form-control" name="name" value=""
-																	required placeholder="client name">
-																</div>
-																<div class="input-group form-group">
-																	<span class="input-group-addon"><i class="fa fa-phone"
-																			aria-hidden="true"></i></span>
-																	<input type="tel" class="form-control" name="phone" value=""
-																	required placeholder="phone number">
-																</div>
-																<div class="input-group form-group">
-																	<span class="input-group-addon"><i class="fa fa-envelope"
-																			aria-hidden="true"></i></span>
-																	<input type="email" class="form-control" name="email" value=""
-																	required placeholder="email">
-																</div>
-																<div class="input-group form-group">
-																	<div class="input-group date date-check-in">
-																		<span class="input-group-addon"><i class="fa fa-calendar"
-																			aria-hidden="true"></i></span>
-																		<input type="text" class="form-control datetimepicker" required
-																		name="date"  placeholder="PREFERRED DATE" data-date-format="Y-M-DD">
-																		<span class="input-group-addon btn"><i
-																			class="fa fa-calendar" id="ti-calendar1" aria-hidden="true"></i></span>
-																	</div>
-																</div>
-															</div>
-															<div class="col-md-7">
-																<div class="input-group form-group">
-																	<textarea name="message" class="form-control"
-																	required placeholder="message"></textarea>
-																</div>
-																<div class="row">
-																	<div class="col-md-5">
-																		<div class="form-group">
-																			<select name="preferred_time" required class="form-control form-control-md">
-																				<option value="" selected>PREFERRED TIME</option>
-																				<option value="MORNING">MORNING</option>
-																				<option value="AFTERNOON">AFTERNOON</option>
-																				<option value="EVENING">EVENING</option>
-																			</select>
-																		</div>
-																	</div>
-																	<div class="col-md-3">
-																		<button class="btn btn-md btn-primary">CONFIRM</button>
-																	</div>
-																</div>
-															</div>
-														</div>
-													</form>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
+	<!-- Visitors -->
+	<div class="col-md-12 col-lg-6">
+		<div class="card card-chart">
+			<div class="card-header p-1">
+				<div class="row align-items-center">
+					<div class="col-6 ">
+						<h5 class="card-title">Visitors</h5>
 					</div>
 				</div>
-				<!-- /Booking Appoinment Tab -->
-
-				<!-- Today Appointment Tab -->
-				<div class="tab-pane" id="today-appointments">
-					<div class="card card-table mb-0">
-						<div class="card-body">
-							<div class="table-responsive">
-								<table id="todayApp" class="table table-bordered table-hover table-center mb-0">
-									<thead>
-										<tr>
-											<th>Name</th>
-											<th>Phone</th>
-											<th>Purpose</th>
-											<th>Preferred Date</th>
-											<!-- <th class="text-center">Paid Amount</th> -->
-											<th></th>
-										</tr>
-									</thead>
-									<tbody>
-										{% for val in todayApp %}
-										<tr>
-											<td>
-												<h2 class="table-avatar">
-													<!-- <a href="patient-profile.html" class="avatar avatar-sm mr-2"><img
-															class="avatar-img rounded-circle"
-															src="{% static 'web-assets/assets/img/patients/patient.jpg' %}"
-															alt="User Image"></a> -->
-													<a href="{% url 'opd' val.id %}">{{val.Name}}<span>#{{val.Patient_Id}}/{{val.id}}</span></a>
-												</h2>
-											</td>
-											<td>{{val.Phone}}
-												<!-- <span class="d-block text-info">10.00 AM</span> -->
-											</td>
-											<td>{{val.Message}}</td>
-											<td>{{val.Preferred_Time}}</td>
-											<!-- <td class="text-center">$150</td> -->
-											<td class="text-right">
-												<div class="table-action">
-													<a href="javascript:void(0);" onclick="delData('App','today`s appointment','{{val.Name}}','{{val.id}}')" class="btn btn-sm bg-danger-light">
-														<i class="fas fa-times"></i> Cancel
-													</a>
-												</div>
-											</td>
-										</tr>
-										{% endfor %}
-									</tbody>
-								</table>
-							</div>
-						</div>
+			</div>
+			<div class="card-body">
+				<div id="visitors"></div>
+			</div>
+		</div>
+	</div>
+	<!-- Patients -->
+	<div class="col-md-12 col-lg-6">
+		<div class="card card-chart">
+			<div class="card-header p-1">
+				<div class="row align-items-center">
+					<div class="col-6">
+						<h5 class="card-title">Procedure</h5>
 					</div>
 				</div>
-				<!-- /Today Appointment Tab -->
-
-				<!-- Upcoming Appointment Tab -->
-				<div class="tab-pane" id="upcoming-appointments">
-					<div class="card card-table mb-0">
-						<div class="card-body">
-							<div class="table-responsive">
-								<table id="upcomingApp" class="table table-bordered table-hover table-center mb-0">
-									<thead>
-										<tr>
-											<th>Date</th>
-											<th>Name</th>
-											<th>Phone</th>
-											<th>Purpose</th>
-											<th>Preferred Date</th>
-											<th></th>
-										</tr>
-									</thead>
-									<tbody>
-										{% for val in upcomingApp %}
-										<tr>
-											<td>{{ val.Preferred_Date|date:'D, M jS, Y' }}</td>
-											<td>
-												<h2 class="table-avatar">
-													<!-- <a href="patient-profile.html" class="avatar avatar-sm mr-2"><img
-															class="avatar-img rounded-circle"
-															src="{% static 'web-assets/assets/img/patients/patient.jpg' %}"
-															alt="User Image"></a> -->
-													<a href="javascript:void(0);">{{val.Name}}<span>#{{val.Patient_Id}}/{{val.id}}</span></a>
-												</h2>
-											</td>
-											<td>{{val.Phone}}
-												<!-- <span class="d-block text-info">10.00 AM</span> -->
-											</td>
-											<td>{{val.Message}}</td>
-											<td>{{val.Preferred_Time}}</td>
-											<td class="text-right">
-												<div class="table-action">
-													<a href="javascript:void(0);" onclick="delData('App','upcoming appointment','{{val.Name}}','{{val.id}}')" class="btn btn-sm bg-danger-light">
-														<i class="fas fa-times"></i> Cancel
-													</a>
-												</div>
-											</td>
-										</tr>
-										{% endfor %}
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
-				</div>
-				<!-- /upcoming Appointment Tab -->
-
-				<!-- Past Appointment Tab -->
-				<div class="tab-pane" id="past-app">
-					<div class="card card-table mb-0">
-						<div class="card-body">
-							<div class="table-responsive">
-								<table id="pastAppTab" class="table table-bordered table-hover table-center mb-0">
-									<thead>
-										<tr>
-											<th>Date</th>
-											<th>Name</th>
-											<th>Phone</th>
-											<th>Purpose</th>
-											<!-- <th>Preferred Coming</th> -->
-											<!-- <th class="text-center">Paid Amount</th>
-											<th></th> -->
-										</tr>
-									</thead>
-									<tbody>
-										{% for val in pastApp %}
-										<tr>
-											<td>{{ val.Preferred_Date|date:'D, M jS, Y' }}</td>
-											<td>
-												<h2 class="table-avatar">
-													<!-- <a href="patient-profile.html" class="avatar avatar-sm mr-2"><img
-															class="avatar-img rounded-circle"
-															src="{% static 'web-assets/assets/img/patients/patient.jpg' %}"
-															alt="User Image"></a> -->
-													<a href="{% url 'opd' val.id %}">{{val.Name}}<span>#{{val.Patient_Id}}/{{val.id}}</span></a>
-												</h2>
-											</td>
-											<td>{{val.Phone}}
-												<!-- <span class="d-block text-info">10.00 AM</span> -->
-											</td>
-											<td>{{val.Message}}</td>
-											<!-- <td>{{val.Preferred_Time}}</td> -->
-											<!-- <td class="text-center">$150</td>
-											<td class="text-right">
-												<div class="table-action">
-													<a href="javascript:void(0);" class="btn btn-sm bg-info-light">
-														<i class="far fa-eye"></i> View
-													</a>
-
-													<a href="javascript:void(0);" class="btn btn-sm bg-success-light">
-														<i class="fas fa-check"></i> Accept
-													</a>
-													<a href="javascript:void(0);" class="btn btn-sm bg-danger-light">
-														<i class="fas fa-times"></i> Cancel
-													</a>
-												</div>
-											</td> -->
-										</tr>
-										{% endfor %}
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
-				</div>
-				<!-- /Past Appointment Tab -->
-
-				<!-- Messages Tab -->
-				<div class="tab-pane" id="messages">
-					<div class="card card-table mb-0">
-						<div class="card-body">
-							<div class="table-responsive">
-								<table id="msgTab" class="table table-bordered table-hover table-center mb-0">
-									<thead>
-										<tr>
-											<th>Date</th>
-											<th>Name</th>
-											<th>Phone</th>
-											<th>Message</th>
-											<th></th>
-										</tr>
-									</thead>
-									<tbody>
-										{% for val in msgRecieved %}
-										<tr>
-											<td>{{ val.Date|date:'D, M jS, Y' }}</td>
-											<td>
-												<h2 class="table-avatar">
-													<a href="javascript:void(0);">{{val.Name}}</a>
-												</h2>
-											</td>
-											<td>{{val.Phone}}
-												<!-- <span class="d-block text-info">10.00 AM</span> -->
-											</td>
-											<td class="inline-block text-truncate" style="max-width: 200px;">{{val.Message}}</td>
-											<td class="text-right">
-												<div class="table-action">
-													<a href="javascript:void(0);" onclick="ReadMessageData('Message','{{val.Name}}','{{val.Message}}');" class="btn btn-sm bg-success-light">
-														<i class="fas fa-mail-bulk"></i> Read
-													</a>
-													<a href="javascript:void(0);" onclick="delData('Msg','message','{{val.Name}}'+' on {{val.Date}}'+'','{{val.id}}')" class="btn btn-sm bg-danger-light">
-														<i class="fas fa-times"></i> Discard
-													</a>
-												</div>
-											</td>
-										</tr>
-										{% endfor %}
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
-				</div>
-				<!-- /Messages Tab -->
+			</div>
+			<div class="card-body">
+				<div id="procedure"></div>
 			</div>
 		</div>
 	</div>
 </div>
+<!-- charts end -->
+
+
+
+{% include 'I_CARE/admin/chart.html' %}
 {% endblock content %}
 <!-- /page content -->
 
