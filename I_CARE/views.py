@@ -308,7 +308,7 @@ class OPD(View):
         except ValueError:
             pass
 
-        if kwargs['page']=='dashboard':
+        if kwargs['page']=='dashboard' or kwargs['page']=='app_mesg':
             app_data=Appoitment.objects.all()
             pastApp=app_data.filter(Preferred_Date__lt=datetime.now())
             todayApp=app_data.filter(Preferred_Date=datetime.now())
@@ -316,7 +316,10 @@ class OPD(View):
             msg=Message.objects.all().order_by('-Date')
             context.update({'todayApp':todayApp,'tdApp':len(todayApp),'upcomingApp':upcomingApp,'tupApp':len(upcomingApp),
             'pastApp':pastApp,'tpastApp':len(pastApp),'msgRecieved':msg,'tmsgRec':len(msg)})
+            if kwargs['page']=='app_mesg':
+                return render(request,'I_CARE/admin/opd-pat-app-mesg.html',context)
             return render(request,'I_CARE/admin/opd-dashboard.html',context)
+        
         elif kwargs['page']=='pat-reg' or isinstance(kwargs['page'],int) :
             # load appointment data 
             if kwargs['page'] !='pat-reg':
