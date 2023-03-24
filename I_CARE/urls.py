@@ -2,7 +2,7 @@ from django.urls import path
 import I_CARE.views as views
 
 urlpatterns = [
-     path(route='',view=views.generate_report,name='home-page'),
+     path(route='',view=views.Home_Page.as_view(),name='home-page'),
      path(route='info/<str:page>',view=views.Home_Page_Links.as_view(),name='web-links'),
      path(route='staff/<str:page>',view=views.Auth_Staffs.as_view(),name='auth-staff'),
      path(route='opd/<str:page>',view=views.OPD.as_view(),name='opd'),
