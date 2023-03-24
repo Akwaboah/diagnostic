@@ -47,8 +47,9 @@
             height: 100%;
         }
     </style> -->
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script src="https://code.Jquery.com/jquery-1.11.1.min.js"></script>
+    <!-- <script src="https://code.Jquery.com/jquery-1.11.1.min.js"></script> -->
+    <script src="{% static 'admin/assets/plugins/apexchart/jquery-1.11.1.min.js' %}"></script>
+
     <script>
         var timer = 0;
         var PERIOD_VISIBLE = 120000;
@@ -886,6 +887,11 @@
         });
 
     </script>
+
+    <!-- Apex Chart -->
+    
+
+    <script src="{% static 'admin/assets/plugins/apexchart/apexcharts.min.js' %}"></script>
 
 
     <!-- extends child js into this block tag -->
