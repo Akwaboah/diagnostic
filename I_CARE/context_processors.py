@@ -1,5 +1,6 @@
 from datetime import datetime
-from django.db.models import F
+from django.db.models import F,Value,ExpressionWrapper,CharField
+from django.db.models.functions import Concat
 from django.core.serializers.json import DjangoJSONEncoder
 from I_CARE.models import Consulting_Room,Patients, User_Details,\
     Business_Info,Procedures,Referring_Facilities,Insurance,Modalities
@@ -12,11 +13,9 @@ def global_data(request):
     total_pat=pat_data.values('Patient_Id').distinct().count()
     debt_pat=pat_data.filter(Balance__lt=0).values('Patient_Id').distinct().count()
     today_pat=pat_data.filter(Last_Visit__date=datetime.now()).values('Patient_Id').distinct().count()
-   
     user_info=None
     if request.user.is_authenticated and request.user.is_anonymous==False:
         user_info=User_Details.objects.get(User=request.user)
-    
     return {'bus_info':bus_info,'hospital_departments':hospital_departments,
     'ward_rooms':Consulting_Room.objects.all(),'procedures':Procedures.objects.all().order_by('Procedure'),
     'total_pat':total_pat,'pat_data':pat_data,'today_pat':today_pat,'debt_pat':debt_pat,
