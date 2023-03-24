@@ -45,20 +45,19 @@
                 <ul class="submenu">
                     <li><a href="{% url 'doc' 'consulting' %}">Radiologist</a></li>
                 </ul>
-            </li>		
+            </li>
             <li class="has-submenu {% if 'Pharmacy' in page %}active{% endif %}">
                 <a href="{% url 'pharm' 'dashboard' %}">Pharmacy<i class="fas fa-chevron-down"></i></a>
                 <ul class="submenu">
                     <li><a href="{% url 'pharm' 'list' %}">Drugs List</a></li>
                     <li><a href="{% url 'pharm' 'stocking' %}">Manage Drugs</a></li>
                     <li><a href="{% url 'pharm' 'cash-form' %}">Prescriptions</a></li>
-                    <li><a href="javascript:void(0);" data-toggle="modal"
-                            data-target="#modal-inventory-rep">
+                    <li><a href="javascript:void(0);" data-toggle="modal" data-target="#modal-inventory-rep">
                             General Reporting
                         </a>
                     </li>
                 </ul>
-            </li>	
+            </li>
             {% if request.user.is_superuser == True %}
             <li class="has-submenu {% if 'Requisition' in page %}active{% endif %}">
                 <a href="javascript:void(0)">Requisition<i class="fas fa-chevron-down"></i></a>
@@ -68,15 +67,17 @@
                 </ul>
             </li>
             {% else %}
-            <li class="{% if 'Requisition' in page %}active{% endif %}"><a href="{% url 'requisition' 'place-request' %}">Requisition</a></li>
-            {% endif %}	
-            {% comment %} <li><a data-toggle="modal" href="#modal-opd-report">General Reporting</a></li> {% endcomment %}
+            <li class="{% if 'Requisition' in page %}active{% endif %}"><a
+                    href="{% url 'requisition' 'place-request' %}">Requisition</a></li>
+            {% endif %}
+            {% comment %} <li><a data-toggle="modal" href="#modal-opd-report">General Reporting</a></li> {% endcomment
+            %}
         </ul>
     </div>
     <ul class="nav header-navbar-rht">
         {% comment %} <li class="nav-item contact-item">
             <div class="header-contact-img">
-                <i class="far fa-hospital"></i>							
+                <i class="far fa-hospital"></i>
             </div>
             <div class="header-contact-detail">
                 <p class="contact-header">Contact Support</p>
@@ -91,7 +92,7 @@
                     <img src="{{user_info.Profile.url}}" alt="User Image">
                     {% else %}
                     <img src="{% static 'admin/assets/img/profiles/avatar.png' %}" alt="User Image">
-                    {% endif %}              
+                    {% endif %}
                 </span>
             </a>
             <div class="dropdown-menu dropdown-menu-right">
@@ -120,4 +121,3 @@
         <!-- /User Menu -->
     </ul>
 </nav>
-

@@ -14,7 +14,8 @@
     <link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap.min.css' %}">
 
     <!-- Bootstrap DatePicker Css -->
-    <link href="{% static 'admin/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}" rel="stylesheet" />
+    <link href="{% static 'admin/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}"
+        rel="stylesheet" />
 
     <!-- Sweet Alert  Animation Css -->
     <link href="{% static 'admin/assets/plugins/animate-css/animate.css' %}" rel="stylesheet" />
@@ -46,22 +47,24 @@
             height: 100%;
         }
     </style> -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://code.Jquery.com/jquery-1.11.1.min.js"></script>
     <script>
         var timer = 0;
-        var PERIOD_VISIBLE =120000;
+        var PERIOD_VISIBLE = 120000;
         var PERIOD_NOT_VISIBLE = 60000;
-     
+
         function onLoad() {
             timer = setInterval(checkBirthDays, (document.hidden) ? PERIOD_NOT_VISIBLE : PERIOD_VISIBLE);
-            if(document.addEventListener) document.addEventListener("visibilitychange", visibilityChanged);
+            if (document.addEventListener) document.addEventListener("visibilitychange", visibilityChanged);
         }
-     
+
         function visibilityChanged() {
             clearTimeout(timer);
             timer = setInterval(checkBirthDays, (document.hidden) ? PERIOD_NOT_VISIBLE : PERIOD_VISIBLE);
         }
-     
-        function checkBirthDays() { 
+
+        function checkBirthDays() {
             // Check server for today's birthdays
             $.ajax({
                 type: "POST",
@@ -74,12 +77,12 @@
                     // window.parent.showNotification(null, data['message'], 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
                     // swal.close();
                 },
-                error: function (request,status,error) {
+                error: function (request, status, error) {
                     // swal(`Error Occurred: ${request.responseText}, please try again :)`, "error");
                 }
             });
         }
-     
+
     </script>
 </head>
 
@@ -169,7 +172,7 @@
                     <h4 class="modal-title" id="defaultModalLabel">ADD NEW USER</h4>
                 </div>
                 <div class="modal-body">
-                    <form id="sign_upForm"> 
+                    <form id="sign_upForm">
                         <div class="row form-group">
                             <div class="col-lg-5">
                                 <div class="input-group">
@@ -177,8 +180,8 @@
                                         <i class="material-icons">people</i>
                                     </span>
                                     <div class="form-line">
-                                        <input autocomplete="off" type="text" class="form-control" id="Username" name="Username" placeholder="Username"
-                                            required autofocus>
+                                        <input autocomplete="off" type="text" class="form-control" id="Username"
+                                            name="Username" placeholder="Username" required autofocus>
                                     </div>
                                 </div>
                             </div>
@@ -188,8 +191,8 @@
                                         <i class="material-icons">person</i>
                                     </span>
                                     <div class="form-line">
-                                        <input type="text" class="form-control" id="Fullname" name="Fullname" placeholder="Fullname / First & Last Name"
-                                            autocomplete="off" required>
+                                        <input type="text" class="form-control" id="Fullname" name="Fullname"
+                                            placeholder="Fullname / First & Last Name" autocomplete="off" required>
                                     </div>
                                 </div>
                             </div>
@@ -215,8 +218,8 @@
                                         <i class="material-icons">phone</i>
                                     </span>
                                     <div class="form-line">
-                                        <input type="text" class="form-control" id="Phone" name="Phone" placeholder="Mobile Number"
-                                            autocomplete="off" required>
+                                        <input type="text" class="form-control" id="Phone" name="Phone"
+                                            placeholder="Mobile Number" autocomplete="off" required>
                                     </div>
                                 </div>
                             </div>
@@ -228,8 +231,8 @@
                                         <i class="material-icons">email</i>
                                     </span>
                                     <div class="form-line">
-                                        <input type="email" autocomplete="off" class="form-control" id="Email" name="Email"
-                                            placeholder="Email Address" required>
+                                        <input type="email" autocomplete="off" class="form-control" id="Email"
+                                            name="Email" placeholder="Email Address" required>
                                     </div>
                                 </div>
                             </div>
@@ -241,8 +244,9 @@
                                         <i class="material-icons">lock</i>
                                     </span>
                                     <div class="form-line">
-                                        <input type="password" class="form-control" id="Password1" name="Password1" minlength="6"
-                                        onchange="onPassWordChange();" autocomplete="off" placeholder="Password" required>
+                                        <input type="password" class="form-control" id="Password1" name="Password1"
+                                            minlength="6" onchange="onPassWordChange();" autocomplete="off"
+                                            placeholder="Password" required>
                                     </div>
                                 </div>
                             </div>
@@ -252,8 +256,9 @@
                                         <i class="material-icons">lock</i>
                                     </span>
                                     <div class="form-line">
-                                        <input type="password" class="form-control" id="Password2" name="Password2" minlength="6"
-                                        onchange="onPassWordChange();" autocomplete="off" placeholder="Confirm Password" required>
+                                        <input type="password" class="form-control" id="Password2" name="Password2"
+                                            minlength="6" onchange="onPassWordChange();" autocomplete="off"
+                                            placeholder="Confirm Password" required>
                                     </div>
                                 </div>
                             </div>
@@ -267,7 +272,7 @@
                                     <option value="">User Level</option>
                                     {% for level in groups_level %}
                                     <option>{{level}}</option>
-                                    {% endfor %} 
+                                    {% endfor %}
                                 </select>
                             </div>
                         </div>
@@ -275,7 +280,7 @@
                             <input type="checkbox" name="terms" id="terms" class="filled-in chk-col-pink">
                             <label for="terms">I read and agree to the <a href="javascript:void(0);">terms of
                                     usage</a>.</label>
-                        </div> 
+                        </div>
                         <button class="btn btn-block btn-sm btn-primary" type="submit">SAVE USER</button>
                     </form>
                 </div>
@@ -289,7 +294,7 @@
 
     <!-- Add Insurance Modal -->
     <div class="modal fade" id="modal_add_insurance" aria-hidden="true" role="dialog">
-        <div class="modal-dialog modal-dialog-centered" role="document" >
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Add Insurance</h5>
@@ -303,7 +308,8 @@
                             <div class="col-12 col-sm-12">
                                 <div class="form-group">
                                     <label>Insurance Name</label>
-                                    <input id="insurance_name" placeholder="eg. NHIS" required type="text" class="form-control">
+                                    <input id="insurance_name" placeholder="eg. NHIS" required type="text"
+                                        class="form-control">
                                 </div>
                             </div>
                         </div>
@@ -317,7 +323,7 @@
 
     <!-- Patient Payment Modal -->
     <div class="modal fade" id="paymentModal" aria-hidden="true" role="dialog">
-        <div class="modal-dialog modal-lg" role="document" >
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Payment Form</h5>
@@ -336,13 +342,16 @@
                                             <div class="row">
                                                 <div class="col-xl-3 col-lg-3 col-md-3 col-sm-3 col-3">
                                                     <div class="profile-img">
-                                                        <img id="JProfile" src="{% static 'admin/assets/img/profiles/avatar.png' %}" alt="User Image">
+                                                        <img id="JProfile"
+                                                            src="{% static 'admin/assets/img/profiles/avatar.png' %}"
+                                                            alt="User Image">
                                                     </div>
                                                 </div>
                                                 <div class="col-xl-9 col-lg-9 col-md-9 col-sm-9 col-9">
                                                     <label>Name/ID:<b id="JName">_ _ _ _ _ _ _ _ _ _ _</b> <br>
                                                         Gender/Age:<b id="JGender">_ _ _ _ _ _ _ _ _ _ _</b> <br>
-                                                        Nationality/Residence:<b id="JAddress">_ _ _ _ _ _ _ _ _ _ _</b> <br>
+                                                        Nationality/Residence:<b id="JAddress">_ _ _ _ _ _ _ _ _ _ _</b>
+                                                        <br>
                                                         Tel/Occupation:<b id="JContact">_ _ _ _ _ _ _ _ _ _ _</b><br>
                                                         Insurance:<b id="Insurance">_ _ _ _ _ _ _ _ _ _ _</b><br>
                                                         Account Balance:<b id="JBalance"> 0.00 GHS</b>
@@ -354,13 +363,17 @@
                                             <form id="journalPaymentForm">
                                                 <div class="row form-row">
                                                     <div class="col-12 col-sm-5 mb-1">
-                                                        <input required id="journalAmount" min="0.01" placeholder="Amount" onkeyup="validatePay();" onchange="validatePay();" autocomplete="off" type="number" step="any" class="form-control form-control-sm">
+                                                        <input required id="journalAmount" min="0.01"
+                                                            placeholder="Amount" onkeyup="validatePay();"
+                                                            onchange="validatePay();" autocomplete="off" type="number"
+                                                            step="any" class="form-control form-control-sm">
                                                     </div>
                                                     <div class="col-12 col-sm-7 mb-1">
-                                                        <select required id="journalMode" class="form-control form-control-sm">
+                                                        <select required id="journalMode"
+                                                            class="form-control form-control-sm">
                                                             <option value="">Payment Type</option>
-                                                            <option >CASH</option>
-                                                            <option >MOMO</option>
+                                                            <option>CASH</option>
+                                                            <option>MOMO</option>
                                                             <option>CHEQUE</option>
                                                             <option>BANK DIRECT</option>
                                                         </select>
@@ -368,20 +381,25 @@
                                                 </div>
                                                 <div class="row form-row">
                                                     <div class="col-6 col-sm-6 mb-1 Date">
-                                                        <input required id="journalDate" placeholder="2023-01-15" autocomplete="off" type="text"  class="form-control form-control-sm">
+                                                        <input required id="journalDate" placeholder="2023-01-15"
+                                                            autocomplete="off" type="text"
+                                                            class="form-control form-control-sm">
                                                     </div>
                                                     <div class="col-6 col-sm-6 mb-1">
-                                                        <input id="journalComment" placeholder="Comment" autocomplete="off" type="text"  class="form-control form-control-sm">
+                                                        <input id="journalComment" placeholder="Comment"
+                                                            autocomplete="off" type="text"
+                                                            class="form-control form-control-sm">
                                                     </div>
                                                 </div>
-                                                <button type="submit" class="btn btn-primary btn-block">Confirm Payment</button>
+                                                <button type="submit" class="btn btn-primary btn-block">Confirm
+                                                    Payment</button>
                                             </form>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    
+
                         <div class="table-responsive p-2">
                             <table id="journalTable" class="table table-bordered table-hover table-center mb-0">
                                 <thead>
@@ -417,7 +435,7 @@
                     <div class="modal-body">
                         <div class="input-group form-group">
                             <textarea id="custom_msg" name="custom_msg" style="height: 150px;" class="form-control"
-                            required placeholder="Message Body"></textarea>
+                                required placeholder="Message Body"></textarea>
                         </div>
                         <div class="input-group">
                             <span class="input-group-addon">
@@ -464,7 +482,8 @@
                         <div class="row clearfix">
                             <div class="col-lg-8 col-md-8 col-sm-8 col-8">
                                 <input autocomplete="off" required id="new_Department" type="text"
-                                    class="form-control form-control-sm" placeholder="Enter Department, eg, syrup, tablet, suspension, etc">
+                                    class="form-control form-control-sm"
+                                    placeholder="Enter Department, eg, syrup, tablet, suspension, etc">
                             </div>
                             <div class="col-lg-4 col-md-4 col-sm-4 col-4">
                                 <button type="submit" class="btn btn-primary btn-block">SAVE ENTRY</button>
@@ -573,12 +592,12 @@
                                     <div class="input-daterange input-group " id="inventory_sales_container">
                                         <div class="form-line">
                                             <input type="text" name="Date_From" class="form-control form-control-sm"
-                                            required  placeholder="Date start..." autocomplete="off">
+                                                required placeholder="Date start..." autocomplete="off">
                                         </div>
                                         <span class="input-group-addon">to</span>
                                         <div class="form-line">
                                             <input type="text" name="Date_To" class="form-control form-control-sm"
-                                            required placeholder="Date end..." autocomplete="off">
+                                                required placeholder="Date end..." autocomplete="off">
                                         </div>
                                     </div>
                                 </div>
@@ -593,7 +612,8 @@
                                 </div>
                             </div>
                             <br>
-                            <button class="btn btn-block btn-sm bg-primary waves-effect" type="submit">PREVIEW REPORT</button>
+                            <button class="btn btn-block btn-sm bg-primary waves-effect" type="submit">PREVIEW
+                                REPORT</button>
                         </form>
                         <br>
                     </div>
@@ -603,13 +623,15 @@
                             <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
                                 <form action="{% url 'pharm' 'available-stocks' %}" target="_blank" method="get">
                                     {% csrf_token %}
-                                    <button class="btn btn-block btn-sm bg-success waves-effect" type="submit">AVAILABLE STOCKS</button>
+                                    <button class="btn btn-block btn-sm bg-success waves-effect" type="submit">AVAILABLE
+                                        STOCKS</button>
                                 </form>
                             </div>
                             <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
                                 <form action="{% url 'pharm' 'low-stocks' %}" target="_blank" method="get">
                                     {% csrf_token %}
-                                    <button class="btn btn-block btn-sm bg-warning waves-effect" type="submit">LOW/OUT STOCKS</button>
+                                    <button class="btn btn-block btn-sm bg-warning waves-effect" type="submit">LOW/OUT
+                                        STOCKS</button>
                                 </form>
                             </div>
                         </div>
@@ -620,17 +642,18 @@
                         <form action="{% url 'pharm' 'purchased-stocks' %}" target="_blank" method="get">
                             <div class="input-daterange input-group " id="inventory_container">
                                 <div class="form-line">
-                                    <input type="text" name="Date_From" class="form-control form-control-sm"
-                                    required  placeholder="Date start..." autocomplete="off">
+                                    <input type="text" name="Date_From" class="form-control form-control-sm" required
+                                        placeholder="Date start..." autocomplete="off">
                                 </div>
                                 <span class="input-group-addon">to</span>
                                 <div class="form-line">
-                                    <input type="text" name="Date_To" class="form-control form-control-sm"
-                                    required placeholder="Date end..." autocomplete="off">
+                                    <input type="text" name="Date_To" class="form-control form-control-sm" required
+                                        placeholder="Date end..." autocomplete="off">
                                 </div>
                             </div>
                             <br>
-                            <button class="btn btn-block btn-sm bg-primary waves-effect" type="submit">PREVIEW REPORT</button>
+                            <button class="btn btn-block btn-sm bg-primary waves-effect" type="submit">PREVIEW
+                                REPORT</button>
                         </form>
                         <br>
                     </div>
@@ -661,8 +684,9 @@
                             <div class="col-lg-4 col-md-4 col-4">
                                 <div class="input-daterange input-group" id="bs_datepicker_range_container">
                                     <div class="form-line">
-                                        <input required type="text" name="date_from" class="form-control form-control-sm"
-                                            placeholder="Date from..." autocomplete="off">
+                                        <input required type="text" name="date_from"
+                                            class="form-control form-control-sm" placeholder="Date from..."
+                                            autocomplete="off">
                                     </div>
                                     <span class="input-group-addon">to</span>
                                     <div class="form-line">
@@ -676,7 +700,9 @@
                                     <select id="pull_type" required class="form-control form-control-md">
                                         <option value="All">All Records</option>
                                         <optgroup label="Procedures">
-                                            {% for data in procedures %}<option value="{{data}}">{{data}}</option>{% endfor %}
+                                            {% for data in procedures %}
+                                            <option value="{{data}}">{{data}}</option>
+                                            {% endfor %}
                                         </optgroup>
                                     </select>
                                 </div>
@@ -691,7 +717,7 @@
         </div>
     </div>
 
-  
+
     <!-- jQuery -->
     <script src="{% static 'web-assets/assets/js/jquery.min.js' %}"></script>
 
@@ -709,7 +735,7 @@
 
     <!-- Sweet Alert Plugin Js -->
     <script src="{% static 'admin/assets/plugins/sweetalert/sweetalert.min.js' %}"></script>
-    
+
     <!-- Slick JS -->
     <script src="{% static 'web-assets/assets/js/slick.js' %}"></script>
 
@@ -722,9 +748,9 @@
     <!-- personal scripts -->
     <script>
 
-        
-        $("#modal_add_insurance").on('submit',function (e) {
-            e.preventDefault()
+
+        $("#modal_add_insurance").on('submit', function (e) {
+            e.preventDefault();
             $.ajax({
                 type: "POST",
                 url: "{% url 'web-links' 'add-insurance' %}",
@@ -748,28 +774,28 @@
                     window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
                 },
                 error: function (data) {
-                window.parent.showNotification(null, "Error occurred whiles processing request", 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
-                swal.close();
-            }
+                    window.parent.showNotification(null, "Error occurred whiles processing request", 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                    swal.close();
+                }
 
             });
         });
 
-        $("#sign_upForm").on('submit',function (e) {
-            e.preventDefault()
+        $("#sign_upForm").on('submit', function (e) {
+            e.preventDefault();
             $.ajax({
                 type: "POST",
                 url: "{% url 'auth-staff' 'add-user' %}",
                 data: {
-                    Username : $('#Username').val(),
-                    Fullname : $('#Fullname').val(),
-                    Phone : $('#Phone').val(),
-                    Email : $('#Email').val(),
-                    Gender : $('#Gender').val(),
-                    Password : $('#Password2').val(),
-                    User_Level : $('#User_Level').val(),
-                    csrfmiddlewaretoken : '{{ csrf_token }}',
-                    dataType : "json",
+                    Username: $('#Username').val(),
+                    Fullname: $('#Fullname').val(),
+                    Phone: $('#Phone').val(),
+                    Email: $('#Email').val(),
+                    Gender: $('#Gender').val(),
+                    Password: $('#Password2').val(),
+                    User_Level: $('#User_Level').val(),
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    dataType: "json",
                 },
                 beforeSend: function () {
                     // show progress whiles request in pregess to avoid many submission
@@ -801,7 +827,7 @@
             }
         }
 
-        function ReadMessageData(data_type,name,msg) {
+        function ReadMessageData(data_type, name, msg) {
             swal({
                 title: `${data_type}: ${name}`,
                 // text: msg,
@@ -824,8 +850,8 @@
                 }
             });
 
-        }       
- 
+        }
+
         $('#smsForm').on('submit', function (e) {
             e.preventDefault();
             $.ajax({
@@ -858,10 +884,10 @@
             });
 
         });
-        
+
     </script>
 
-   
+
     <!-- extends child js into this block tag -->
     {% block extra-js %}
     {% endblock extra-js %}
@@ -869,13 +895,13 @@
     <!-- Messages Handler -->
     {% for message in messages %} {% if message.tags == "info" %}
     <script>
-        var text = '{{ message}}'
+        var text = '{{ message}}';
         //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
         window.parent.showNotification(null, text, 'top', 'left', 'animated bounceIn', 'animated bounceOut');
     </script>
     {% elif message.tags == "success" %}
     <script>
-        var text = '{{ message}}'
+        var text = '{{ message}}';
         //Parameters= colorName, text, placementFrom, placementAlign, animateEnter, animateExit
         window.parent.showNotification(null, text, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
     </script>

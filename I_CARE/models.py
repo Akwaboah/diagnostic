@@ -301,7 +301,7 @@ class Vitals(models.Model):
     Referring_Facility=models.CharField(max_length=100,null=True,default='None')
     Referred_Doctor=models.CharField(max_length=50,null=True,default='None')
     # payment side
-    Treatment_Amount = models.DecimalField(max_digits=50,decimal_places=2)
+    Treatment_Amount = models.DecimalField(max_digits=50,decimal_places=2,default=0.00)
     Paid_Amount = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Trans_Id=models.CharField(max_length=250)
     # 

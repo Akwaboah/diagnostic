@@ -35,16 +35,18 @@
                 <span>Patient Registration</span>
             </a>
         </li>
-        <li>
-            <a href="{% url 'opd' 'pat-update' %}">
-                <i class="fas fa-user-edit"></i>
-                <span>Patient Demographics</span>
-            </a>
-        </li>
+
+
         <li class="active">
             <a href="{% url 'opd' 'pat-complaints' %}">
                 <i class="fas fa-user"></i>
                 <span>Existing Patients</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'opd' 'app_mesg' %}">
+                <i class="fas fa-book"></i>
+                <span>Appointment & Messages</span>
             </a>
         </li>
     </ul>
@@ -72,7 +74,8 @@
                                             onchange="searchPatient(this.value);">
                                             <option value="" disabled selected hidden></option>
                                             {% for val in pat_data %}
-                                            <option value="{{val.Patient_Id}}">{{val.First_Name}} {{val.Surname}}({{val.Tel}})</option>
+                                            <option value="{{val.Patient_Id}}">{{val.First_Name}}
+                                                {{val.Surname}}({{val.Tel}})</option>
                                             {% endfor%}
                                         </select>
                                         <div class="input-group-prepend">
@@ -90,16 +93,19 @@
                                     <div class="form-group">
                                         <div class="change-avatar">
                                             <div class="profile-img">
-                                                <img id="img_profile" src="{% static 'admin/assets/img/profiles/avatar.png' %}" alt="User Image">
+                                                <img id="img_profile"
+                                                    src="{% static 'admin/assets/img/profiles/avatar.png' %}"
+                                                    alt="User Image">
                                             </div>
                                             <div class="row">
                                                 <div class="col-xl-12">
                                                     <label>Name/ID:<b id="Name">_ _ _ _ _ _ _ _ _ _ _</b> <br>
-                                                           Gender/Age:<b id="Gender">_ _ _ _ _ _ _ _ _ _ _</b> <br>
-                                                           Nationality/Residence:<b id="Address">_ _ _ _ _ _ _ _ _ _ _</b> <br>
-                                                           Tel/Occupation:<b id="Contact">_ _ _ _ _ _ _ _ _ _ _</b><br>
-                                                           Insurance:<b id="Insurance">_ _ _ _ _ _ _ _ _ _ _</b><br>
-                                                           Last Seen:<b id="Last_Visit">_ _ _ _ _ _ _ _ _ _ _</b>
+                                                        Gender/Age:<b id="Gender">_ _ _ _ _ _ _ _ _ _ _</b> <br>
+                                                        Nationality/Residence:<b id="Address">_ _ _ _ _ _ _ _ _ _ _</b>
+                                                        <br>
+                                                        Tel/Occupation:<b id="Contact">_ _ _ _ _ _ _ _ _ _ _</b><br>
+                                                        Insurance:<b id="Insurance">_ _ _ _ _ _ _ _ _ _ _</b><br>
+                                                        Last Seen:<b id="Last_Visit">_ _ _ _ _ _ _ _ _ _ _</b>
                                                     </label>
                                                 </div>
                                             </div>
@@ -127,7 +133,8 @@
                                                             <span class="input-group-text"><i
                                                                     class="fa fa-user-nurse"></i></span>
                                                         </div>
-                                                        <input placeholder="Refferring Doctor" type="text" name="Reffered_Doctor" class="form-control form-control-md">
+                                                        <input placeholder="Refferring Doctor" type="text"
+                                                            name="Reffered_Doctor" class="form-control form-control-md">
                                                     </div>
                                                 </div>
                                             </div>
@@ -149,7 +156,9 @@
                                                 </div>
                                                 <div class="col-lg-6 col-6">
                                                     <div class="form-group">
-                                                        <input placeholder="Insurance Id" type="text" name="Insurance_Id" autocomplete class="form-control form-control-md">
+                                                        <input placeholder="Insurance Id" type="text"
+                                                            name="Insurance_Id" autocomplete
+                                                            class="form-control form-control-md">
                                                     </div>
                                                 </div>
                                             </div>
@@ -161,8 +170,9 @@
                                             <div class="row">
                                                 <div class="col-lg-12 col-md-12 col-12">
                                                     <div class="form-group">
-                                                        <select style="width: 100%" id="procedure_type" name="Procedure_Name" multiple="multiple"
-                                                            required class="js-states form-control">
+                                                        <select style="width: 100%" id="procedure_type"
+                                                            name="Procedure_Name" multiple="multiple" required
+                                                            class="js-states form-control">
                                                             {% for val in procedures %}
                                                             <option value="{{val.id}}">{{val}}({{val.Charge}})</option>
                                                             {% endfor %}
@@ -170,7 +180,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-md-5 col-5">
-                                                    <button type="submit" class="btn btn-md btn-primary">INITIATE PROCEDURE</button>
+                                                    <button type="submit" class="btn btn-md btn-primary">INITIATE
+                                                        PROCEDURE</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -203,14 +214,14 @@
 
     $(function () {
         $("#searchPat").select2();
-         
+
         $("#referring_facility").select2({
             dropdownAutoWidth: true,
             multiple: false,
             width: '100%',
             placeholder: "Referring Facility",
             allowClear: true,
-            tags: true , //helps for adding new data which is not in option
+            tags: true, //helps for adding new data which is not in option
             // tokenSeparators: [',', ' '], // entering a space or a comma will create tag
         });
 
@@ -224,12 +235,12 @@
             // tokenSeparators: [',', ' '], // entering a space or a comma will create tag
         });
 
-         
+
         $('.select2-search__field').css('width', '100%'); // select2 placeholder css
     });
 
     function searchPatient(patId) {
-                        
+
         $.ajax({
             type: "GET",
             url: "{% url 'opd' 'search-patient' %}",
@@ -249,18 +260,18 @@
             },
             success: function (data) {
                 swal.close();
-                const patient_data=JSON.parse(data.pat_data)
-                document.getElementById('Name').innerText=patient_data['First_Name']+" "+patient_data['Surname']+"/"+patient_data['Patient_Id'];
-                document.getElementById('Gender').innerText=patient_data['Gender']+"/"+patient_data['Age'];
-                document.getElementById('Address').innerText=patient_data['Nationality']+"/"+patient_data['Residence'];
-                document.getElementById('Contact').innerText=patient_data['Tel']+"/"+patient_data['Occupation'];
-                document.getElementById('Insurance').innerText=`${patient_data['Insurance_Name']}(${patient_data['Insurance_Id']})`;
-                document.getElementById('Last_Visit').innerText=`${patient_data['Last_Visit']}`;
+                const patient_data = JSON.parse(data.pat_data);
+                document.getElementById('Name').innerText = patient_data['First_Name'] + " " + patient_data['Surname'] + "/" + patient_data['Patient_Id'];
+                document.getElementById('Gender').innerText = patient_data['Gender'] + "/" + patient_data['Age'];
+                document.getElementById('Address').innerText = patient_data['Nationality'] + "/" + patient_data['Residence'];
+                document.getElementById('Contact').innerText = patient_data['Tel'] + "/" + patient_data['Occupation'];
+                document.getElementById('Insurance').innerText = `${patient_data['Insurance_Name']}(${patient_data['Insurance_Id']})`;
+                document.getElementById('Last_Visit').innerText = `${patient_data['Last_Visit']}`;
 
-                let image=patient_data['Profile']
+                let image = patient_data['Profile'];
                 var imgAttr = document.getElementById('img_profile');
                 imgAttr.src = image;
-                
+
                 // window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
             },
             error: function (data) {
@@ -269,8 +280,8 @@
             }
 
         });
-   
-   }
+
+    }
 
 </script>
 

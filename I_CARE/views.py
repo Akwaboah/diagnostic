@@ -316,6 +316,15 @@ class OPD(View):
             context.update({'todayApp':todayApp,'tdApp':len(todayApp),'upcomingApp':upcomingApp,'tupApp':len(upcomingApp),
             'pastApp':pastApp,'tpastApp':len(pastApp),'msgRecieved':msg,'tmsgRec':len(msg)})
             return render(request,'I_CARE/admin/opd-dashboard.html',context)
+        elif kwargs['page']=='app_mesg':
+            app_data=Appoitment.objects.all()
+            pastApp=app_data.filter(Preferred_Date__lt=datetime.now())
+            todayApp=app_data.filter(Preferred_Date=datetime.now())
+            upcomingApp=app_data.filter(Preferred_Date__gt=datetime.now()).order_by('-Date')
+            msg=Message.objects.all().order_by('-Date')
+            context.update({'todayApp':todayApp,'tdApp':len(todayApp),'upcomingApp':upcomingApp,'tupApp':len(upcomingApp),
+            'pastApp':pastApp,'tpastApp':len(pastApp),'msgRecieved':msg,'tmsgRec':len(msg)})
+            return render(request,'I_CARE/admin/opd-pat-app-mesg.html',context)
         elif kwargs['page']=='pat-reg' or isinstance(kwargs['page'],int) :
             # load appointment data 
             if kwargs['page'] !='pat-reg':
