@@ -397,14 +397,13 @@ class Journal_History_Checker(models.Model):
 
 # Requisition Approval_Authority
 class Approval_Authority(models.Model):
-    Min_Amount = models.DecimalField(max_digits=50,decimal_places=2,unique=True)
-    Max_Amount = models.DecimalField(max_digits=50,decimal_places=2,unique=True)
-    Authorizer=models.ForeignKey(User_Details, on_delete=models.CASCADE, db_column="Authorizer")
+    Limited_Amount = models.DecimalField(max_digits=50,decimal_places=2,unique=True)
+    Authorizer=models.OneToOneField(User_Details, on_delete=models.CASCADE, db_column="Authorizer")
     Date=models.DateField(auto_now=True)
     Time=models.TimeField(auto_now=True)
 
     def __str__(self):
-        return f'{self.Authorizer}-({self.Min_Amount}-{self.Max_Amount})'
+        return f'{self.Authorizer}-({self.Limited_Amount})'
 
     class Meta:
         db_table = "approval_authority"
@@ -418,9 +417,10 @@ class Requisition(models.Model):
     Quantity = models.IntegerField()
     Price = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Total_Cost = models.DecimalField(max_digits=50,decimal_places=2,default=0)
-    Approval_Authority=models.ForeignKey(Approval_Authority, on_delete=models.CASCADE, db_column="Approval_Authority")
+    Approval_Authority=models.ManyToManyField(Approval_Authority, db_column="Approval_Authority")
     Approval_Status=models.CharField(max_length=50,default='Pending')
     Delivery_Status=models.CharField(max_length=50,default='Pending')
+    Approved_By=models.CharField(max_length=50,default='Pending')
     Date=models.DateField(auto_now=True)
     Time=models.TimeField(auto_now=True)
 
@@ -590,3 +590,8 @@ class Drugs_Prescriptions(models.Model):
 
     class Meta:
         db_table = "drugs_prescriptions"
+
+class Sale(models.Model):
+    product = models.CharField(max_length=50)
+    date = models.DateField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)

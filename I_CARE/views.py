@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime,date,time
+import io
 from django.utils import timezone
 from decimal import Decimal
 import json
@@ -495,7 +496,7 @@ class Payment_Department(View):
         if kwargs['page']=='journal-payment':
             transID=create_trans_id()
             patientID=request.POST['Patient_Id']
-            Amount=Decimal(request.POST['Amount'])
+            totalAmount=Decimal(request.POST['Amount'])
             jData=Vitals.objects.exclude(Paid_Amount=F('Treatment_Amount')).filter(Patient_Id__Patient_Id=patientID)
             for data in jData:
                 # record payment history
@@ -508,10 +509,10 @@ class Payment_Department(View):
                 data.Department=data.Procedure.Tag
                 data.Trans_Id=transID
             Vitals.objects.bulk_update(jData,['Paid_Amount','Department','Trans_Id'])
-            Patients.objects.filter(Patient_Id=request.POST['Patient_Id']).update(Balance=F('Balance')+Amount)
+            Patients.objects.filter(Patient_Id=request.POST['Patient_Id']).update(Balance=F('Balance')+totalAmount)
             Journal_History_Checker.objects.create(Trans_Id=transID,Cashier=Loged_User(request))
             sms=SMS()
-            msg_bdy=sms.getPAYMENT_MSG(request.POST['First_Name'])
+            msg_bdy=sms.getPAYMENT_MSG(request.POST['First_Name'],totalAmount)
             asyncio.run(sms.SEND_ALERT([request.POST['Tel']],msg_bdy))
             return HttpResponse(json.dumps({'message':'Payment recorded successfully','transID':transID}),content_type='application/json')
         elif kwargs['page']=='del-folder':
@@ -552,9 +553,6 @@ class Imaging(View):
                     Tech_Report=file,Tech_Report_Name=file.name,
                     Vitals=vitData
                 )
-                vitData.Department='Consultation'
-                vitData.Status='Waiting'
-                msg='Test recorded and pushed to radiologist'
             else:
                 Presenting_Complaints.objects.create(
                     Patient_Id= patData,Complaint_Category=request.POST['procedure_name'],
@@ -562,10 +560,11 @@ class Imaging(View):
                     Tech_Instance=Loged_User_Instance(request),
                     Vitals=vitData
                 )
-                vitData.Status='Done'
-                msg='Test recorded successfully'
             # save status 
+            vitData.Department='Consultation'
+            vitData.Status='Waiting'
             vitData.save()
+            msg='Test recorded and pushed to radiologist'
             messages.success(request,msg)
             return redirect(request.META.get('HTTP_REFERER'))
         
@@ -646,28 +645,30 @@ class Requisition_Form(View):
             context.update({'reqHist':reqHist})
             return render(request,'I_CARE/admin/requisition-form.html',context)
         elif kwargs['page']=='pending-request':
-            reqHist=Requisition.objects.filter(Approval_Authority__Authorizer=User_Details.objects.get(User=request.user))
+            reqHist=Requisition.objects.all().order_by('-Date')
             context.update({'reqHist':reqHist})
-            return render(request,'I_CARE/admin/pending-requisition.html',context)
+            return render(request,'I_CARE/admin/requisition-pending.html',context)
     
     @transaction.atomic(using=None, savepoint=True, durable=True)
     def post(self,request,*args,**kwargs):
         if kwargs['page']=='place-request':
             total_cost=(Decimal(request.POST['Total_Cost']))
-            authorizer=Approval_Authority.objects.filter(Q(Min_Amount__lte=total_cost) & Q(Max_Amount__gte=total_cost)).first()
+            authorizer=Approval_Authority.objects.filter(Limited_Amount__gte=total_cost)
             if authorizer:
-                Requisition.objects.create(
+                reqData=Requisition(
                     Placeholder=User_Details.objects.get(User=request.user),
                     Description=request.POST['Description'],
                     Delivery_Timeline=str(request.POST['Delivery_Tm']).title(),
                     Quantity=request.POST['Quantity'],
                     Price=request.POST['Price'],
-                    Total_Cost=request.POST['Total_Cost'],
-                    Approval_Authority=authorizer,
+                    Total_Cost=request.POST['Total_Cost']
                 )
+                reqData.save()
+                for data in authorizer:
+                    reqData.Approval_Authority.add(data)
                 messages.success(request,'Request placed successful')
             else:
-                messages.success(request,'Your request is above limit')
+                messages.success(request,'Your request is above threshold')
         elif kwargs['page']=='pending-request':
             total_cost=(Decimal(request.POST['Total_Cost']))
             authorizer=Approval_Authority.objects.filter(Q(Min_Amount__lte=total_cost) & Q(Max_Amount__gte=total_cost)).first()
@@ -685,7 +686,8 @@ class Requisition_Form(View):
                 messages.success(request,'Your request is above limit')
         elif kwargs['page']=='alter-request':
             Requisition.objects.filter(id=request.POST['requestID']).update(
-                Approval_Status=request.POST['newStaus']
+                Approval_Status=request.POST['newStaus'],
+                Approved_By=Loged_User(request)
             )
             messages.success(request,'Request processed successfully')
         return redirect(request.META.get('HTTP_REFERER'))
