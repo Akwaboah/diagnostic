@@ -5,3 +5,6 @@ I_CARE_MAIN.zip
 .vscode
 media
 staticfiles
+db.sqlite3
+.gitignore
+qlite3
