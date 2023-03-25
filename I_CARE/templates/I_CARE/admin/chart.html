@@ -16,7 +16,7 @@
 
     const size = 350;
     $(document).ready(function () {
-
+        // Chart for Procedures within a week
         if ($('#procedure').length > 0) {
             var chartData = JSON.parse('{{ visitors|escapejs }}');
             var labels = [];
@@ -97,7 +97,7 @@
             var chartBar = new ApexCharts(document.querySelector('#procedure'), optionsBar);
             chartBar.render();
 
-
+            // Bar chart on visitors
             var options = {
                 series: [{
                     data
@@ -121,15 +121,7 @@
                     enabled: false
                 },
                 xaxis: {
-                    // labels: {
-                    //     show: true
-                    // },
-                    // axisBorder: {
-                    //     show: false
-                    // },
-                    // axisTicks: {
-                    //     show: true
-                    // },
+
                     categories: days,
                 }
 
