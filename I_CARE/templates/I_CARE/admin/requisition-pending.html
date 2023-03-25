@@ -115,68 +115,7 @@
         <div class="content">
             <div class="container-fluid">
                 <div class="row">
-                    <div class="col-md-4">
-                        <div class="card mb-5">
-                            <div class="card-header p-1">
-                                <div class="col">
-                                    <div class="row justify-content-start"> 
-                                        <button class="nav-link active bg-warning p-1 mr-2 text-white">Review Form</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-body p-1">
-                                <form method="POST">
-                                    {% csrf_token %}
-                                    <input hidden id="Request_Id" name="Request_Id" required autocomplete="off" class="form-control" type="text">
-
-                                    <div class="row">
-                                        <div class="col-md-7 col-sm-7">
-                                            <div class="form-group card-label">
-                                                <label>Description</label>
-                                                <input name="Description" id="Description" required autocomplete="off" class="form-control" type="text">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-5 col-sm-5">
-                                            <div class="form-group card-label">
-                                                <label>Delivery Timeline</label>
-                                                <input name="Delivery_Tm" id="Delivery_Tm" required autocomplete="off" class="form-control" type="text">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4 col-sm-4">
-                                            <div class="form-group card-label">
-                                                <label>Quantity</label>
-                                                <input name="Quantity" id="Quantity" required class="form-control" type="number" onkeyup="calTotal();">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4 col-sm-4">
-                                            <div class="form-group card-label">
-                                                <label>Price</label>
-                                                <input name="Price" id="Price" required step="any" class="form-control" type="number" onkeyup="calTotal();">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4 col-sm-4">
-                                            <div class="form-group card-label">
-                                                <label>Total Cost</label>
-                                                <input name="Total_Cost" id="Total_Cost" required class="form-control" step="any" type="number">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12 col-sm-12">
-                                            <div class="form-group">
-                                                <div class="submit-section pull-right">
-                                                    <button type="submit" class="btn btn-md btn-primary">Confirm Review</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-8">
+                    <div class="col-md-12">
                         <div class="card mb-5">
                             <div class="card-header p-1">
                                 <div class="col">
@@ -199,6 +138,8 @@
                                                 <th>Qty</th>
                                                 <th>Price</th>
                                                 <th>Total Cost</th>
+                                                <th>Approval Authorities</th>
+                                                <th>Approved By</th>
                                                 <th>Status</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -220,13 +161,19 @@
                                                 <td>{{vit.Quantity}}</td>
                                                 <td>{{vit.Price}}</td>
                                                 <td class="text-capitalize">{{vit.Total_Cost}}</td>
+                                                <td class="text-capitalize">
+                                                    {% for subtask in vit.Approval_Authority.all %}
+                                                    <li>{{ subtask.Authorizer }}</li>
+                                                    {% endfor %}
+                                                </td>
+                                                <td>{{vit.Approved_By}}</td>
                                                 <td class="text-left">
                                                     <div class="table-action">
                                                         {% if vit.Approval_Status == 'Pending' %}
                                                             <a class="btn btn-sm bg-warning-light">
                                                                 {{vit.Approval_Status}}
                                                             </a>
-                                                        {% elif vit.Approval_Status == 'Denied' %}
+                                                        {% elif vit.Approval_Status == 'Reject' %}
                                                             <a class="btn btn-sm bg-danger-light">
                                                                 {{vit.Approval_Status}}
                                                             </a>
@@ -239,14 +186,24 @@
                                                 </td>
                                                 <td class="text-left">
                                                     <div class="table-action">
+                                                        {% if vit.Approval_Status in 'Approved,Reject' %}
+                                                        <a class="btn btn-sm bg-success-light">Reviewed</a>
+                                                        {% else %}
+                                                        {% if user_info == vit.Approval_Authority.all.0.Authorizer %}
                                                         <a class="btn btn-sm bg-info-light" 
-                                                        onclick='acctionRequest("{{vit.id}}","{{vit.Placeholder}}","{{vit.Description}}","{{vit.Delivery_Timeline}}","{{vit.Total_Cost}}","Approved","aprrove")'>
+                                                        onclick='acctionRequest("{{vit.id}}","{{vit.Placeholder}}","{{vit.Description}}","{{vit.Delivery_Timeline}}","{{vit.Total_Cost}}","Approved","approve")'>
                                                             Approve
                                                         </a>
                                                         <a class="btn btn-sm bg-danger-light"
-                                                        onclick='acctionRequest("{{vit.id}}","{{vit.Placeholder}}","{{vit.Description}}","{{vit.Delivery_Timeline}}","{{vit.Total_Cost}}","Denied","deny")'>
-                                                            Deny
+                                                        onclick='acctionRequest("{{vit.id}}","{{vit.Placeholder}}","{{vit.Description}}","{{vit.Delivery_Timeline}}","{{vit.Total_Cost}}","Reject","reject")'>
+                                                            Reject
                                                         </a>
+                                                        {% else %}
+                                                        <a class="btn btn-sm bg-danger-light">
+                                                            Above your limit
+                                                        </a>
+                                                        {% endif %}
+                                                        {% endif %}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -322,8 +279,9 @@
             let total=price*qty;
             $('#Total_Cost').val(total)
         }
-         // get table click    
-         $('#requisitionTable').on('click', 'tr', function() {
+        
+        // get table click    
+        {% comment %} $('#requisitionTable').on('click', 'tr', function() {
             
             var cells = document.getElementsByTagName('td');
 
@@ -354,7 +312,7 @@
             }
             
         })
-        
+         {% endcomment %}
         function acctionRequest(reqID,placeHolder,description,timeLine,totalCost,newStatus,note) {
             let color="#DD6B55";
             if (note != 'deny') {

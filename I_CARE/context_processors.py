@@ -1,6 +1,9 @@
 from datetime import datetime,timedelta
 import math
 from django.db.models import F
+from datetime import datetime
+from django.db.models import F,Value,ExpressionWrapper,CharField
+from django.db.models.functions import Concat
 from django.core.serializers.json import DjangoJSONEncoder
 from I_CARE.models import Consulting_Room,Patients, User_Details,\
     Business_Info,Procedures,Referring_Facilities,Insurance,Modalities, Vitals
@@ -19,7 +22,6 @@ def global_data(request):
     debt_pat=pat_data.filter(Balance__lt=0).values('Patient_Id').distinct().count()
     today_pat=pat_data.filter(Last_Visit__date=datetime.now()).values('Patient_Id').distinct().count()
    
-#    My Changes
     ################ Getting gender ##################
     pat_data = Patients.objects.annotate(year=TruncYear('Date_Joined')).values('year').annotate(
     male_count=Count('id', filter=Q(Gender='Male')),
@@ -74,31 +76,17 @@ def global_data(request):
             }
             # add the dictionary to the results list
             results.append(result)
-    # print the results
-    print('--------------print the results--------------')
-    for item in results:
-        print(item)
-        print(f"{item['day']}:")
-        print(f"{item['procedure']}: {item['count']} patients({item['patients']}) - ${item['charge']}")
-        # for sub_item in item:
-            # print(sub_item)
-        print()
-    print('--------------?????????--------------')
-
-#   End of Changes
-    user_info=None
-    if request.user.is_authenticated and request.user.is_anonymous==False:
-        user_info=User_Details.objects.get(User=request.user)
-    chart_data_json = json.dumps(chart_data)
-    visitors = json.dumps(results)
-    print('//////////////////////////////////////////')
-    for data in chart_data:
-        print(data)
-    print('//////////////////////////////////////////')
+    
 
     return {
     'chart_data': chart_data_json,'visitors':visitors,
     'bus_info':bus_info,'hospital_departments':hospital_departments,
+
+    user_info=None
+    if request.user.is_authenticated and request.user.is_anonymous==False:
+        user_info=User_Details.objects.get(User=request.user)
+    return {'bus_info':bus_info,'hospital_departments':hospital_departments,
+
     'ward_rooms':Consulting_Room.objects.all(),'procedures':Procedures.objects.all().order_by('Procedure'),
     'total_pat':total_pat,'pat_data':pat_data,'today_pat':today_pat,'debt_pat':debt_pat,
     'user_info':user_info,'groups_level':dict(user_levels),

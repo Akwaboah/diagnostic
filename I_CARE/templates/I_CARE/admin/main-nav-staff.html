@@ -35,7 +35,7 @@
             <li class="has-submenu {% if 'Imaging' in page %}active{% elif 'Laboratory' in page %}active{% endif %}">
                 <a href="javascript:void(0)">Departments<i class="fas fa-chevron-down"></i></a>
                 <ul class="submenu">
-                    <li><a href="{% url 'lab' 'test' %}">Laboratory</a></li>
+                    {% comment %} <li><a href="{% url 'lab' 'test' %}">Laboratory</a></li> {% endcomment %}
                     <li><a href="{% url 'radiology' 'test' %}">Imaging</a></li>
                     <li><a href="{% url 'reporting' 'test' 'report-history' %}">Reports</a></li>
                 </ul>
@@ -58,6 +58,7 @@
                     </li>
                 </ul>
             </li>
+            </li>		
             {% if request.user.is_superuser == True %}
             <li class="has-submenu {% if 'Requisition' in page %}active{% endif %}">
                 <a href="javascript:void(0)">Requisition<i class="fas fa-chevron-down"></i></a>
@@ -70,8 +71,26 @@
             <li class="{% if 'Requisition' in page %}active{% endif %}"><a
                     href="{% url 'requisition' 'place-request' %}">Requisition</a></li>
             {% endif %}
-            {% comment %} <li><a data-toggle="modal" href="#modal-opd-report">General Reporting</a></li> {% endcomment
-            %}
+            {% comment %} 
+            <li><a data-toggle="modal" href="#modal-opd-report">General Reporting</a></li> 
+            {% endcomment %}
+
+            <li class="{% if 'Requisition' in page %}active{% endif %}"><a href="{% url 'requisition' 'place-request' %}">Requisition</a></li>
+            {% endif %}	
+            {% comment %} <li class="has-submenu {% if 'Pharmacy' in page %}active{% endif %}">
+                <a href="{% url 'pharm' 'dashboard' %}">Pharmacy<i class="fas fa-chevron-down"></i></a>
+                <ul class="submenu">
+                    <li><a href="{% url 'pharm' 'list' %}">Drugs List</a></li>
+                    <li><a href="{% url 'pharm' 'stocking' %}">Manage Drugs</a></li>
+                    <li><a href="{% url 'pharm' 'cash-form' %}">Prescriptions</a></li>
+                    <li><a href="javascript:void(0);" data-toggle="modal"
+                            data-target="#modal-inventory-rep">
+                            General Reporting
+                        </a>
+                    </li>
+                </ul>
+            </li>	 {% endcomment %}
+            {% comment %} <li><a data-toggle="modal" href="#modal-opd-report">General Reporting</a></li> {% endcomment %}
         </ul>
     </div>
     <ul class="nav header-navbar-rht">
