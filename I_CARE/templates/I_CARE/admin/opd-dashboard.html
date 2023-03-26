@@ -32,16 +32,22 @@
                 <span>Patient Registration</span>
             </a>
         </li>
-        <li>
+		<li>
+            <a href="{% url 'opd' 'pat-complaints' %}">
+                <i class="fas fa-user"></i>
+                <span>Existing Patients</span>
+            </a>
+        </li>
+		<li>
             <a href="{% url 'opd' 'pat-update' %}">
                 <i class="fas fa-user-edit"></i>
                 <span>Patient Demographics</span>
             </a>
         </li>
-		<li>
-            <a href="{% url 'opd' 'pat-complaints' %}">
-                <i class="fas fa-user"></i>
-                <span>Existing Patients</span>
+		<li >
+            <a data-toggle="modal" href="#modal-alert">
+                <i class="fas fa-mail-bulk"></i>
+                <span>Send Message</span>
             </a>
         </li>
     </ul>
@@ -184,7 +190,7 @@
 																		<span class="input-group-addon"><i class="fa fa-calendar"
 																			aria-hidden="true"></i></span>
 																		<input type="text" class="form-control datetimepicker" required
-																		name="date"  placeholder="PREFERRED DATE" data-date-format="Y-M-DD">
+																		name="date"  placeholder="PREFERRED DATE" data-date-format="M-DD">
 																		<span class="input-group-addon btn"><i
 																			class="fa fa-calendar" id="ti-calendar1" aria-hidden="true"></i></span>
 																	</div>

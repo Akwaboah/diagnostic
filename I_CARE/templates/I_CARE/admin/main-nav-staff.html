@@ -25,8 +25,8 @@
                 <a href="{% url 'opd' 'dashboard' %}">Registration<i class="fas fa-chevron-down"></i></a>
                 <ul class="submenu">
                     <li><a href="{% url 'opd' 'pat-reg' %}">Patient Registration</a></li>
-                    <li><a href="{% url 'opd' 'pat-update' %}">Patient Demographics</a></li>
                     <li><a href="{% url 'opd' 'pat-complaints' %}">Existing Patients</a></li>
+                    <li><a href="{% url 'opd' 'pat-update' %}">Patient Demographics</a></li>
                 </ul>
             </li>
             <li class="has-submenu {% if 'Payment' in page %}active{% endif %}">
@@ -70,7 +70,8 @@
                     </li>
                 </ul>
             </li>	 {% endcomment %}
-            {% comment %} <li><a data-toggle="modal" href="#modal-opd-report">General Reporting</a></li> {% endcomment %}
+            <li><a href="{% url 'reporting' 'gen-reporting' 'reg-attendance' %}">General Reporting</a></li>
+           
         </ul>
     </div>
     <ul class="nav header-navbar-rht">
