@@ -1,0 +1,184 @@
+{% extends 'I_CARE/admin/index.html' %}
+
+{% block extra-css %}
+
+<!-- Datetimepicker CSS -->
+<link rel="stylesheet" href="{% static 'web-assets/assets/css/bootstrap-datetimepicker.min.css' %}">
+<!-- Datatables CSS -->
+<link rel="stylesheet" href="{% static 'admin/assets/plugins/datatables/datatables.min.css' %}">
+
+<style>
+	.msg_content{
+		white-space:nowrap;
+		overflow:hidden;
+		text-overflow:ellipsis;
+	}
+</style>
+{% endblock extra-css %}
+
+<!--dashboard-menu -->
+{% block dashboard-menu %}
+<nav class="dashboard-menu">
+	<ul>
+        <li class="active">
+            <a href="{% url 'reporting' 'gen-reporting' 'reg-attendance' %}">
+                <i class="fas fa-columns"></i>
+                <span>Registration & Attendance</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endblock dashboard-menu %}
+<!-- /dashboard-menu -->
+ 
+<!-- page content -->
+{% block content %}
+<div class="row">
+	<div class="col-md-12">
+        <div class="card card-table mb-0">
+            <div class="card-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="uni-single-departments-right">
+                                <div class="uni-single-department-appointment">
+                                    <h3 class="uni-single-departments-right-title">Registration & Attendance Reports</h3>
+                                    <div class="uni-divider"></div>
+                                    <div class="uni-single-department-appointment-form">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="font-weight-bold"><u>Registered Patients</u></label>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="font-weight-bold">Patient Attendance</label>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-lg-6 col-md-12 dct-border-rht">
+                                                <form method="GET" action="{% url 'reporting' 'gen-reporting' 'reg-pat-single' %}" >
+                                                    <div class="row">
+                                                        <div class="col-lg-9 col-md-9 col-sm-9 col-9">
+                                                            <div class="input-group form-group">
+                                                                <div class="input-group date date-check-in">
+                                                                    <span class="input-group-addon"><i class="fa fa-calendar"
+                                                                        aria-hidden="true"></i></span>
+                                                                    <input type="text" class="form-control datetimepicker text-dark font-weight-bold" required
+                                                                    name="date"  placeholder="PREFERRED DATE" data-date-format="Y-M-DD" autocomplete="off">
+                                                                    <span class="input-group-addon btn"><i
+                                                                        class="fa fa-calendar" id="ti-calendar1" aria-hidden="true"></i></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-3 col-md-3 col-sm-3 col-3">
+                                                            <div class="submit-section pull-right">
+                                                                <button type="submit" class="btn btn-lg btn-primary">DAILY</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                                <hr>
+                                                <form method="GET" action="{% url 'reporting' 'gen-reporting' 'reg-pat-range' %}" >
+                                                    <div class="row">
+                                                        <div class="col-md-5">
+                                                            <div class="input-group form-group">
+                                                                <span class="input-group-addon"><i class="fa fa-calendar"
+                                                                    aria-hidden="true"></i></span>
+                                                                <div class="input-group date date-check-in">
+                                                                    <input type="text" class="form-control datetimepicker text-dark font-weight-bold" required
+                                                                    name="date_from"  placeholder="START DATE" data-date-format="Y-M-DD" autocomplete="off">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="input-group form-group">
+                                                                <div class="input-group date date-check-in">
+                                                                    <input type="text" class="form-control datetimepicker text-dark font-weight-bold" required
+                                                                    name="date_to"  placeholder="END DATE" data-date-format="Y-M-DD"  autocomplete="off">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <div class="submit-section pull-right">
+                                                                <button type="submit" class="btn btn-lg btn-primary">RANGE</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                                <hr>
+                                                <form method="GET" action="{% url 'reporting' 'gen-reporting' 'reg-pat-montly' %}" >
+                                                    <div class="row">
+                                                        <div class="col-md-5">
+                                                            <div class="input-group form-group">
+                                                                <span class="input-group-addon"><i class="fa fa-calendar"
+                                                                    aria-hidden="true"></i></span>
+                                                                <div class="input-group date date-check-in">
+                                                                    <input type="text" class="form-control datetimepicker text-dark font-weight-bold" required
+                                                                    name="date_from"  placeholder="START MONTH" data-date-format="Y-MM-DD" autocomplete="off">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="input-group form-group">
+                                                                <div class="input-group date date-check-in">
+                                                                    <input type="text" class="form-control datetimepicker text-dark font-weight-bold" required
+                                                                    name="date_to"  placeholder="END MONTH" data-date-format="Y-MM-DD"  autocomplete="off">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <div class="submit-section pull-right">
+                                                                <button type="submit" class="btn btn-lg btn-primary">MONTHLY</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            <div class="col-md-6">
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+	</div>
+</div>
+{% endblock content %}
+<!-- /page content -->
+
+{% block extra-js %}
+ 
+<!-- Sticky Sidebar JS -->
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/ResizeSensor.js' %}"></script>
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/theia-sticky-sidebar.js' %}"></script>
+
+<!-- Circle Progress JS -->
+<script src="{% static 'web-assets/assets/js/circle-progress.min.js' %}"></script>
+
+<!-- Datatables JS -->
+<script src="{% static 'admin/assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'admin/assets/plugins/datatables/datatables.min.js' %}"></script>
+    
+<!-- jquery-datatable.js -->
+<script src="{% static 'admin/assets/js/pages/tables/jquery-datatable.js' %}"></script>
+
+<!-- Datetimepicker JS -->
+<script src="{% static 'web-assets/assets/js/moment.min.js' %}"></script>
+<script src="{% static 'web-assets/assets/js/bootstrap-datetimepicker.min.js' %}"></script>
+
+
+<!-- Custom JS -->
+<script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+
+<script>
+ 
+</script>
+
+{% endblock extra-js %}
+
+</body>
+</html>

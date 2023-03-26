@@ -310,10 +310,11 @@ class Vitals(models.Model):
     Time=models.TimeField(auto_now=True)
 
     def __str__(self):
-        return '%s(%s)'%(self.Patient_Id,self.Complaints)
+        return f'{self.Patient_Id}({self.Procedure})'
 
     class Meta:
         db_table = "vitals"
+        verbose_name='Patient Procedure'
 
 # Patients Complaints By Doctors
 class Presenting_Complaints(models.Model):

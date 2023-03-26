@@ -14,5 +14,6 @@ urlpatterns = [
      path(route='reporting/<str:page>/<str:type>',view=views.General_Reports.as_view(),name='reporting'),
      path(route='requisition/<str:page>',view=views.Requisition_Form.as_view(),name='requisition'),
      path('alerts/<str:page>',views.CUS_SMS.as_view(),name='alerts'),
+     path('chart',views.Chart,name='chart'),
 ]
 # urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
