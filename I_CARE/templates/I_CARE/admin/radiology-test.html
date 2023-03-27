@@ -37,9 +37,9 @@
 		<![endif]-->
      <style>
         /* Make the image fully responsive */
-       .dataTables_wrapper .dataTables_filter {
+       {% comment %} .dataTables_wrapper .dataTables_filter {
             display: none;
-        }
+        } {% endcomment %}
 
     </style>  
     <style>/* Set !important rule to override default colors */
@@ -95,7 +95,7 @@
                                         style="cursor: pointer;">
                                         <thead>
                                             <tr class="tb_r">
-                                                <th>Patient Id</th>
+                                                <th>Patient ID</th>
                                                 <th>Status</th>
                                                 <th>Modality</th>
                                                 <th>Procedure</th>
