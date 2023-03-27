@@ -2,7 +2,7 @@ from django.contrib import admin
 # Register your models here.
 from I_CARE.models import Consulting_Room,User_Details,\
     Business_Info,Procedures,Referring_Facilities,\
-    Modalities,Approval_Authority
+    Modalities,Approval_Authority,Vitals
 
 admin.site.register(Consulting_Room)
 admin.site.register(User_Details)
@@ -11,6 +11,7 @@ admin.site.register(Procedures)
 admin.site.register(Referring_Facilities)
 admin.site.register(Modalities)
 admin.site.register(Approval_Authority)
+admin.site.register(Vitals)
 
 
 
