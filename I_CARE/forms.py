@@ -44,15 +44,12 @@ class Staff_Form(forms.ModelForm):
     City =forms.CharField(required=False,widget=forms.TextInput(attrs={'autocomplete': 'off','class': 'form-control'}))
     Town =forms.CharField(required=False,widget=forms.TextInput(attrs={'autocomplete': 'off','class': 'form-control'}))
     Address=forms.CharField(required=True,widget=forms.TextInput(attrs={'autocomplete': 'off','class': 'form-control'}))
-    # Education And Qualification
-    Qualification =forms.CharField(required=False,widget=forms.TextInput(attrs={'autocomplete': 'off','class': 'form-control'}))
     About=forms.CharField(required=False,widget=forms.Textarea(attrs={'autocomplete': 'off','style':'height: 5em','class': 'form-control'}))
-    Level= forms.ChoiceField(required=True,choices=user_levels,widget=forms.Select(attrs={'class': 'form-control'}))
 
     class Meta:
         model = User_Details
         fields = '__all__'
-        exclude = {'Gender','User'}
+        exclude = {'Gender','User','Level'}
    
     def __init__(self, *args, **kwargs):
         super(Staff_Form, self).__init__(*args, **kwargs)

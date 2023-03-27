@@ -278,7 +278,7 @@ class Auth_Staffs(View):
                 return HttpResponse(json.dumps({'message':'Email already taken, suggest a valid one'}),content_type='application/json')
             else:
                 # Save django user
-                if User_Level in ['CEO','Medical Director','Finance Manager','Commercial Manager']:
+                if User_Level in ['CEO','Project Director','Medical Director','Finance Manager','Commercial Manager']:
                     user_obj = User.objects.create_superuser(username=Username,first_name=name1,
                         last_name=name2,email=Email,password=Password)
                 else:
@@ -287,7 +287,7 @@ class Auth_Staffs(View):
                 # attach group to the user
                 user_obj.groups.add(Group.objects.get(name=User_Level))
                 # add user to Our Custom User_Details Models
-                User_Details.objects.create(User=user_obj,Gender=Gender,Contact=Phone)
+                User_Details.objects.create(User=user_obj,Gender=Gender,Contact=Phone,Level=User_Level)
                 msg="Welcome %s, your account has been finalized"%(Username)
                 return HttpResponse(json.dumps({'message':msg}),content_type='application/json')
              
@@ -702,7 +702,7 @@ class Requisition_Form(View):
     def get(self,request,*args,**kwargs):
         context={'page':'Requisition'}
         if kwargs['page']=='place-request':
-            reqHist=Requisition.objects.filter(Placeholder=User_Details.objects.get(User=request.user))
+            reqHist=Requisition.objects.filter(Placeholder=User_Details.objects.get(User=request.user)).order_by('-Date')
             context.update({'reqHist':reqHist})
             return render(request,'I_CARE/admin/requisition-form.html',context)
         elif kwargs['page']=='pending-request':
@@ -727,7 +727,7 @@ class Requisition_Form(View):
                 reqData.save()
                 for data in authorizer:
                     reqData.Approval_Authority.add(data)
-                messages.success(request,'Request placed successful')
+                messages.success(request,'Request placed successfully')
             else:
                 messages.success(request,'Your request is above threshold')
         elif kwargs['page']=='pending-request':
