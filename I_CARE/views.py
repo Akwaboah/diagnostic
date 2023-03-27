@@ -368,7 +368,6 @@ class OPD(View):
             ).order_by('Date')
             visitors = json.dumps(list(visitors),cls=DecimalEncoder)
             procedures = json.dumps(list(procedures),cls=DecimalEncoder)
-            print(procedures)
             context.update({'todayApp':todayApp,'tdApp':len(todayApp),'upcomingApp':upcomingApp,'tupApp':len(upcomingApp),
             'pastApp':pastApp,'tpastApp':len(pastApp),'msgRecieved':msg,'tmsgRec':len(msg),'visChart':visitors,'proChart':procedures})
             if kwargs['page']=='app_mesg':
