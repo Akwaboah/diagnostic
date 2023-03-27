@@ -442,8 +442,8 @@ class OPD(View):
                         Referring_Facility=referred_facility,
                         Referred_Doctor=request.POST['Reffered_Doctor'],
                         Treatment_Amount=data.Charge,
-                        Insurance_Type=form.instance.Insurance_Type,
-                        Insurance_Id=form.instance.Insurance_Id,
+                        Insurance_Type=form.instance.Insurance_Type or 'None',
+                        Insurance_Id=form.instance.Insurance_Id or 'xx-xxxx-xxxx',
                         Logger=Loged_User(request))
                   
                 msg='Process initiated at the payment department...'

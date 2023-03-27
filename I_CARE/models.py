@@ -305,8 +305,8 @@ class Vitals(models.Model):
     Paid_Amount = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Trans_Id=models.CharField(max_length=250)
     # insurance details
-    Insurance_Type=models.CharField(max_length=50,default='None')
-    Insurance_Id=models.CharField(max_length=50,default='xx-xxxx-xxxx')
+    Insurance_Type=models.CharField(max_length=50,default='None',null=True,blank=True)
+    Insurance_Id=models.CharField(max_length=50,default='xx-xxxx-xxxx',null=True,blank=True)
     Logger=models.CharField(max_length=50)
     Date=models.DateField(auto_now=True)
     Time=models.TimeField(auto_now=True)
