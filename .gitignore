@@ -1,8 +1,10 @@
 .gitignore
 I_CARE/migrations
+env
 I_CARE_FRAMADA.zip
 I_CARE_MAIN.zip
 .vscode
 media
 staticfiles
+I_CARE/__pycache__
 db.sqlite3
