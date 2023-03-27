@@ -7,3 +7,4 @@ I_CARE_MAIN.zip
 media
 staticfiles
 I_CARE/__pycache__
+db.sqlite3

@@ -1,6 +1,7 @@
 import asyncio
+from datetime import datetime,date,time,timedelta
+import io
 import calendar
-from datetime import datetime,date,time
 from django.utils import timezone
 from decimal import Decimal
 import json
@@ -27,7 +28,11 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.hashers import check_password
 from django.utils.decorators import method_decorator
 from django.contrib import messages
+from django.db import models
 from django.db.models.functions import Concat,Cast
+from django.db.models.functions import ExtractWeekDay
+from django.db.models import F,Value,CharField,Sum,ExpressionWrapper,DecimalField,DateField,Q,Count,\
+Case,When
 from django.db.models import F,Value,CharField,Sum,ExpressionWrapper,DecimalField,DateField,Q,Count
 from I_CARE.models import Business_Info, Patients, User_Details,Patients_Checker,Vitals,\
     Appoitment,Message,Procedures,Presenting_Complaints,Journal_History,Treatment_Alert,\
@@ -84,6 +89,23 @@ def Loged_User(request)-> str:
 def Loged_User_Instance(request):
     user_data=User_Details.objects.get(User=request.user)
     return user_data
+
+def get_weekday_expression(field_name):
+    weekday_names = [
+        (2, 'Mon'),
+        (3, 'Tue'),
+        (4, 'Wed'),
+        (5, 'Thur'),
+        (6, 'Fri'),
+        (7, 'Sat'),
+        (1, 'Sun')
+    ]
+
+    when_list = []
+    for day, name in weekday_names:
+        when_list.append(When(**{f"{field_name}__week_day": day}, then=Value(name)))
+
+    return Case(*when_list, output_field=models.CharField())
 
 def gen_pat_id():
     pat_id=Patients_Checker.objects.all().values('Patient_Id').distinct().count() + 1
@@ -306,7 +328,13 @@ def create_trans_id():
 
 @method_decorator(unauthenticated_staffs,name='get')
 class OPD(View):
-    
+
+    def currentWeek(self):
+        today = date.today()
+        start_of_week = today - timedelta(days=today.weekday())
+        end_of_week = start_of_week + timedelta(days=6)
+        return [start_of_week,end_of_week]
+
     def dispatch(self,  *args, **kwargs):
         return super(OPD,self).dispatch(*args, **kwargs)
 
@@ -318,15 +346,35 @@ class OPD(View):
         except ValueError:
             pass
 
-        if kwargs['page']=='dashboard':
+        if kwargs['page']=='dashboard' or kwargs['page']=='app_mesg':
             app_data=Appoitment.objects.all()
             pastApp=app_data.filter(Preferred_Date__lt=datetime.now())
             todayApp=app_data.filter(Preferred_Date=datetime.now())
             upcomingApp=app_data.filter(Preferred_Date__gt=datetime.now()).order_by('-Date')
             msg=Message.objects.all().order_by('-Date')
+            chartData = (
+                Vitals.objects.filter(Date__range=self.currentWeek())
+                .annotate(weekday_name=get_weekday_expression('Date'))
+                ).order_by('Date')
+            visitors = (
+                chartData
+                .values('weekday_name').distinct()
+                .annotate(count=Count('Patient_Id'))
+            ).order_by('Date')
+            procedures = (
+                chartData
+                .values('weekday_name','Procedure__Modality__Acronym').distinct()
+                .annotate(count=Count('Patient_Id'),Procedure=F('Procedure__Modality__Acronym'))
+            ).order_by('Date')
+            visitors = json.dumps(list(visitors),cls=DecimalEncoder)
+            procedures = json.dumps(list(procedures),cls=DecimalEncoder)
+            print(procedures)
             context.update({'todayApp':todayApp,'tdApp':len(todayApp),'upcomingApp':upcomingApp,'tupApp':len(upcomingApp),
-            'pastApp':pastApp,'tpastApp':len(pastApp),'msgRecieved':msg,'tmsgRec':len(msg)})
+            'pastApp':pastApp,'tpastApp':len(pastApp),'msgRecieved':msg,'tmsgRec':len(msg),'visChart':visitors,'proChart':procedures})
+            if kwargs['page']=='app_mesg':
+                return render(request,'I_CARE/admin/opd-pat-app-mesg.html',context)
             return render(request,'I_CARE/admin/opd-dashboard.html',context)
+        
         elif kwargs['page']=='pat-reg' or isinstance(kwargs['page'],int) :
             # load appointment data 
             if kwargs['page'] !='pat-reg':
