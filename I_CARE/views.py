@@ -532,17 +532,8 @@ class Payment_Department(View):
 
     def get(self,request,*args,**kwargs):
         context={'page':'Payment'}
-        
-        if kwargs['page']=='dashboard':
-            app_data=Appoitment.objects.all()
-            pastApp=app_data.filter(Preferred_Date__lt=datetime.now())
-            todayApp=app_data.filter(Preferred_Date=datetime.now())
-            upcomingApp=app_data.filter(Preferred_Date__gt=datetime.now()).order_by('-Date')
-            msg=Message.objects.all().order_by('-Date')
-            context.update({'todayApp':todayApp,'tdApp':len(todayApp),'upcomingApp':upcomingApp,'tupApp':len(upcomingApp),
-            'pastApp':pastApp,'tpastApp':len(pastApp),'msgRecieved':msg,'tmsgRec':len(msg)})
-            return render(request,'I_CARE/admin/service-dashboard.html',context)
-        elif kwargs['page']=='pat-journal':
+         
+        if kwargs['page']=='pat-journal':
             # load patients journal 
             journal=(Vitals.objects.all().order_by('-Date','Treatment_Amount').annotate(Patient_Ref=F('Patient_Id__Patient_Id'),Balance=F('Treatment_Amount')-F('Paid_Amount'),Treatment_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym'),output_field=CharField())).values())
             journal=json.dumps(list(journal), cls=DjangoJSONEncoder)
@@ -550,6 +541,28 @@ class Payment_Department(View):
             pat_data=Patients.objects.all().order_by('-Date_Joined','Balance')
             context.update({'journalData': journal,'pat_data':pat_data})
             return render(request,'I_CARE/admin/service-payment.html',context)
+        
+        elif kwargs['page']=='journal-history':
+            pat_data=Journal_History.objects.all().order_by('-Date')
+            context.update({'pat_data':pat_data})
+            return render(request,'I_CARE/admin/service-payment-hist.html',context)
+        
+        else:
+            transID=kwargs['page']
+            jnrData=Journal_History.objects.filter(Payment_Journal__Trans_Id=transID)
+            if not jnrData:
+                messages.success(request,f"No invoice found with the ID:{transID}")
+                return redirect(request.META.get('HTTP_REFERER'))
+            paymentData=jnrData.first()
+            patData=paymentData.Payment_Journal.Patient_Id
+            totalCost=jnrData.aggregate(sum=Sum('Payment_Journal__Treatment_Amount'))['sum']
+            totalCost=totalCost if totalCost else Decimal(0)
+            totalPaid=jnrData.aggregate(sum=Sum('Paid_Amount'))['sum']
+            totalPaid=totalPaid if totalPaid else Decimal(0)
+            totalBalance=totalCost-totalPaid
+            context={'patData':patData,'jnrData':jnrData,'totalCost':totalCost,'totalPaid':totalPaid,
+                     'totalBalance':totalBalance,'paymentData':paymentData,'invoce_id':transID}
+            return render(request,'I_CARE/admin/invoice.html',context)
         
     @transaction.atomic(using=None, savepoint=True, durable=True)
     def post(self,request,*args,**kwargs):
@@ -564,12 +577,12 @@ class Payment_Department(View):
                 Journal_History.objects.create(
                     Payment_Journal = data,Paid_Amount = (data.Treatment_Amount-data.Paid_Amount),
                     Payment_Type=request.POST['Mode'], Approved_By=Loged_User(request),
-                    Payment_Comment=request.POST['Comment'],Date=request.POST['PaymentDate']
+                    Payment_Comment=request.POST['Comment'],
                 )
                 data.Paid_Amount=F('Treatment_Amount')
                 data.Department=data.Procedure.Tag
                 data.Trans_Id=transID
-            Vitals.objects.bulk_update(jData,['Paid_Amount','Department','Trans_Id'])
+            Vitals.objects.bulk_update(jData,['Department','Trans_Id'])
             Patients.objects.filter(Patient_Id=request.POST['Patient_Id']).update(Balance=F('Balance')+totalAmount)
             Journal_History_Checker.objects.create(Trans_Id=transID,Cashier=Loged_User(request))
             sms=SMS()
@@ -834,6 +847,7 @@ class General_Reports(View):
         'Date','Patient ID','Patient Name','Gender','Contact Phone','Emergency Contact','Procedure','Referring Doctor','Referring Facility',
         'Insurance Type','Insurance ID',
     ]
+    
     def dispatch(self, request, *args, **kwargs):
         return super(General_Reports,self).dispatch(request, *args, **kwargs)
 
@@ -844,19 +858,7 @@ class General_Reports(View):
                 vitalHist=Presenting_Complaints.objects.all().order_by('-Date')
                 context={'page':'Test Reports','vitalHist':vitalHist}
                 return render(request,'I_CARE/admin/approved-reports.html',context)
-        elif kwargs['page']=='receipt':
-            transID=kwargs['type']
-            jnrData=Journal_History.objects.filter(Payment_Journal__Trans_Id=transID)
-            paymentData=jnrData.first()
-            patData=paymentData.Payment_Journal.Patient_Id
-            totalCost=jnrData.aggregate(sum=Sum('Payment_Journal__Treatment_Amount'))['sum']
-            totalCost=totalCost if totalCost else Decimal(0)
-            totalPaid=jnrData.aggregate(sum=Sum('Paid_Amount'))['sum']
-            totalPaid=totalPaid if totalPaid else Decimal(0)
-            totalBalance=totalCost-totalPaid
-            context={'patData':patData,'jnrData':jnrData,'totalCost':totalCost,'totalPaid':totalPaid,
-                     'totalBalance':totalBalance,'paymentData':paymentData,'invoce_id':transID}
-            return render(request,'I_CARE/admin/invoice.html',context)
+        
         elif kwargs['page']=='gen-reporting':
             context={'page': 'General Reporting'}
             if kwargs['type']=='reg-attendance': # pages

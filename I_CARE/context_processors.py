@@ -1,5 +1,5 @@
 from datetime import datetime
-from I_CARE.models import Consulting_Room,Patients, User_Details,\
+from I_CARE.models import Exam_Room,Patients, User_Details,\
     Business_Info,Procedures,Referring_Facilities,Insurance,Modalities
 from I_CARE.utils import user_levels,med_dent_types,investigations_types,hospital_departments
 
@@ -14,7 +14,7 @@ def global_data(request):
     if request.user.is_authenticated and request.user.is_anonymous==False:
         user_info=User_Details.objects.get(User=request.user)
     return {'bus_info':bus_info,'hospital_departments':hospital_departments,
-    'ward_rooms':Consulting_Room.objects.all(),'procedures':Procedures.objects.all().order_by('Procedure'),
+    'exam_rooms':Exam_Room.objects.all(),'procedures':Procedures.objects.all().order_by('Procedure'),
     'total_pat':total_pat,'pat_data':pat_data,'today_pat':today_pat,'debt_pat':debt_pat,
     'user_info':user_info,'groups_level':dict(user_levels),
     'med_dent_types':dict(med_dent_types),'invest_types':dict(investigations_types),'modalities':Modalities.objects.all(),

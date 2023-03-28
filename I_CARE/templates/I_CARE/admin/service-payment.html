@@ -12,17 +12,17 @@
 {% block dashboard-menu %}
 <nav class="dashboard-menu">
 	<ul>
-        <li>
-            <a href="{% url 'nursing' 'dashboard' %}">
-                <i class="fas fa-columns"></i>
-                <span>Dashboard</span>
-            </a>
-        </li>
 		<li class="active">
             <a href="{% url 'nursing' 'pat-journal' %}">
                 <i class="fas fa-money-bill-wave"></i>
-                <span>Payment</span>
+                <span>Record Payment</span>
 				<small class="unread-msg">{{debt_pat}}</small>
+            </a>
+        </li>
+		<li>
+            <a href="{% url 'nursing' 'journal-history' %}">
+                <i class="fas fa-money"></i>
+                <span>Payment History</span>
             </a>
         </li>
     </ul>
@@ -239,7 +239,6 @@
             data: {
                 Amount: $('#journalAmount').val(),
                 Mode: $('#journalMode').val(),
-                PaymentDate:$('#journalDate').val(),
                 Comment: $('#journalComment').val(),
                 Patient_Id: Patient_Ref_Id,
                 First_Name:Fname,
@@ -261,7 +260,7 @@
                 swal.close();
                 window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
                 setTimeout(function() {
-                    window.location="/reporting/receipt/"+data.transID;
+                    window.location="/nursing/"+data.transID;
                 },1500);
             },
             error: function (request,status,error) {
