@@ -6,3 +6,7 @@
 # Media and static files
 media
 staticfiles
+
+# Environment
+.env
+env
