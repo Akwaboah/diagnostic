@@ -2445,6 +2445,7 @@ class General_Reports(View):
             else:
                 messages(request,'Requested page or report not found')
                 return redirect(request.META.get('HTTP_REFERER'))     
+
 @method_decorator(unauthenticated_staffs,name='get')
 @method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Pharmacist']),name='get')
 class Pharmacy(View):
