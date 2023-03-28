@@ -1,0 +1,196 @@
+{% extends 'I_CARE/admin/index.html' %}
+ 
+{% block extra-css %}
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'admin/assets/css/select2.min.css' %}">
+<!-- Datatables CSS -->
+<link rel="stylesheet" href="{% static 'admin/assets/plugins/datatables/datatables.min.css' %}">
+
+{% endblock extra-css %}
+
+<!--dashboard-menu -->
+{% block dashboard-menu %}
+<nav class="dashboard-menu">
+	<ul>
+		<li>
+            <a href="{% url 'nursing' 'pat-journal' %}">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Record Payment</span>
+				<small class="unread-msg">{{debt_pat}}</small>
+            </a>
+        </li>
+		<li class="active">
+            <a href="{% url 'nursing' 'journal-history' %}">
+                <i class="fas fa-money"></i>
+                <span>Payment History</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endblock dashboard-menu %}
+<!-- /dashboard-menu -->
+ 
+<!-- page content -->
+{% block content %}
+<div class="row">
+	<div class="col-md-12">
+		<div class="card card-table mb-5">
+			{% comment %} <div class="card-header p-1">
+				<div class="col">
+                    <div class="row justify-content-start"> 
+                        <button class="nav-link active bg-warning p-1 mr-2 text-white">Payment History</button>
+                    </div>
+                </div>
+			</div> {% endcomment %}
+			<div class="card-body">
+				<div class="table-responsive p-2">
+					<table id="patientTable" class="table table-bordered table-hover table-center mb-0">
+						<thead>
+							<tr>
+                                <th>Date</th>
+								<th>Code</th>
+								<th>Patient ID</th>
+                                <th>Procedure</th>
+                                <th>Charge</th>
+								<th>Cashier</th>
+								<th>Mode</th>
+								<th>Comment</th>
+                                <th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for vit in pat_data %}
+							<tr>
+                                <td>
+									<h2 class="table-avatar">
+										<a href="javascript:void(0)">{{vit.Date|date:"d M, Y"}}
+											<span class="d-block text-info text-capitalize"><i class="fa fa-clock-o"></i> {{vit.Time}}</span></a>
+									</h2>
+								</td>
+                                <td>{{vit.Payment_Journal.Trans_Id}}</td>
+								<td>
+									<h2 class="table-avatar">
+										<a href="javascript:void(0);">
+                                            {{vit.Payment_Journal.Patient_Id}}
+											<span>#{{vit.Payment_Journal.Patient_Id.Patient_Id}}</span></a>
+									</h2>
+								</td>
+								<td>{{vit.Payment_Journal.Procedure}}</td>
+								<td>{{vit.Payment_Journal.Treatment_Amount}}</td>
+								<td>{{vit.Approved_By}}</td>
+                                <td>{{vit.Payment_Type}}</td>
+                                <td>{{vit.Payment_Comment}}</td>
+                                <td class="text-left">
+									<div class="table-action">
+										<a class="btn btn-sm bg-success-light" 
+                                        href="{% url 'nursing' vit.Payment_Journal.Trans_Id %}"
+                                         class="btn btn-sm bg-success-light">
+											<i class="fas fa-file-pdf"></i>
+										</a>
+									</div>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock content %}
+<!-- /page content -->
+
+{% block extra-js %}
+ 
+<!-- Sticky Sidebar JS -->
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/ResizeSensor.js' %}"></script>
+<script src="{% static 'web-assets/assets/plugins/theia-sticky-sidebar/theia-sticky-sidebar.js' %}"></script>
+
+<!-- Select2 JS -->
+<script src="{% static 'admin/assets/js/select2.min.js' %}"></script>
+
+
+<!-- Datatables JS -->
+<script src="{% static 'admin/assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'admin/assets/plugins/datatables/datatables.min.js' %}"></script>
+    
+<!-- jquery-datatable.js -->
+<script src="{% static 'admin/assets/js/pages/tables/jquery-datatable.js' %}"></script>
+
+<!-- Custom JS -->
+<script src="{% static 'web-assets/assets/js/script.js' %}"></script>
+
+<script>
+    
+    let journalEntryTable;
+
+    $(document).ready(function () {
+
+        patientTable = $('#patientTable').DataTable({
+            // destroy : true,  
+            paging: true,
+            ordering: false,
+            info: false,
+            searching:true,
+            pageLength:7,
+            bLengthChange:false,
+            stateSave: true,
+            lengthMenu: [ [7, 14, 21, -1], [7, 14, 21, "All"] ]
+        });
+         
+    })
+    
+    // bills/jurnal data
+    const journalData=(JSON.parse ('{{journalData|safe}}'))
+     
+    function showPayment(patient_id,fname,sname,gender,age,nat,res,tel,occup,bal,insur_name,insur_id,profile_image) {
+        journalEntryTable.clear().draw();
+        let posNo=0
+        for (var i = 0; i < journalData.length; i++) {
+            if (journalData[i].Patient_Ref==patient_id) {
+                posNo+=1
+                journalEntryTable.row.add([posNo,journalData[i].Date,journalData[i].Treatment_Name,journalData[i].Treatment_Amount,journalData[i].Paid_Amount,journalData[i].Balance,journalData[i].Logger]).draw(false);
+            }
+        }
+        // set patient details
+        document.getElementById('JName').innerText=fname+" "+sname+"/"+patient_id;
+        document.getElementById('JGender').innerText=gender+"/"+age;
+        document.getElementById('JAddress').innerText=nat+"/"+res;
+        document.getElementById('JContact').innerText=tel+"/"+occup;
+        document.getElementById('JBalance').innerText=bal+" GHS";
+        document.getElementById('Insurance').innerText=`${insur_name}(${insur_id})`;
+
+        // 
+        var imgAttr = document.getElementById('JProfile');
+        if (!String(profile_image).includes('avatar')) {
+            imgAttr.src = profile_image;
+        }else{
+            imgAttr.src = "{% static 'admin/assets/img/profiles/avatar.png' %}"
+        }
+        
+        $('#paymentModal').modal('show')
+        Patient_Ref_Id=patient_id;
+        Patient_Bal=Math.abs(bal);
+        Fname=fname;
+        PTel=tel;
+        
+    }
+
+    function validatePay() {
+        const amount = document.getElementById('journalAmount');
+        if (parseFloat(amount.value)!=parseFloat(Patient_Bal)) {
+            amount.setCustomValidity(`Total amount to be paid for all procedures is ${Patient_Bal}¢`)
+            return false
+        }else{
+            amount.setCustomValidity('')
+        }
+    }
+ 
+
+</script>
+
+{% endblock extra-js %}
+
+</body>
+</html>

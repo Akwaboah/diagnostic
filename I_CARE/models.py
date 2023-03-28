@@ -185,19 +185,20 @@ class Referring_Facilities(models.Model):
         db_table = "referring_facilities"
         verbose_name='Referring Facilitie'
 
-class Consulting_Room(models.Model):
+class Exam_Room(models.Model):
     Room_Name = models.CharField(max_length=50,unique=True)
-    Description = models.TextField()
-     
+    Modality=models.ForeignKey(Modalities,on_delete=models.CASCADE,db_column='Modality')
+
     def __str__(self):
-        return '%s'%(self.Room_Name)
+        return f'{self.Room_Name}({self.Modality.Acronym})'
 
     def save(self, *args, **kwargs):
         self.Room_Name = str(self.Room_Name).title()
-        super(Consulting_Room, self).save(*args, **kwargs)
+        super(Exam_Room, self).save(*args, **kwargs)
 
     class Meta:
-        db_table = "consulting_room"
+        db_table = "exam_room"
+        verbose_name='Exam Room'
 
 class Patients_Checker(models.Model):
     Patient_Id = models.CharField(max_length=20, primary_key=True, unique=True)
@@ -305,8 +306,9 @@ class Vitals(models.Model):
     Paid_Amount = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Trans_Id=models.CharField(max_length=250)
     # insurance details
-    Insurance_Type=models.CharField(max_length=50,default='None')
-    Insurance_Id=models.CharField(max_length=50,default='xx-xxxx-xxxx')
+    Insurance_Type=models.CharField(max_length=50,default='None',null=True,blank=True)
+    Insurance_Id=models.CharField(max_length=50,default='xx-xxxx-xxxx',null=True,blank=True)
+    Exam_Room=models.CharField(max_length=50,default='Default Room',null=True,blank=True)
     Logger=models.CharField(max_length=50)
     Date=models.DateField(auto_now=True)
     Time=models.TimeField(auto_now=True)
@@ -377,7 +379,7 @@ class Journal_History(models.Model):
     Payment_Type=models.CharField(max_length=20)
     Approved_By=models.CharField(max_length=50)
     Payment_Comment=models.TextField(null=True)
-    Date=models.DateField(auto_now=False)
+    Date=models.DateField(auto_now=True)
     Time=models.TimeField(auto_now=True)
 
     def __str__(self):
@@ -422,7 +424,7 @@ class Requisition(models.Model):
     Total_Cost = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Approval_Authority=models.ManyToManyField(Approval_Authority, db_column="Approval_Authority")
     Approval_Status=models.CharField(max_length=50,default='Pending')
-    Delivery_Status=models.CharField(max_length=50,default='Pending')
+    Delivery_Status=models.CharField(max_length=50,default='Not Received')
     Approved_By=models.CharField(max_length=50,default='Pending')
     Date=models.DateField(auto_now=True)
     Time=models.TimeField(auto_now=True)
@@ -594,7 +596,3 @@ class Drugs_Prescriptions(models.Model):
     class Meta:
         db_table = "drugs_prescriptions"
 
-class Sale(models.Model):
-    product = models.CharField(max_length=50)
-    date = models.DateField()
-    amount = models.DecimalField(max_digits=10, decimal_places=2)

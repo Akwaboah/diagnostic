@@ -171,12 +171,22 @@
                                         <label class="col-lg-3 col-form-label">Procedures</label>
                                         <div class="col-lg-9">
                                             <div class="row">
-                                                <div class="col-lg-12 col-md-12 col-12">
+                                                <div class="col-lg-7 col-md-7 col-7">
                                                     <div class="form-group">
                                                         <select style="width: 100%" id="procedure_type" name="Procedure_Name" multiple="multiple"
                                                             required class="js-states form-control">
                                                             {% for val in procedures %}
                                                             <option value="{{val.id}}">{{val}}({{val.Charge}})</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-5 col-md-5 col-5">
+                                                    <div class="form-group">
+                                                        <select style="width: 100%" id="exam_room" name="Exam_Room" multiple="multiple"
+                                                            required class="js-states form-control">
+                                                            {% for val in exam_rooms %}
+                                                            <option value="{{val}}">{{val}}</option>
                                                             {% endfor %}
                                                         </select>
                                                     </div>
@@ -236,7 +246,16 @@
             // tokenSeparators: [',', ' '], // entering a space or a comma will create tag
         });
 
-         
+        $('#exam_room').select2({
+            dropdownAutoWidth: true,
+            multiple: true,
+            width: '100%',
+            placeholder: "Add examination rooms ",
+            allowClear: true,
+            // tags: true , //helps for adding new data which is not in option
+            // tokenSeparators: [',', ' '], // entering a space or a comma will create tag
+        });
+        
         $('.select2-search__field').css('width', '100%'); // select2 placeholder css
     });
 

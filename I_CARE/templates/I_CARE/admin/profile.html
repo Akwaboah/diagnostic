@@ -93,7 +93,7 @@
                                     <div class="profile-det-info">
                                         <h3>{{request.user.first_name}} {{request.user.last_name}}</h3>
                                         <div class="patient-details">
-                                            <h5 class="mb-0">{{user_info.Qualification}}</h5>
+                                            <h5 class="mb-0">{{user_info.Level}}</h5>
                                         </div>
                                     </div>
                                 </div>
@@ -115,7 +115,7 @@
                                     </div>
                                     <div class="clinic-services">
                                         <span>{{user_info.Gender}}</span>
-                                        <span>{{user_det.Level.value}}</span>
+                                        <span>{{user_info.Level}}</span>
                                     </div>
                                 </div>
                                 <!-- About Details -->
@@ -205,32 +205,11 @@
                                                                 <div class="col-lg-3 col-md-6 col-sm-4">
                                                                     <div class="form-group">
                                                                         <label>Gender</label>
-                                                                        <div class="form-group row">
-                                                                            <div class="col-lg-9">
-                                                                                <div
-                                                                                    class="form-check form-check-inline">
-                                                                                    <input class="form-check-input"
-                                                                                        type="radio" name="gender"
-                                                                                        id="gender_male" value="Male"
-                                                                                        checked>
-                                                                                    <label class="form-check-label"
-                                                                                        for="gender_male">
-                                                                                        Male
-                                                                                    </label>
-                                                                                </div>
-                                                                                <div
-                                                                                    class="form-check form-check-inline">
-                                                                                    <input class="form-check-input"
-                                                                                        type="radio" name="gender"
-                                                                                        id="gender_female"
-                                                                                        value="Female">
-                                                                                    <label class="form-check-label"
-                                                                                        for="gender_female">
-                                                                                        Female
-                                                                                    </label>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
+                                                                        <select id="gender" name="gender"
+                                                                            required class="js-states form-control">
+                                                                            <option value="Male">Male</option>
+                                                                            <option value="Female">Female</option>
+                                                                        </select>
                                                                     </div>
                                                                 </div>
                                                                 <div class="col-lg-4 col-md-6 col-sm-4">
@@ -250,13 +229,13 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="col-12 col-md-6">
+                                                        <div class="col-4 col-md-4">
                                                             <div class="form-group">
                                                                 <label>City</label>
                                                                 {{user_det.City}}
                                                             </div>
                                                         </div>
-                                                        <div class="col-12 col-md-6">
+                                                        <div class="col-4 col-md-4">
                                                             <div class="form-group">
                                                                 <label>Town</label>
                                                                 {{user_det.Town}}
@@ -266,18 +245,6 @@
                                                             <div class="form-group">
                                                                 <label>Address</label>
                                                                 {{user_det.Address}}
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-4 col-md-4">
-                                                            <div class="form-group">
-                                                                <label>Qualifications</label>
-                                                                {{user_det.Qualification}}
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-4 col-md-4">
-                                                            <div class="form-group">
-                                                                <label>User Level</label>
-                                                                {{user_det.Level}}
                                                             </div>
                                                         </div>
                                                         <div class="col-12">
@@ -391,13 +358,8 @@
     <script>
         $(function () {
             var gender = "{{user_info.Gender}}";
-            if (gender == 'Male') {
-                document.getElementById('gender_male').checked = true
-                document.getElementById('gender_female').checked = false
-            } else {
-                document.getElementById('gender_male').checked = false
-                document.getElementById('gender_female').checked = true
-            }
+            $('#gender').val(gender).change()
+              
         })
         function onChange() {
             const password = document.querySelector('input[name=NewPassword]');

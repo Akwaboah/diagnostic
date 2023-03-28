@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')  # Use a non-interactive backend
 from openpyxl import Workbook
+from openpyxl.chart.label import DataLabelList
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font,Alignment
 from openpyxl.chart import BarChart,PieChart,Reference
@@ -30,7 +31,6 @@ from django.utils.decorators import method_decorator
 from django.contrib import messages
 from django.db import models
 from django.db.models.functions import Concat,Cast
-from django.db.models.functions import ExtractWeekDay
 from django.db.models import F,Value,CharField,Sum,ExpressionWrapper,DecimalField,DateField,Q,Count,\
 Case,When
 from django.db.models import F,Value,CharField,Sum,ExpressionWrapper,DecimalField,DateField,Q,Count
@@ -278,7 +278,7 @@ class Auth_Staffs(View):
                 return HttpResponse(json.dumps({'message':'Email already taken, suggest a valid one'}),content_type='application/json')
             else:
                 # Save django user
-                if User_Level in ['CEO','Medical Director','Finance Manager','Commercial Manager']:
+                if User_Level in ['CEO','Project Director','Medical Director','Finance Manager','Commercial Manager']:
                     user_obj = User.objects.create_superuser(username=Username,first_name=name1,
                         last_name=name2,email=Email,password=Password)
                 else:
@@ -287,7 +287,7 @@ class Auth_Staffs(View):
                 # attach group to the user
                 user_obj.groups.add(Group.objects.get(name=User_Level))
                 # add user to Our Custom User_Details Models
-                User_Details.objects.create(User=user_obj,Gender=Gender,Contact=Phone)
+                User_Details.objects.create(User=user_obj,Gender=Gender,Contact=Phone,Level=User_Level)
                 msg="Welcome %s, your account has been finalized"%(Username)
                 return HttpResponse(json.dumps({'message':msg}),content_type='application/json')
              
@@ -419,6 +419,7 @@ class OPD(View):
             msg='Process initiated at the payment department...'
             if form.is_valid():
                 procedure_list=request.POST.getlist('Procedure_Name')
+                exam_room_list=request.POST.getlist('Exam_Room')
                 procedure_data=Procedures.objects.filter(id__in=procedure_list)
                 totalCost=procedure_data.aggregate(sum=Sum('Charge'))['sum']
                 totalCost= totalCost if totalCost else Decimal(0)
@@ -435,15 +436,20 @@ class OPD(View):
                 # check if patient been registered from appointment then update patient id
                 if isinstance(kwargs['page'],int):
                     Appoitment.objects.filter(Phone=request.POST['Tel']).update(Patient_Id=patient_init_id)
-                for data in procedure_data:
+                for index,data in enumerate(procedure_data):
+                    try:
+                        exam_room=exam_room_list[index]
+                    except IndexError:
+                        exam_room="Default Room"
                     Vitals.objects.create(
                         Patient_Id=form.instance,
                         Procedure=data,
                         Referring_Facility=referred_facility,
                         Referred_Doctor=request.POST['Reffered_Doctor'],
                         Treatment_Amount=data.Charge,
-                        Insurance_Type=form.instance.Insurance_Type,
-                        Insurance_Id=form.instance.Insurance_Id,
+                        Insurance_Type=form.instance.Insurance_Type or 'None',
+                        Insurance_Id=form.instance.Insurance_Id or 'xx-xxxx-xxxx',
+                        Exam_Room=exam_room,
                         Logger=Loged_User(request))
                   
                 msg='Process initiated at the payment department...'
@@ -466,6 +472,7 @@ class OPD(View):
                 messages.success(request,'Error occured:%s'%form.errors)
         elif kwargs['page']=='pat-complaints':
             procedure_list=request.POST.getlist('Procedure_Name')
+            exam_room_list=request.POST.getlist('Exam_Room')
             procedure_data=Procedures.objects.filter(id__in=procedure_list)
             totalCost=procedure_data.aggregate(sum=Sum('Charge'))['sum']
             totalCost= totalCost if totalCost else Decimal(0)
@@ -473,7 +480,11 @@ class OPD(View):
             patient_init_id=patData.first()
             referred_facility=request.POST['Referring_Facility'] or None
             # check procedures and apply bill to patient
-            for data in procedure_data:
+            for index,data in enumerate(procedure_data):
+                try:
+                    exam_room=exam_room_list[index]
+                except IndexError:
+                    exam_room="Default Room"
                 Vitals.objects.create(
                     Patient_Id=patient_init_id,
                     Procedure=data,
@@ -482,6 +493,7 @@ class OPD(View):
                     Treatment_Amount=data.Charge,
                     Insurance_Type=request.POST['Insurance_Type'] or 'None',
                     Insurance_Id=request.POST['Insurance_Id'] or 'xx-xxxx-xxxx',
+                    Exam_Room=exam_room,
                     Logger=Loged_User(request))
             # update insurance details
             updatingFields={}
@@ -532,17 +544,8 @@ class Payment_Department(View):
 
     def get(self,request,*args,**kwargs):
         context={'page':'Payment'}
-        
-        if kwargs['page']=='dashboard':
-            app_data=Appoitment.objects.all()
-            pastApp=app_data.filter(Preferred_Date__lt=datetime.now())
-            todayApp=app_data.filter(Preferred_Date=datetime.now())
-            upcomingApp=app_data.filter(Preferred_Date__gt=datetime.now()).order_by('-Date')
-            msg=Message.objects.all().order_by('-Date')
-            context.update({'todayApp':todayApp,'tdApp':len(todayApp),'upcomingApp':upcomingApp,'tupApp':len(upcomingApp),
-            'pastApp':pastApp,'tpastApp':len(pastApp),'msgRecieved':msg,'tmsgRec':len(msg)})
-            return render(request,'I_CARE/admin/service-dashboard.html',context)
-        elif kwargs['page']=='pat-journal':
+         
+        if kwargs['page']=='pat-journal':
             # load patients journal 
             journal=(Vitals.objects.all().order_by('-Date','Treatment_Amount').annotate(Patient_Ref=F('Patient_Id__Patient_Id'),Balance=F('Treatment_Amount')-F('Paid_Amount'),Treatment_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym'),output_field=CharField())).values())
             journal=json.dumps(list(journal), cls=DjangoJSONEncoder)
@@ -550,6 +553,28 @@ class Payment_Department(View):
             pat_data=Patients.objects.all().order_by('-Date_Joined','Balance')
             context.update({'journalData': journal,'pat_data':pat_data})
             return render(request,'I_CARE/admin/service-payment.html',context)
+        
+        elif kwargs['page']=='journal-history':
+            pat_data=Journal_History.objects.all().order_by('-Date')
+            context.update({'pat_data':pat_data})
+            return render(request,'I_CARE/admin/service-payment-hist.html',context)
+        
+        else:
+            transID=kwargs['page']
+            jnrData=Journal_History.objects.filter(Payment_Journal__Trans_Id=transID)
+            if not jnrData:
+                messages.success(request,f"No invoice found with the ID:{transID}")
+                return redirect(request.META.get('HTTP_REFERER'))
+            paymentData=jnrData.first()
+            patData=paymentData.Payment_Journal.Patient_Id
+            totalCost=jnrData.aggregate(sum=Sum('Payment_Journal__Treatment_Amount'))['sum']
+            totalCost=totalCost if totalCost else Decimal(0)
+            totalPaid=jnrData.aggregate(sum=Sum('Paid_Amount'))['sum']
+            totalPaid=totalPaid if totalPaid else Decimal(0)
+            totalBalance=totalCost-totalPaid
+            context={'patData':patData,'jnrData':jnrData,'totalCost':totalCost,'totalPaid':totalPaid,
+                     'totalBalance':totalBalance,'paymentData':paymentData,'invoce_id':transID}
+            return render(request,'I_CARE/admin/invoice.html',context)
         
     @transaction.atomic(using=None, savepoint=True, durable=True)
     def post(self,request,*args,**kwargs):
@@ -562,14 +587,14 @@ class Payment_Department(View):
             for data in jData:
                 # record payment history
                 Journal_History.objects.create(
-                    Payment_Journal = data,Paid_Amount = (data.Treatment_Amount-data.Paid_Amount),
+                    Payment_Journal = data,Paid_Amount = data.Treatment_Amount,
                     Payment_Type=request.POST['Mode'], Approved_By=Loged_User(request),
-                    Payment_Comment=request.POST['Comment'],Date=request.POST['PaymentDate']
+                    Payment_Comment=request.POST['Comment'],
                 )
                 data.Paid_Amount=F('Treatment_Amount')
                 data.Department=data.Procedure.Tag
                 data.Trans_Id=transID
-            Vitals.objects.bulk_update(jData,['Paid_Amount','Department','Trans_Id'])
+            Vitals.objects.bulk_update(jData,['Department','Trans_Id'])
             Patients.objects.filter(Patient_Id=request.POST['Patient_Id']).update(Balance=F('Balance')+totalAmount)
             Journal_History_Checker.objects.create(Trans_Id=transID,Cashier=Loged_User(request))
             sms=SMS()
@@ -702,7 +727,7 @@ class Requisition_Form(View):
     def get(self,request,*args,**kwargs):
         context={'page':'Requisition'}
         if kwargs['page']=='place-request':
-            reqHist=Requisition.objects.filter(Placeholder=User_Details.objects.get(User=request.user))
+            reqHist=Requisition.objects.filter(Placeholder=User_Details.objects.get(User=request.user)).order_by('-Date')
             context.update({'reqHist':reqHist})
             return render(request,'I_CARE/admin/requisition-form.html',context)
         elif kwargs['page']=='pending-request':
@@ -727,7 +752,7 @@ class Requisition_Form(View):
                 reqData.save()
                 for data in authorizer:
                     reqData.Approval_Authority.add(data)
-                messages.success(request,'Request placed successful')
+                messages.success(request,'Request placed successfully')
             else:
                 messages.success(request,'Your request is above threshold')
         elif kwargs['page']=='pending-request':
@@ -830,10 +855,14 @@ class General_Reports(View):
             'Registration Date','Patient ID', 'First Name', 'Surname', 'Gender', 'DOB', 'Age', 'Residence',
             'Contact Phone', 'Occupation', 'Emergency Contact','Email Address', 'Nationality', 'Insurance Type', 'Insurance ID'
             ]
+    
     patAttHR=[
         'Date','Patient ID','Patient Name','Gender','Contact Phone','Emergency Contact','Procedure','Referring Doctor','Referring Facility',
         'Insurance Type','Insurance ID',
     ]
+    
+    revHR=['Date','Patient ID','Patient Name','Procedure','Modality','Charge','Exam Room','Cashier','Payment Type','Comments']
+    
     def dispatch(self, request, *args, **kwargs):
         return super(General_Reports,self).dispatch(request, *args, **kwargs)
 
@@ -844,23 +873,11 @@ class General_Reports(View):
                 vitalHist=Presenting_Complaints.objects.all().order_by('-Date')
                 context={'page':'Test Reports','vitalHist':vitalHist}
                 return render(request,'I_CARE/admin/approved-reports.html',context)
-        elif kwargs['page']=='receipt':
-            transID=kwargs['type']
-            jnrData=Journal_History.objects.filter(Payment_Journal__Trans_Id=transID)
-            paymentData=jnrData.first()
-            patData=paymentData.Payment_Journal.Patient_Id
-            totalCost=jnrData.aggregate(sum=Sum('Payment_Journal__Treatment_Amount'))['sum']
-            totalCost=totalCost if totalCost else Decimal(0)
-            totalPaid=jnrData.aggregate(sum=Sum('Paid_Amount'))['sum']
-            totalPaid=totalPaid if totalPaid else Decimal(0)
-            totalBalance=totalCost-totalPaid
-            context={'patData':patData,'jnrData':jnrData,'totalCost':totalCost,'totalPaid':totalPaid,
-                     'totalBalance':totalBalance,'paymentData':paymentData,'invoce_id':transID}
-            return render(request,'I_CARE/admin/invoice.html',context)
+        
         elif kwargs['page']=='gen-reporting':
             context={'page': 'General Reporting'}
             if kwargs['type']=='reg-attendance': # pages
-                return render(request,'I_CARE/admin/reg-att-reporting.html',context)
+                return render(request,'I_CARE/admin/reporting-reg-att.html',context)
             # patient registration reporting
             elif kwargs['type']=='reg-pat-daily': # # registered patients daily
                 # Get the start and end dates from the request parameters
@@ -892,11 +909,11 @@ class General_Reports(View):
                 ws1.append(self.regHR)
                 for r in dataframe_to_rows(df, index=False, header=False):
                     ws1.append(r)
-                # preparing gender distribution chart
-                # group the dataframe by gender
-                df_gender_counts = df.groupby('Gender').size().reset_index(name='Number Of Patients')
+
                 # create the second sheet with pie chart distribution
                 ws2 = wb.create_sheet(title="Gender Distribution")
+                # group the dataframe by gender
+                df_gender_counts = df.groupby('Gender').size().reset_index(name='Number Of Patients')
                 # Add the data to the worksheet
                 for r in dataframe_to_rows(df_gender_counts, index=False, header=True):
                     ws2.append(r)
@@ -912,6 +929,11 @@ class General_Reports(View):
                 categories = Reference(ws2, min_col=1, min_row=2, max_row=len(df_gender_counts.index) + 1)
                 pie_chart.add_data(data, titles_from_data=True)
                 pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
                 # Add the pie_chart to the worksheet
                 ws2.add_chart(pie_chart, "D2")
  
@@ -999,6 +1021,11 @@ class General_Reports(View):
                 categories = Reference(ws3, min_col=1, min_row=2, max_row=len(df_gender_counts.index) + 1)
                 pie_chart.add_data(data, titles_from_data=True)
                 pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
                 # Add the pie_chart to the worksheet
                 ws3.add_chart(pie_chart, "D2")
 
@@ -1022,20 +1049,20 @@ class General_Reports(View):
                     ws4.append(r)
 
                 # Create the chart and set its properties
-                gender_pie_chart = BarChart()
-                gender_pie_chart.title = "Gender Distribution Per Date"
-                gender_pie_chart.y_axis.title = "Number of Patients"
-                gender_pie_chart.width = 20
-                gender_pie_chart.height = 10
+                gender_chart = BarChart()
+                gender_chart.title = "Gender Distribution Per Date"
+                gender_chart.y_axis.title = "Number of Patients"
+                gender_chart.width = 20
+                gender_chart.height = 10
 
                 # Add the data to the gender chart
                 gender_data = Reference(ws4, min_col=2, min_row=1, max_row=len(df_pivot.index) + 1, max_col=len(df_pivot.columns))
                 gender_categories = Reference(ws4, min_col=1, min_row=2, max_row=len(df_pivot.index) + 1)
-                gender_pie_chart.add_data(gender_data, titles_from_data=True)
-                gender_pie_chart.set_categories(gender_categories)
+                gender_chart.add_data(gender_data, titles_from_data=True)
+                gender_chart.set_categories(gender_categories)
 
                 # Add the pie_chart to the worksheet
-                ws4.add_chart(gender_pie_chart, "D2")
+                ws4.add_chart(gender_chart, "D2")
 
                 # Save the workbook to the output buffer and prepare the response
                 wb.save(output)
@@ -1124,6 +1151,11 @@ class General_Reports(View):
                 categories = Reference(ws3, min_col=1, min_row=2, max_row=len(df_monthly.index) + 1)
                 pie_chart.add_data(data, titles_from_data=True)
                 pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
                 # Add the pie_chart to the worksheet
                 ws3.add_chart(pie_chart, "D2")
 
@@ -1170,7 +1202,11 @@ class General_Reports(View):
                 gender_categories = Reference(ws4, min_col=1, min_row=2, max_row=len(df_pivot.index) + 1)
                 gender_pie_chart.add_data(gender_data, titles_from_data=True)
                 gender_pie_chart.set_categories(gender_categories)
-
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                gender_pie_chart.dataLabels = data_labels
                 # Add the pie_chart to the worksheet
                 ws4.add_chart(gender_pie_chart, "D2")
 
@@ -1214,7 +1250,7 @@ class General_Reports(View):
                 ws1.title = "Patients List"
                 # Write the title
                 title = f'REGISTERED PATIENTS REPORT(YEARLY)'
-                subtitle=f'DATE FROM: {str(start_date)} to {str(end_date)}'
+                subtitle=f'START FROM: {str(start_date)} to {str(end_date)}'
                 self.createSheetTitle(df,ws1,title,subtitle)
                 ws1.append([])
                 ws1.append(self.regHR)
@@ -1260,6 +1296,11 @@ class General_Reports(View):
                 categories = Reference(ws3, min_col=1, min_row=2, max_row=len(df_yearly.index) + 1)
                 pie_chart.add_data(data, titles_from_data=True)
                 pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
                 # Add the pie_chart to the worksheet
                 ws3.add_chart(pie_chart, "D2")
  
@@ -1296,7 +1337,11 @@ class General_Reports(View):
                 gender_categories = Reference(ws4, min_col=1, min_row=2, max_row=len(df_pivot.index) + 1)
                 gender_pie_chart.add_data(gender_data, titles_from_data=True)
                 gender_pie_chart.set_categories(gender_categories)
-
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                gender_pie_chart.dataLabels = data_labels
                 # Add the pie_chart to the worksheet
                 ws4.add_chart(gender_pie_chart, "D2")
 
@@ -1311,7 +1356,7 @@ class General_Reports(View):
             elif kwargs['type']=='pat-att-daily': # patients attendance daily
                 # Get the start and end dates from the request parameters
                 start_date = datetime.strptime(str(request.GET['date_from']),'%Y-%m-%d').date()
-                fileName=f"Patients Attendance Report(Daily)"
+                fileName="Patient Attendance Report(Daily)"
                 # Get patient data as a queryset
                 genData=Vitals.objects.all().filter(Date=start_date)
                 queriedData =(genData.values('Date')
@@ -1334,7 +1379,7 @@ class General_Reports(View):
                 ws1 = wb.active
                 ws1.title = "Patients List"
                 # Write the title
-                title = f'PATIENTS ATTENDANCE REPORT(DAILY)'
+                title = 'PATIENT ATTENDANCE REPORT(DAILY)'
                 subtitle=f'AS AT: {str(start_date.strftime("%d, %B %Y")).upper()}'
                 self.createSheetTitle(df,ws1,title,subtitle)
                 ws1.append([])
@@ -1363,6 +1408,11 @@ class General_Reports(View):
                 categories = Reference(ws2, min_col=1, min_row=2, max_row=len(df_gender_counts.index) + 1)
                 pie_chart.add_data(data, titles_from_data=True)
                 pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
                 # Add the pie_chart to the worksheet
                 ws2.add_chart(pie_chart, "D2")
 
@@ -1412,7 +1462,7 @@ class General_Reports(View):
                 # Get the start and end dates from the request parameters
                 start_date = datetime.strptime(str(request.GET['date_from']),'%Y-%m-%d').date()
                 end_date = datetime.strptime(str(request.GET['date_to']),'%Y-%m-%d').date()
-                fileName=f"Patients Attendance Report(Weekly)"
+                fileName="Patient Attendance Report(Weekly)"
                 # Get patient data as a queryset
                 genData=Vitals.objects.all().filter(Date__range=[start_date,end_date])
                 queriedData =(genData.values('Date')
@@ -1435,7 +1485,7 @@ class General_Reports(View):
                 ws1 = wb.active
                 ws1.title = "Patients List"
                 # Write the title
-                title = f'PATIENTS ATTENDANCE REPORT(WEEKLY/RANGE)'
+                title = 'PATIENT ATTENDANCE REPORT(WEEKLY/RANGE)'
                 subtitle=f'DATE FROM: {str(start_date.strftime("%d, %B %Y")).upper()} to {str(end_date.strftime("%d, %B %Y")).upper()}'
                 self.createSheetTitle(df,ws1,title,subtitle)
                 ws1.append([])
@@ -1488,9 +1538,13 @@ class General_Reports(View):
                 categories = Reference(ws3, min_col=1, min_row=2, max_row=len(df_pat_counts.index) + 1)
                 pie_chart.add_data(data, titles_from_data=True)
                 pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
                 # Add the pie_chart to the worksheet
                 ws3.add_chart(pie_chart, "D2")
-
 
                 # create the third sheet with pie chart distribution
                 ws4 = wb.create_sheet(title="Gender Distribution")
@@ -1511,6 +1565,11 @@ class General_Reports(View):
                 categories = Reference(ws4, min_col=1, min_row=2, max_row=len(df_gender_counts.index) + 1)
                 pie_chart.add_data(data, titles_from_data=True)
                 pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
                 # Add the pie_chart to the worksheet
                 ws4.add_chart(pie_chart, "D2")
 
@@ -1559,10 +1618,834 @@ class General_Reports(View):
                 response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                 response['Content-Disposition'] = f'attachment; filename={fileName}.xlsx'
                 return response
-                    
+
+            elif kwargs['type']=='pat-att-monthly': # patients attendance monthly
+                # Get the start and end dates from the request parameters
+                start_date = datetime.strptime(str(request.GET['date_from']),'%Y-%m-%d').date()
+                end_date = datetime.strptime(str(request.GET['date_to']),'%Y-%m-%d').date()
+                fileName="Patient Attendance Report(Monthly)"
+                # Get patient data as a queryset
+                genData=Vitals.objects.all().filter(Date__range=[start_date,end_date])
+                queriedData =(genData.values('Date')
+                .annotate(Patient_ID=F('Patient_Id__Patient_Id'), Patient_Name=Concat(F('Patient_Id__First_Name'),F('Patient_Id__Surname'),output_field=CharField()),
+                        Gender=F('Patient_Id__Gender'),Tel=F('Patient_Id__Tel'),Emmergency_Tel=F('Patient_Id__Emergency_Tel'),
+                        Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),
+                        Doctor=F('Referred_Doctor'),Facility=F('Referring_Facility'),Insurance=F('Insurance_Type'),Insurance_ID=F('Insurance_Id'),
+                        Month=Concat(F('Date__year'),Value('-'),F('Date__month'),output_field=CharField())
+                        ).order_by('Date')
+                    )
+                if not genData:
+                    messages.success(request,'No record found for the input date')
+                    return redirect(request.META.get('HTTP_REFERER'))
+                
+                # Convert the queryset to a pandas DataFrame
+                df = pd.DataFrame.from_records(queriedData)
+                # Group the data by month
+                df['Month'] = pd.to_datetime(df['Month'].astype(str), format='%Y-%m')
+                df['Month'] = df['Month'].apply(lambda x: x.strftime('%b-%Y'))
+                df_monthly = df.groupby('Month').size().reset_index(name='Number Of Patients')
+                # Convert the Month column to a datetime column
+                df_monthly['Month'] = pd.to_datetime(df_monthly['Month'], format='%b-%Y')
+                # Sort the dataframe by month
+                df_monthly = df_monthly.sort_values(by='Month')
+                # Convert the Month column back to a string column with month names in words
+                df_monthly['Month'] = df_monthly['Month'].apply(lambda x: x.strftime('%b-%Y'))
+
+                # Create an Excel file
+                output = io.BytesIO()
+                wb = Workbook()
+
+                # Create the first sheet with patient data
+                ws1 = wb.active
+                ws1.title = "Patients List"
+                # Write the title
+                title = 'PATIENT ATTENDANCE REPORT(MONTHLY)'
+                subtitle=f'DATE FROM: {str(start_date.strftime("%d, %B %Y")).upper()} to {str(end_date.strftime("%d, %B %Y")).upper()}'
+                self.createSheetTitle(df,ws1,title,subtitle)
+                ws1.append([])
+                ws1.append(self.patAttHR)
+                for r in dataframe_to_rows(df, index=False, header=False):
+                    ws1.append(r)
+
+                # Create the second sheet with the bar chart
+                ws2 = wb.create_sheet(title="Monthly Attendance Chart")
+                 
+                # Add the data to the worksheet
+                for r in dataframe_to_rows(df_monthly, index=False, header=True):
+                    ws2.append(r)
+
+                # Create the chart and set its properties
+                bar_chart = BarChart()
+                bar_chart.title = "Monthly Attendance"
+                bar_chart.y_axis.title = "Number of Patients"
+                bar_chart.x_axis.title = "Month"
+                bar_chart.width = 20
+                bar_chart.height = 10
+
+                # Add the data to the chart
+                data = Reference(ws2, min_col=2, min_row=1, max_row=len(df_monthly.index) + 1, max_col=len(df_monthly.columns))
+                categories = Reference(ws2, min_col=1, min_row=2, max_row=len(df_monthly.index) + 1)
+                bar_chart.add_data(data, titles_from_data=True)
+                bar_chart.set_categories(categories)
+
+                # Add the chart to the worksheet
+                ws2.add_chart(bar_chart, "D2")
+
+                # create the third sheet with pie chart distribution
+                ws3 = wb.create_sheet(title="Attendance Distribution")
+                # Add the data to the worksheet
+                for r in dataframe_to_rows(df_monthly, index=False, header=True):
+                    ws3.append(r)
+
+                # Create the chart and set its properties
+                pie_chart = PieChart()
+                pie_chart.title = "Attendance Distribution(Patients)"
+                pie_chart.width = 20
+                pie_chart.height = 10
+
+                # Add the data to the chart
+                data = Reference(ws3, min_col=2, min_row=1, max_row=len(df_monthly.index) + 1, max_col=len(df_monthly.columns))
+                categories = Reference(ws3, min_col=1, min_row=2, max_row=len(df_monthly.index) + 1)
+                pie_chart.add_data(data, titles_from_data=True)
+                pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
+                # Add the pie_chart to the worksheet
+                ws3.add_chart(pie_chart, "D2")
+
+                # create the third sheet with pie chart distribution
+                ws4 = wb.create_sheet(title="Gender Distribution")
+                # group the dataframe by gender
+                df_gender_counts = df.groupby('Gender').size().reset_index(name='Number Of Patients')
+                # Add the data to the worksheet
+                for r in dataframe_to_rows(df_gender_counts, index=False, header=True):
+                    ws4.append(r)
+
+                # Create the chart and set its properties
+                pie_chart = PieChart()
+                pie_chart.title = "Gender Distribution"
+                pie_chart.width = 20
+                pie_chart.height = 10
+
+                # Add the data to the chart
+                data = Reference(ws4, min_col=2, min_row=1, max_row=len(df_gender_counts.index) + 1, max_col=len(df_gender_counts.columns))
+                categories = Reference(ws4, min_col=1, min_row=2, max_row=len(df_gender_counts.index) + 1)
+                pie_chart.add_data(data, titles_from_data=True)
+                pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
+                # Add the pie_chart to the worksheet
+                ws4.add_chart(pie_chart, "D2")
+
+                # create the fifth sheet
+                ws5 = wb.create_sheet(title="Modality Distribution")
+                # Create the modality distribution chart data
+                modalityData = (
+                    genData.annotate(Month=Concat(F('Date__year'),Value('-'),F('Date__month'),output_field=CharField()))
+                    .values('Month', 'Procedure__Modality__Modality')
+                    .annotate(count=Count('Procedure__Modality__Modality'))
+                )
+                # Convert the queryset to a pandas DataFrame
+                modalityDf = pd.DataFrame.from_records(modalityData)
+                # sort by date
+                modalityDf = modalityDf.sort_values(by='Month')
+                # sum every month modality together(# Aggregate counts)
+                modalityDf = modalityDf.groupby(['Month', 'Procedure__Modality__Modality']).sum().reset_index()  # Aggregate counts
+                # Pivot the data to make the gender counts for each month a separate column
+                df_pivot = modalityDf.pivot(index='Month', columns='Procedure__Modality__Modality', values='count')
+                df_pivot = df_pivot.reset_index().rename_axis(None, axis=1)
+                df_pivot = df_pivot.fillna(0)
+                
+                for r in dataframe_to_rows(df_pivot, index=False, header=True):
+                    ws5.append(r)
+
+                # Create the chart and set its properties
+                modality_chart = BarChart()
+                modality_chart.title = "Modality Distribution"
+                modality_chart.y_axis.title = "Number of Patients"
+                modality_chart.width = 20
+                modality_chart.height = 10
+
+                # Add the data to the gender chart
+                mod_data = Reference(ws5, min_col=2, min_row=1, max_row=len(df_pivot.index) + 1, max_col=len(df_pivot.columns))
+                mod_categories = Reference(ws5, min_col=1, min_row=2, max_row=len(df_pivot.index) + 1)
+                modality_chart.add_data(mod_data, titles_from_data=True)
+                modality_chart.set_categories(mod_categories)
+
+                # Add the pie_chart to the worksheet
+                ws5.add_chart(modality_chart, "D2")
+
+                # Save the workbook to the output buffer and prepare the response
+                wb.save(output)
+                output.seek(0)
+                response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = f'attachment; filename={fileName}.xlsx'
+                
+                return response
+               
+            elif kwargs['type']=='pat-att-yearly': # patients attendance yearly
+                # Get the start and end dates from the request parameters
+                start_date = datetime.strptime(str(request.GET['date_from']),'%Y').date().year
+                end_date = datetime.strptime(str(request.GET['date_to']),'%Y').date().year
+                fileName="Patient Attendance Report(Yearly)"
+                # Get patient data as a queryset
+                genData=Vitals.objects.all().filter(Date__year__range=[start_date,end_date])
+                queriedData =(genData.values('Date')
+                .annotate(Patient_ID=F('Patient_Id__Patient_Id'), Patient_Name=Concat(F('Patient_Id__First_Name'),F('Patient_Id__Surname'),output_field=CharField()),
+                        Gender=F('Patient_Id__Gender'),Tel=F('Patient_Id__Tel'),Emmergency_Tel=F('Patient_Id__Emergency_Tel'),
+                        Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),
+                        Doctor=F('Referred_Doctor'),Facility=F('Referring_Facility'),Insurance=F('Insurance_Type'),Insurance_ID=F('Insurance_Id'),
+                        Year=F('Date__year')
+                        ).order_by('Date')
+                    )
+                if not genData:
+                    messages.success(request,'No record found for the input date')
+                    return redirect(request.META.get('HTTP_REFERER'))
+                
+                # Convert the queryset to a pandas DataFrame
+                df = pd.DataFrame.from_records(queriedData)
+                # Group the data by Year
+                df_yearly = df.groupby('Year').size().reset_index(name='Number Of Patients')
+
+                # Create an Excel file
+                output = io.BytesIO()
+                wb = Workbook()
+
+                # Create the first sheet with patient data
+                ws1 = wb.active
+                ws1.title = "Patients List"
+                # Write the title
+                title = 'PATIENT ATTENDANCE REPORT(YEARLY)'
+                subtitle=f'START FROM: {str(start_date)} to {str(end_date)}'
+                self.createSheetTitle(df,ws1,title,subtitle)
+                ws1.append([])
+                ws1.append(self.patAttHR)
+                for r in dataframe_to_rows(df, index=False, header=False):
+                    ws1.append(r)
+
+                # Create the second sheet with the bar chart
+                ws2 = wb.create_sheet(title="Yearly Attendance Chart")
+                 
+                # Add the data to the worksheet
+                for r in dataframe_to_rows(df_yearly, index=False, header=True):
+                    ws2.append(r)
+
+                # Create the chart and set its properties
+                bar_chart = BarChart()
+                bar_chart.title = "Yearly Attendance"
+                bar_chart.y_axis.title = "Number of Patients"
+                bar_chart.x_axis.title = "Yearly"
+                bar_chart.width = 20
+                bar_chart.height = 10
+
+                # Add the data to the chart
+                data = Reference(ws2, min_col=2, min_row=1, max_row=len(df_yearly.index) + 1, max_col=len(df_yearly.columns))
+                categories = Reference(ws2, min_col=1, min_row=2, max_row=len(df_yearly.index) + 1)
+                bar_chart.add_data(data, titles_from_data=True)
+                bar_chart.set_categories(categories)
+
+                # Add the chart to the worksheet
+                ws2.add_chart(bar_chart, "D2")
+
+                # create the third sheet with pie chart distribution
+                ws3 = wb.create_sheet(title="Attendance Distribution")
+                # Add the data to the worksheet
+                for r in dataframe_to_rows(df_yearly, index=False, header=True):
+                    ws3.append(r)
+
+                # Create the chart and set its properties
+                pie_chart = PieChart()
+                pie_chart.title = "Attendance Distribution(Patients)"
+                pie_chart.width = 20
+                pie_chart.height = 10
+
+                # Add the data to the chart
+                data = Reference(ws3, min_col=2, min_row=1, max_row=len(df_yearly.index) + 1, max_col=len(df_yearly.columns))
+                categories = Reference(ws3, min_col=1, min_row=2, max_row=len(df_yearly.index) + 1)
+                pie_chart.add_data(data, titles_from_data=True)
+                pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
+                # Add the pie_chart to the worksheet
+                ws3.add_chart(pie_chart, "D2")
+
+                # create the forth sheet
+                ws4 = wb.create_sheet(title="Gender Distribution")
+                # Create the gender distribution chart data
+                genderData = (
+                    queriedData
+                    .values('Year', 'Gender')
+                    .annotate(count=Count('Gender'))
+                )
+                # Convert the queryset to a pandas DataFrame
+                genderDf = pd.DataFrame.from_records(genderData)
+                # sort by year
+                genderDf = genderDf.sort_values(by='Year')
+                # sum every year modality together(# Aggregate counts)
+                genderDf = genderDf.groupby(['Year', 'Gender']).sum().reset_index()  # Aggregate counts
+                # Pivot the data to make the gender counts for each year a separate column
+                df_pivot = genderDf.pivot(index='Year', columns='Gender', values='count')
+                df_pivot = df_pivot.reset_index().rename_axis(None, axis=1)
+                df_pivot = df_pivot.fillna(0)
+                
+                for r in dataframe_to_rows(df_pivot, index=False, header=True):
+                    ws4.append(r)
+                
+                # Create the chart and set its properties
+                gender_chart = BarChart()
+                gender_chart.title = "Gender Distribution"
+                gender_chart.y_axis.title = "Number of Patients"
+                gender_chart.width = 20
+                gender_chart.height = 10
+
+                # Add the data to the gender chart
+                mod_data = Reference(ws4, min_col=2, min_row=1, max_row=len(df_pivot.index) + 1, max_col=len(df_pivot.columns))
+                mod_categories = Reference(ws4, min_col=1, min_row=2, max_row=len(df_pivot.index) + 1)
+                gender_chart.add_data(mod_data, titles_from_data=True)
+                gender_chart.set_categories(mod_categories)
+
+                # Add the pie_chart to the worksheet
+                ws4.add_chart(gender_chart, "D2")
+
+                # create the fifth sheet
+                ws5 = wb.create_sheet(title="Modality Distribution")
+                # Create the modality distribution chart data
+                modalityData = (
+                    genData.annotate(Year=F('Date__year'))
+                    .values('Year', 'Procedure__Modality__Modality')
+                    .annotate(count=Count('Procedure__Modality__Modality'))
+                )
+                # Convert the queryset to a pandas DataFrame
+                modalityDf = pd.DataFrame.from_records(modalityData)
+                # sort by date
+                modalityDf = modalityDf.sort_values(by='Year')
+                # sum every year modality together(# Aggregate counts)
+                modalityDf = modalityDf.groupby(['Year', 'Procedure__Modality__Modality']).sum().reset_index()  # Aggregate counts
+                # Pivot the data to make the gender counts for each year a separate column
+                df_pivot = modalityDf.pivot(index='Year', columns='Procedure__Modality__Modality', values='count')
+                df_pivot = df_pivot.reset_index().rename_axis(None, axis=1)
+                df_pivot = df_pivot.fillna(0)
+                
+                for r in dataframe_to_rows(df_pivot, index=False, header=True):
+                    ws5.append(r)
+
+                # Create the chart and set its properties
+                modality_chart = BarChart()
+                modality_chart.title = "Modality Distribution"
+                modality_chart.y_axis.title = "Number of Patients"
+                modality_chart.width = 20
+                modality_chart.height = 10
+
+                # Add the data to the gender chart
+                mod_data = Reference(ws5, min_col=2, min_row=1, max_row=len(df_pivot.index) + 1, max_col=len(df_pivot.columns))
+                mod_categories = Reference(ws5, min_col=1, min_row=2, max_row=len(df_pivot.index) + 1)
+                modality_chart.add_data(mod_data, titles_from_data=True)
+                modality_chart.set_categories(mod_categories)
+
+                # Add the pie_chart to the worksheet
+                ws5.add_chart(modality_chart, "D2")
+
+                # Save the workbook to the output buffer and prepare the response
+                wb.save(output)
+                output.seek(0)
+                response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = f'attachment; filename={fileName}.xlsx'
+                
+                return response
+               
             else:
+                messages(request,'Requested page or report not found')
                 return redirect(request.META.get('HTTP_REFERER'))
-                            
+            
+        elif kwargs['page']=='revenue': 
+            context={'page': 'General Reporting'}
+            if kwargs['type']=='gen-revenue': # pages
+                return render(request,'I_CARE/admin/reporting-revenue.html',context)
+            
+            elif kwargs['type']=='daily': # daily revenue
+                # Get the start and end dates from the request parameters
+                start_date = datetime.strptime(str(request.GET['date_from']),'%Y-%m-%d').date()
+                fileName="Revenue Report(Daily)"
+                # Get patient data as a queryset
+                genData=Journal_History.objects.all().filter(Date=start_date)
+                queriedData =(genData.values('Date')
+                .annotate(Patient_ID=F('Payment_Journal__Patient_Id__Patient_Id'), Patient_Name=Concat(F('Payment_Journal__Patient_Id__First_Name'),F('Payment_Journal__Patient_Id__Surname'),output_field=CharField()),
+                        Procedure_Name=Concat(F('Payment_Journal__Procedure__Procedure'),Value('-'),F('Payment_Journal__Procedure__Modality__Acronym')),Modality=F('Payment_Journal__Procedure__Modality__Modality'),
+                        Charge=F('Payment_Journal__Treatment_Amount'),Exam_Room=F('Payment_Journal__Exam_Room'),Cashier=F('Approved_By'),Payment_Mode=F('Payment_Type'),Comment=F('Payment_Comment')).order_by('Date')
+                    )
+                if not genData:
+                    messages.success(request,'No record found for the input date')
+                    return redirect(request.META.get('HTTP_REFERER'))
+                # Convert the queryset to a pandas DataFrame
+                df = pd.DataFrame.from_records(queriedData)
+
+                # Create an Excel file
+                output = io.BytesIO()
+                wb = Workbook()
+
+                # Create the first sheet with patient data
+                ws1 = wb.active
+                ws1.title = "Revenue List"
+                # Write the title
+                title = 'REVENUE REPORT(DAILY)'
+                subtitle=f'AS AT: {str(start_date.strftime("%d, %B %Y")).upper()}'
+                self.createSheetTitle(df,ws1,title,subtitle)
+                ws1.append([])
+                ws1.append(self.revHR)
+                for r in dataframe_to_rows(df, index=False, header=False):
+                    ws1.append(r)
+                # Sum the charge field and write it to the worksheet
+                charge_sum = df['Charge'].sum()
+                total_charge_row = ['', '', '', '', f'Revenue= {charge_sum} GHS']
+
+                # Write the 'Total Charge' row to the worksheet
+                ws1.append([])
+                ws1.append(total_charge_row)
+
+                # Make the 'Total Charge' row bold
+                for cell in ws1[ws1.max_row]:
+                    cell.font = Font(bold=True,size=16)
+  
+                # create the second sheet
+                ws2 = wb.create_sheet(title="Modality Distribution")
+                # Create the modality distribution chart data
+                modalityData = (
+                    queriedData.values('Modality').distinct().annotate(Revenue=Sum('Charge'))
+                )
+                # Convert the data to a pandas DataFrame
+                modalityDf = pd.DataFrame.from_records(modalityData)
+                modality_order = [modality['Modality'] for modality in Modalities.objects.all().values('Modality')]
+                modalityDf['Modality'] = pd.Categorical(modalityDf['Modality'], categories=modality_order, ordered=True)
+                modalityDf = modalityDf.sort_values(by='Modality')
+                # Group the data by Modality and sum the Charge column
+                modalityDfSum = modalityDf.groupby(['Modality']).sum().reset_index()
+                # Add the data to the worksheet
+                for r in dataframe_to_rows(modalityDfSum, index=False, header=True):
+                    ws2.append(r)
+
+                # Create the chart and set its properties
+                modality_bar_chart = BarChart()
+                modality_bar_chart.title = "Modality Distribution"
+                modality_bar_chart.y_axis.title = "Revenue"
+                modality_bar_chart.width = 20
+                modality_bar_chart.height = 10
+
+                # Add the data to the chart
+                procedure_data = Reference(ws2, min_col=2, min_row=1, max_row=len(modalityDfSum.index) + 1, max_col=len(modalityDfSum.columns))
+                procedure_categories = Reference(ws2, min_col=1, min_row=2, max_row=len(modalityDfSum.index) + 1)
+                modality_bar_chart.add_data(procedure_data, titles_from_data=True)
+                modality_bar_chart.set_categories(procedure_categories)
+                
+                # Add the chart to the worksheet
+                ws2.add_chart(modality_bar_chart, "D2")
+
+                # create the third sheet with pie chart distribution
+                ws3 = wb.create_sheet(title="Modality Distribution(%)")
+                # Add the data to the worksheet
+                for r in dataframe_to_rows(modalityDfSum, index=False, header=True):
+                    ws3.append(r)
+
+                # Create the chart and set its properties
+                pie_chart = PieChart()
+                pie_chart.title = "Modality Distribution"
+                pie_chart.width = 20
+                pie_chart.height = 10
+
+                # Add the data to the chart
+                data = Reference(ws3, min_col=2, min_row=1, max_row=len(modalityDfSum.index) + 1, max_col=len(modalityDfSum.columns))
+                categories = Reference(ws3, min_col=1, min_row=2, max_row=len(modalityDfSum.index) + 1)
+                pie_chart.add_data(data, titles_from_data=True)
+                pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
+                # Add the pie_chart to the worksheet
+                ws3.add_chart(pie_chart, "D2")
+
+                # Save the workbook to the output buffer and prepare the response
+                wb.save(output)
+                output.seek(0)
+                response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = f'attachment; filename={fileName}.xlsx'
+                return response
+            
+            elif kwargs['type']=='weekly': # weekly revenue
+                # Get the start and end dates from the request parameters
+                start_date = datetime.strptime(str(request.GET['date_from']),'%Y-%m-%d').date()
+                end_date = datetime.strptime(str(request.GET['date_to']),'%Y-%m-%d').date()
+                fileName="Revenue Report(Weekly)"
+                # Get patient data as a queryset
+                genData=Journal_History.objects.all().filter(Date__range=[start_date,end_date])
+                queriedData =(genData.values('Date')
+                .annotate(Patient_ID=F('Payment_Journal__Patient_Id__Patient_Id'), Patient_Name=Concat(F('Payment_Journal__Patient_Id__First_Name'),F('Payment_Journal__Patient_Id__Surname'),output_field=CharField()),
+                        Procedure_Name=Concat(F('Payment_Journal__Procedure__Procedure'),Value('-'),F('Payment_Journal__Procedure__Modality__Acronym')),Modality=F('Payment_Journal__Procedure__Modality__Modality'),
+                        Charge=F('Payment_Journal__Treatment_Amount'),Exam_Room=F('Payment_Journal__Exam_Room'),Cashier=F('Approved_By'),Payment_Mode=F('Payment_Type'),Comment=F('Payment_Comment')).order_by('Date')
+                    )
+                if not genData:
+                    messages.success(request,'No record found for the input date')
+                    return redirect(request.META.get('HTTP_REFERER'))
+                # Convert the queryset to a pandas DataFrame
+                df = pd.DataFrame.from_records(queriedData)
+                
+                # Create an Excel file
+                output = io.BytesIO()
+                wb = Workbook()
+
+                # Create the first sheet with patient data
+                ws1 = wb.active
+                ws1.title = "Revenue List"
+                # Write the title
+                title = 'REVENUE REPORT(WEEKLY)'
+                subtitle=f'DATE FROM: {str(start_date.strftime("%d, %B %Y")).upper()} to {str(end_date.strftime("%d, %B %Y")).upper()}'
+                self.createSheetTitle(df,ws1,title,subtitle)
+                ws1.append([])
+                ws1.append(self.revHR)
+                for r in dataframe_to_rows(df, index=False, header=False):
+                    ws1.append(r)
+                # Sum the charge field and write it to the worksheet
+                charge_sum = df['Charge'].sum()
+                total_charge_row = ['', '', '', '', f'Revenue= {charge_sum} GHS']
+
+                # Write the 'Total Charge' row to the worksheet
+                ws1.append([])
+                ws1.append(total_charge_row)
+
+                # Make the 'Total Charge' row bold
+                for cell in ws1[ws1.max_row]:
+                    cell.font = Font(bold=True,size=16)
+  
+                # create the second sheet
+                ws2 = wb.create_sheet(title="Modality Distribution")
+                # Group the data by Date and Modality and sum the Charge column
+                modalityData = queriedData.values('Date', 'Modality').annotate(Revenue=Sum('Charge')).order_by('Date', 'Modality')
+                # Convert the queryset to a pandas DataFrame
+                modalityDf = pd.DataFrame.from_records(modalityData)
+                # sort by date
+                modalityDf = modalityDf.sort_values(by='Date')
+                # sum every day modality together(# Aggregate sum)
+                modalityDfSum = modalityDf.groupby(['Date', 'Modality']).sum().reset_index()  # Aggregate sum
+                # Pivot the data to make the gender counts for each month a separate column
+                df_pivot = modalityDfSum.pivot(index='Date', columns='Modality', values='Revenue')
+                df_pivot = df_pivot.reset_index().rename_axis(None, axis=1)
+                df_pivot = df_pivot.fillna(0)
+                
+                for r in dataframe_to_rows(df_pivot, index=False, header=True):
+                    ws2.append(r)
+
+                # Create the chart and set its properties
+                modality_chart = BarChart()
+                modality_chart.title = "Modality Distribution"
+                modality_chart.y_axis.title = "Revenue"
+                modality_chart.width = 20
+                modality_chart.height = 10
+
+                # Add the data to the gender chart
+                mod_data = Reference(ws2, min_col=2, min_row=1, max_row=len(df_pivot.index) + 1, max_col=len(df_pivot.columns))
+                mod_categories = Reference(ws2, min_col=1, min_row=2, max_row=len(df_pivot.index) + 1)
+                modality_chart.add_data(mod_data, titles_from_data=True)
+                modality_chart.set_categories(mod_categories)
+
+                # Add the pie_chart to the worksheet
+                ws2.add_chart(modality_chart, "D2")
+                # create the third sheet with pie chart distribution
+                ws3 = wb.create_sheet(title="Modality Distribution(%)")
+                modalityData = (
+                    queriedData.values('Modality').distinct().annotate(Revenue=Sum('Charge'))
+                )
+                # Convert the data to a pandas DataFrame
+                modalityDf = pd.DataFrame.from_records(modalityData)
+                modality_order = [modality['Modality'] for modality in Modalities.objects.all().values('Modality')]
+                modalityDf['Modality'] = pd.Categorical(modalityDf['Modality'], categories=modality_order, ordered=True)
+                modalityDf = modalityDf.sort_values(by='Modality')
+                # Group the data by Modality and sum the Charge column
+                modalityDfSum = modalityDf.groupby(['Modality']).sum().reset_index()
+                # Add the data to the worksheet
+                for r in dataframe_to_rows(modalityDfSum, index=False, header=True):
+                    ws3.append(r)
+
+                # Create the chart and set its properties
+                pie_chart = PieChart()
+                pie_chart.title = "Modality Distribution"
+                pie_chart.width = 20
+                pie_chart.height = 10
+
+                # Add the data to the chart
+                data = Reference(ws3, min_col=2, min_row=1, max_row=len(modalityDfSum.index) + 1, max_col=len(modalityDfSum.columns))
+                categories = Reference(ws3, min_col=1, min_row=2, max_row=len(modalityDfSum.index) + 1)
+                pie_chart.add_data(data, titles_from_data=True)
+                pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
+                # Add the pie_chart to the worksheet
+                ws3.add_chart(pie_chart, "D2")
+
+                # Save the workbook to the output buffer and prepare the response
+                wb.save(output)
+                output.seek(0)
+                response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = f'attachment; filename={fileName}.xlsx'
+                return response
+
+            elif kwargs['type']=='monthly': # monthly revenue
+                # Get the start and end dates from the request parameters
+                start_date = datetime.strptime(str(request.GET['date_from']),'%Y-%m-%d').date()
+                end_date = datetime.strptime(str(request.GET['date_to']),'%Y-%m-%d').date()
+                fileName="Revenue Report(Monthly)"
+                # Get patient data as a queryset
+                genData=Journal_History.objects.all().filter(Date__range=[start_date,end_date])
+                queriedData =(genData.values('Date')
+                .annotate(Patient_ID=F('Payment_Journal__Patient_Id__Patient_Id'), Patient_Name=Concat(F('Payment_Journal__Patient_Id__First_Name'),F('Payment_Journal__Patient_Id__Surname'),output_field=CharField()),
+                        Procedure_Name=Concat(F('Payment_Journal__Procedure__Procedure'),Value('-'),F('Payment_Journal__Procedure__Modality__Acronym')),Modality=F('Payment_Journal__Procedure__Modality__Modality'),
+                        Charge=F('Payment_Journal__Treatment_Amount'),Exam_Room=F('Payment_Journal__Exam_Room'),Cashier=F('Approved_By'),Payment_Mode=F('Payment_Type'),Comment=F('Payment_Comment'),
+                        Month=Concat(F('Date__year'),Value('-'),F('Date__month'),output_field=CharField())).order_by('Date')
+                    )
+                if not genData:
+                    messages.success(request,'No record found for the input date')
+                    return redirect(request.META.get('HTTP_REFERER'))
+                # Convert the queryset to a pandas DataFrame
+                df = pd.DataFrame.from_records(queriedData)
+                
+                # Create an Excel file
+                output = io.BytesIO()
+                wb = Workbook()
+
+                # Create the first sheet with patient data
+                ws1 = wb.active
+                ws1.title = "Revenue List"
+                # Write the title
+                title = 'REVENUE REPORT(MONTHLY)'
+                subtitle=f'DATE FROM: {str(start_date.strftime("%d, %B %Y")).upper()} to {str(end_date.strftime("%d, %B %Y")).upper()}'
+                self.createSheetTitle(df,ws1,title,subtitle)
+                ws1.append([])
+                ws1.append(self.revHR)
+                for r in dataframe_to_rows(df, index=False, header=False):
+                    ws1.append(r)
+                # Sum the charge field and write it to the worksheet
+                charge_sum = df['Charge'].sum()
+                total_charge_row = ['', '', '', '', f'Revenue= {charge_sum} GHS']
+
+                # Write the 'Total Charge' row to the worksheet
+                ws1.append([])
+                ws1.append(total_charge_row)
+
+                # Make the 'Total Charge' row bold
+                for cell in ws1[ws1.max_row]:
+                    cell.font = Font(bold=True,size=16)
+  
+                # create the second sheet
+                ws2 = wb.create_sheet(title="Modality Distribution")
+                # Group the data by Month and Modality and sum the Charge column
+                modalityData = queriedData.values('Month', 'Modality').annotate(Revenue=Sum('Charge')).order_by('Month', 'Modality')
+                # Convert the queryset to a pandas DataFrame
+                modalityDf = pd.DataFrame.from_records(modalityData)
+                # sort by Month
+                modalityDf = modalityDf.sort_values(by='Month')
+                # sum every Month modality together(# Aggregate sum)
+                modalityDfSum = modalityDf.groupby(['Month', 'Modality']).sum().reset_index()  # Aggregate sum
+                # Pivot the data to make the gender counts for each month a separate column
+                df_pivot = modalityDfSum.pivot(index='Month', columns='Modality', values='Revenue')
+                df_pivot = df_pivot.reset_index().rename_axis(None, axis=1)
+                df_pivot = df_pivot.fillna(0)
+                
+                for r in dataframe_to_rows(df_pivot, index=False, header=True):
+                    ws2.append(r)
+
+                # Create the chart and set its properties
+                modality_chart = BarChart()
+                modality_chart.title = "Modality Distribution"
+                modality_chart.y_axis.title = "Revenue"
+                modality_chart.width = 20
+                modality_chart.height = 10
+
+                # Add the data to the gender chart
+                mod_data = Reference(ws2, min_col=2, min_row=1, max_row=len(df_pivot.index) + 1, max_col=len(df_pivot.columns))
+                mod_categories = Reference(ws2, min_col=1, min_row=2, max_row=len(df_pivot.index) + 1)
+                modality_chart.add_data(mod_data, titles_from_data=True)
+                modality_chart.set_categories(mod_categories)
+
+                # Add the pie_chart to the worksheet
+                ws2.add_chart(modality_chart, "D2")
+                # create the third sheet with pie chart distribution
+                ws3 = wb.create_sheet(title="Modality Distribution(%)")
+                modalityData = (
+                    queriedData.values('Modality').distinct().annotate(Revenue=Sum('Charge'))
+                )
+                # Convert the data to a pandas DataFrame
+                modalityDf = pd.DataFrame.from_records(modalityData)
+                modality_order = [modality['Modality'] for modality in Modalities.objects.all().values('Modality')]
+                modalityDf['Modality'] = pd.Categorical(modalityDf['Modality'], categories=modality_order, ordered=True)
+                modalityDf = modalityDf.sort_values(by='Modality')
+                # Group the data by Modality and sum the Charge column
+                modalityDfSum = modalityDf.groupby(['Modality']).sum().reset_index()
+                # Add the data to the worksheet
+                for r in dataframe_to_rows(modalityDfSum, index=False, header=True):
+                    ws3.append(r)
+
+                # Create the chart and set its properties
+                pie_chart = PieChart()
+                pie_chart.title = "Modality Distribution"
+                pie_chart.width = 20
+                pie_chart.height = 10
+
+                # Add the data to the chart
+                data = Reference(ws3, min_col=2, min_row=1, max_row=len(modalityDfSum.index) + 1, max_col=len(modalityDfSum.columns))
+                categories = Reference(ws3, min_col=1, min_row=2, max_row=len(modalityDfSum.index) + 1)
+                pie_chart.add_data(data, titles_from_data=True)
+                pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
+                # Add the pie_chart to the worksheet
+                ws3.add_chart(pie_chart, "D2")
+
+                # Save the workbook to the output buffer and prepare the response
+                wb.save(output)
+                output.seek(0)
+                response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = f'attachment; filename={fileName}.xlsx'
+                return response
+
+            elif kwargs['type']=='yearly': # yearly revenue
+                # Get the start and end dates from the request parameters
+                start_date = datetime.strptime(str(request.GET['date_from']),'%Y').date().year
+                end_date = datetime.strptime(str(request.GET['date_to']),'%Y').date().year
+                fileName="Revenue Report(Yearly)"
+                # Get patient data as a queryset
+                genData=Journal_History.objects.all().filter(Date__year__range=[start_date,end_date])
+                queriedData =(genData.values('Date')
+                .annotate(Patient_ID=F('Payment_Journal__Patient_Id__Patient_Id'), Patient_Name=Concat(F('Payment_Journal__Patient_Id__First_Name'),F('Payment_Journal__Patient_Id__Surname'),output_field=CharField()),
+                        Procedure_Name=Concat(F('Payment_Journal__Procedure__Procedure'),Value('-'),F('Payment_Journal__Procedure__Modality__Acronym')),Modality=F('Payment_Journal__Procedure__Modality__Modality'),
+                        Charge=F('Payment_Journal__Treatment_Amount'),Exam_Room=F('Payment_Journal__Exam_Room'),Cashier=F('Approved_By'),Payment_Mode=F('Payment_Type'),Comment=F('Payment_Comment'),
+                        Year=F('Date__year')).order_by('Date')
+                    )
+                if not genData:
+                    messages.success(request,'No record found for the input date')
+                    return redirect(request.META.get('HTTP_REFERER'))
+                # Convert the queryset to a pandas DataFrame
+                df = pd.DataFrame.from_records(queriedData)
+                
+                # Create an Excel file
+                output = io.BytesIO()
+                wb = Workbook()
+
+                # Create the first sheet with patient data
+                ws1 = wb.active
+                ws1.title = "Revenue List"
+                # Write the title
+                title = 'REVENUE REPORT(YEARLY)'
+                subtitle=f'START FROM: {str(start_date)} to {str(end_date)}'
+                self.createSheetTitle(df,ws1,title,subtitle)
+                ws1.append([])
+                ws1.append(self.revHR)
+                for r in dataframe_to_rows(df, index=False, header=False):
+                    ws1.append(r)
+                # Sum the charge field and write it to the worksheet
+                charge_sum = df['Charge'].sum()
+                total_charge_row = ['', '', '', '', f'Revenue= {charge_sum} GHS']
+
+                # Write the 'Total Charge' row to the worksheet
+                ws1.append([])
+                ws1.append(total_charge_row)
+
+                # Make the 'Total Charge' row bold
+                for cell in ws1[ws1.max_row]:
+                    cell.font = Font(bold=True,size=16)
+  
+                # create the second sheet
+                ws2 = wb.create_sheet(title="Modality Distribution")
+                # Group the data by Year and Modality and sum the Charge column
+                modalityData = queriedData.values('Year', 'Modality').annotate(Revenue=Sum('Charge')).order_by('Year', 'Modality')
+                # Convert the queryset to a pandas DataFrame
+                modalityDf = pd.DataFrame.from_records(modalityData)
+                # sort by Year
+                modalityDf = modalityDf.sort_values(by='Year')
+                # sum every Year modality together(# Aggregate sum)
+                modalityDfSum = modalityDf.groupby(['Year', 'Modality']).sum().reset_index()  # Aggregate sum
+                # Pivot the data to make the data counts for each month a separate column
+                df_pivot = modalityDfSum.pivot(index='Year', columns='Modality', values='Revenue')
+                df_pivot = df_pivot.reset_index().rename_axis(None, axis=1)
+                df_pivot = df_pivot.fillna(0)
+                
+                for r in dataframe_to_rows(df_pivot, index=False, header=True):
+                    ws2.append(r)
+
+                # Create the chart and set its properties
+                modality_chart = BarChart()
+                modality_chart.title = "Modality Distribution"
+                modality_chart.y_axis.title = "Revenue"
+                modality_chart.width = 20
+                modality_chart.height = 10
+
+                # Add the data to the gender chart
+                mod_data = Reference(ws2, min_col=2, min_row=1, max_row=len(df_pivot.index) + 1, max_col=len(df_pivot.columns))
+                mod_categories = Reference(ws2, min_col=1, min_row=2, max_row=len(df_pivot.index) + 1)
+                modality_chart.add_data(mod_data, titles_from_data=True)
+                modality_chart.set_categories(mod_categories)
+
+                # Add the pie_chart to the worksheet
+                ws2.add_chart(modality_chart, "D2")
+                # create the third sheet with pie chart distribution
+                ws3 = wb.create_sheet(title="Modality Distribution(%)")
+                modalityData = (
+                    queriedData.values('Modality').distinct().annotate(Revenue=Sum('Charge'))
+                )
+                # Convert the data to a pandas DataFrame
+                modalityDf = pd.DataFrame.from_records(modalityData)
+                modality_order = [modality['Modality'] for modality in Modalities.objects.all().values('Modality')]
+                modalityDf['Modality'] = pd.Categorical(modalityDf['Modality'], categories=modality_order, ordered=True)
+                modalityDf = modalityDf.sort_values(by='Modality')
+                # Group the data by Modality and sum the Charge column
+                modalityDfSum = modalityDf.groupby(['Modality']).sum().reset_index()
+                # Add the data to the worksheet
+                for r in dataframe_to_rows(modalityDfSum, index=False, header=True):
+                    ws3.append(r)
+
+                # Create the chart and set its properties
+                pie_chart = PieChart()
+                pie_chart.title = "Modality Distribution"
+                pie_chart.width = 20
+                pie_chart.height = 10
+
+                # Add the data to the chart
+                data = Reference(ws3, min_col=2, min_row=1, max_row=len(modalityDfSum.index) + 1, max_col=len(modalityDfSum.columns))
+                categories = Reference(ws3, min_col=1, min_row=2, max_row=len(modalityDfSum.index) + 1)
+                pie_chart.add_data(data, titles_from_data=True)
+                pie_chart.set_categories(categories)
+                # Add data labels with percentage values
+                data_labels = DataLabelList()
+                data_labels.showPercent = True
+                data_labels.fontSize = 14  # set font size to 14
+                pie_chart.dataLabels = data_labels
+                # Add the pie_chart to the worksheet
+                ws3.add_chart(pie_chart, "D2")
+
+                # Save the workbook to the output buffer and prepare the response
+                wb.save(output)
+                output.seek(0)
+                response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = f'attachment; filename={fileName}.xlsx'
+                return response
+
+            else:
+                messages(request,'Requested page or report not found')
+                return redirect(request.META.get('HTTP_REFERER'))     
+
 @method_decorator(unauthenticated_staffs,name='get')
 @method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Pharmacist']),name='get')
 class Pharmacy(View):
