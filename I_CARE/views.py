@@ -563,7 +563,7 @@ class Payment_Department(View):
             transID=kwargs['page']
             jnrData=Journal_History.objects.filter(Payment_Journal__Trans_Id=transID)
             if not jnrData:
-                messages.success(request,f"No invoice found with the ID:{transID}")
+                messages.success(request,f"No receipt found with this ID:{transID}")
                 return redirect(request.META.get('HTTP_REFERER'))
             paymentData=jnrData.first()
             patData=paymentData.Payment_Journal.Patient_Id
@@ -574,7 +574,7 @@ class Payment_Department(View):
             totalBalance=totalCost-totalPaid
             context={'patData':patData,'jnrData':jnrData,'totalCost':totalCost,'totalPaid':totalPaid,
                      'totalBalance':totalBalance,'paymentData':paymentData,'invoce_id':transID}
-            return render(request,'I_CARE/admin/invoice.html',context)
+            return render(request,'I_CARE/admin/receipt.html',context)
         
     @transaction.atomic(using=None, savepoint=True, durable=True)
     def post(self,request,*args,**kwargs):
@@ -875,7 +875,7 @@ class General_Reports(View):
                 return render(request,'I_CARE/admin/approved-reports.html',context)
         
         elif kwargs['page']=='gen-reporting':
-            context={'page': 'General Reporting'}
+            context={'page': 'Statistics'}
             if kwargs['type']=='reg-attendance': # pages
                 return render(request,'I_CARE/admin/reporting-reg-att.html',context)
             # patient registration reporting
@@ -1967,7 +1967,7 @@ class General_Reports(View):
                 return redirect(request.META.get('HTTP_REFERER'))
             
         elif kwargs['page']=='revenue': 
-            context={'page': 'General Reporting'}
+            context={'page': 'Statistics'}
             if kwargs['type']=='gen-revenue': # pages
                 return render(request,'I_CARE/admin/reporting-revenue.html',context)
             

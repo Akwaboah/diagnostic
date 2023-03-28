@@ -1,0 +1,12 @@
+#Python files
+**I_CARE/__pycache__/
+**I_CARE/templatetags/__pycache__/
+**IKA_NET_HMS/__pycache__/
+
+# Media and static files
+media
+staticfiles
+
+# Environment
+.env
+env
