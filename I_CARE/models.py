@@ -308,6 +308,7 @@ class Vitals(models.Model):
     # insurance details
     Insurance_Type=models.CharField(max_length=50,default='None',null=True,blank=True)
     Insurance_Id=models.CharField(max_length=50,default='xx-xxxx-xxxx',null=True,blank=True)
+    Exam_Room=models.CharField(max_length=50,default='Default Room',null=True,blank=True)
     Logger=models.CharField(max_length=50)
     Date=models.DateField(auto_now=True)
     Time=models.TimeField(auto_now=True)
@@ -423,7 +424,7 @@ class Requisition(models.Model):
     Total_Cost = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Approval_Authority=models.ManyToManyField(Approval_Authority, db_column="Approval_Authority")
     Approval_Status=models.CharField(max_length=50,default='Pending')
-    Delivery_Status=models.CharField(max_length=50,default='Pending')
+    Delivery_Status=models.CharField(max_length=50,default='Not Received')
     Approved_By=models.CharField(max_length=50,default='Pending')
     Date=models.DateField(auto_now=True)
     Time=models.TimeField(auto_now=True)

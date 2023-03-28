@@ -160,20 +160,24 @@
 						<thead>
 							<tr>
 								<th>Description</th>
+								<th>Exam Room</th>
 								<th>Amount(GHS)</th>
 							</tr>
 						</thead>
 						<tbody>
 							{% for data in jnrData %}
 							<tr>
-								<td class="col-md-9">
+								<td class="col-md-4">
 									{{data.Payment_Journal.Procedure.Procedure}}-{{data.Payment_Journal.Procedure.Modality.Acronym}}
+								</td>
+								<td class="col-md-5"><i class="fa fa-inr"></i>{{data.Payment_Journal.Exam_Room}}
 								</td>
 								<td class="col-md-3"><i class="fa fa-inr"></i>{{data.Payment_Journal.Procedure.Charge}}
 								</td>
 							</tr>
 							{% endfor %}
 							<tr>
+								<td></td>
 								<td class="text-right">
 									<p>
 										<strong>Total Amount: </strong>

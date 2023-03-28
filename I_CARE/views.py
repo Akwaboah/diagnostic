@@ -419,6 +419,7 @@ class OPD(View):
             msg='Process initiated at the payment department...'
             if form.is_valid():
                 procedure_list=request.POST.getlist('Procedure_Name')
+                exam_room_list=request.POST.getlist('Exam_Room')
                 procedure_data=Procedures.objects.filter(id__in=procedure_list)
                 totalCost=procedure_data.aggregate(sum=Sum('Charge'))['sum']
                 totalCost= totalCost if totalCost else Decimal(0)
@@ -435,7 +436,11 @@ class OPD(View):
                 # check if patient been registered from appointment then update patient id
                 if isinstance(kwargs['page'],int):
                     Appoitment.objects.filter(Phone=request.POST['Tel']).update(Patient_Id=patient_init_id)
-                for data in procedure_data:
+                for index,data in enumerate(procedure_data):
+                    try:
+                        exam_room=exam_room_list[index]
+                    except IndexError:
+                        exam_room="Default Room"
                     Vitals.objects.create(
                         Patient_Id=form.instance,
                         Procedure=data,
@@ -444,6 +449,7 @@ class OPD(View):
                         Treatment_Amount=data.Charge,
                         Insurance_Type=form.instance.Insurance_Type or 'None',
                         Insurance_Id=form.instance.Insurance_Id or 'xx-xxxx-xxxx',
+                        Exam_Room=exam_room,
                         Logger=Loged_User(request))
                   
                 msg='Process initiated at the payment department...'
@@ -466,6 +472,7 @@ class OPD(View):
                 messages.success(request,'Error occured:%s'%form.errors)
         elif kwargs['page']=='pat-complaints':
             procedure_list=request.POST.getlist('Procedure_Name')
+            exam_room_list=request.POST.getlist('Exam_Room')
             procedure_data=Procedures.objects.filter(id__in=procedure_list)
             totalCost=procedure_data.aggregate(sum=Sum('Charge'))['sum']
             totalCost= totalCost if totalCost else Decimal(0)
@@ -473,7 +480,11 @@ class OPD(View):
             patient_init_id=patData.first()
             referred_facility=request.POST['Referring_Facility'] or None
             # check procedures and apply bill to patient
-            for data in procedure_data:
+            for index,data in enumerate(procedure_data):
+                try:
+                    exam_room=exam_room_list[index]
+                except IndexError:
+                    exam_room="Default Room"
                 Vitals.objects.create(
                     Patient_Id=patient_init_id,
                     Procedure=data,
@@ -482,6 +493,7 @@ class OPD(View):
                     Treatment_Amount=data.Charge,
                     Insurance_Type=request.POST['Insurance_Type'] or 'None',
                     Insurance_Id=request.POST['Insurance_Id'] or 'xx-xxxx-xxxx',
+                    Exam_Room=exam_room,
                     Logger=Loged_User(request))
             # update insurance details
             updatingFields={}
