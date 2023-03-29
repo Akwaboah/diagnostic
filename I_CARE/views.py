@@ -30,9 +30,9 @@ from django.contrib.auth.hashers import check_password
 from django.utils.decorators import method_decorator
 from django.contrib import messages
 from django.db import models
-from django.db.models.functions import Concat,Cast
+from django.db.models.functions import Concat,Cast,Trunc
 from django.db.models import F,Value,CharField,Sum,ExpressionWrapper,DecimalField,DateField,Q,Count,\
-Case,When
+Case,When,Func,TimeField
 from django.db.models import F,Value,CharField,Sum,ExpressionWrapper,DecimalField,DateField,Q,Count
 from I_CARE.models import Business_Info, Patients, User_Details,Patients_Checker,Vitals,\
     Appoitment,Message,Procedures,Presenting_Complaints,Journal_History,Treatment_Alert,\
@@ -536,7 +536,7 @@ class OPD(View):
         return redirect(request.META.get('HTTP_REFERER'))
 
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Finance Manager','Receptionist','Secretary']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Finance Manager','Front Office Manager','CEO Secretary']),name='get')
 class Payment_Department(View):
     
     def dispatch(self,  *args, **kwargs):
@@ -821,7 +821,7 @@ def csvFileReports(request,querySet,titleRow=[],headerRow=[],fileName=""):
     # End of CSV file in memory
     
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer','Lab Scientist','Nurse']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer','Lab Scientist','Nursing officer']),name='get')
 class General_Reports(View):
 
     def createSheetTitle(self,df,work_sheet,title,subtitle):
@@ -2747,6 +2747,14 @@ class Pharmacy(View):
             return HttpResponse(json.dumps({'message':f"{request.POST['Name']} deleted successfully"}),content_type='application/json')
         return redirect(request.META.get('HTTP_REFERER'))
 
+class FullDateTimeCast(Func):
+    """
+    Coerce an expression to a new field type.
+    """
+    function = 'TO_CHAR'
+    template = '%(function)s(%(expressions)s, \'FMDay, Month DD, YYYY at HH12:MI:SS AM\')'
+
+
 # web 
 class Home_Page(View):
     
@@ -2754,7 +2762,8 @@ class Home_Page(View):
         return super(Home_Page,self).dispatch(*args, **kwargs)
 
     def get(self,request):
-        return render(request,"I_CARE/web/index.html",{'page':'web'})
+        return redirect('/staff/login')
+        # return render(request,"I_CARE/web/index.html",{'page':'web'})
 
 class Home_Page_Links(View):
     
@@ -2775,13 +2784,15 @@ class Home_Page_Links(View):
                 vitalWaiting=Vitals.objects.filter(Department='Consultation',Status='Waiting')
                 # # doctors complaints records
                 pc_hist=Presenting_Complaints.objects.exclude(Vitals__Department='Radiology').filter(Patient_Id__Patient_Id__in=vitalWaiting.values('Patient_Id__Patient_Id')).order_by('-Date').annotate(Patient_ID=F('Patient_Id__Patient_Id'),Technician=Concat(F('Tech_Instance__User__first_name'),Value(' '),F("Tech_Instance__User__last_name"),output_field=CharField()),Tech_Report_Url=Concat(Value('/media/'), 'Tech_Report',output_field=CharField()),
-                    Doctor=Concat(F('Docs_Instance__User__first_name'),Value(' '),F("Docs_Instance__User__last_name"),output_field=CharField()),Docs_Report_Url=Concat(Value('/media/'), 'Docs_Report',output_field=CharField()),Vital_ID=F('Vitals__id')).values()
+                    Doctor=Concat(F('Docs_Instance__User__first_name'),Value(' '),F("Docs_Instance__User__last_name"),output_field=CharField()),Docs_Report_Url=Concat(Value('/media/'), 'Docs_Report',output_field=CharField()),Vital_ID=F('Vitals__id'),
+                    Time_In=Concat(F('Time__hour'),Value(':'),F('Time__minute'), output_field=CharField())).values()
                 pc_hist=list(pc_hist)
                 
                 # vitals
                 vitalHist=vitalWaiting.annotate(Patient_ID=F('Patient_Id__Patient_Id'),Balance=F('Patient_Id__Balance'),Age=F('Patient_Id__Age'),Last_Seen=Cast('Patient_Id__Last_Visit', output_field=DateField()),
                     Fullname=Concat(F('Patient_Id__First_Name'),Value(' '),F("Patient_Id__Surname"),output_field=CharField()),Profile=F('Patient_Id__Profile'),First_Name=F('Patient_Id__First_Name'),
-                    Surname=F('Patient_Id__Surname'),Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),Modality=F('Procedure__Modality__Modality')).values()
+                    Surname=F('Patient_Id__Surname'),Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),Modality=F('Procedure__Modality__Modality'),
+                    Time_In=Concat(F('Time__hour'),Value(':'),F('Time__minute'), output_field=CharField())).values()
                 vitalHist=list(vitalHist)
 
                 context.update({'total_incoming':f'Active Patients({len(vitalHist)})',
@@ -2797,13 +2808,15 @@ class Home_Page_Links(View):
                 # doctors complaints records 
                 pc_hist=Presenting_Complaints.objects.filter(Patient_Id__Patient_Id__in=vitalHist.values('Patient_Id__Patient_Id')).order_by('-Date').annotate(Patient_ID=F('Patient_Id__Patient_Id'),Technician=Concat(F('Tech_Instance__User__first_name'),Value(' '),F("Tech_Instance__User__last_name"),output_field=CharField()),Tech_Report_Url=Concat(Value('/media/'), 'Tech_Report',output_field=CharField()),
                     Doctor=Concat(F('Docs_Instance__User__first_name'),Value(' '),F("Docs_Instance__User__last_name"),output_field=CharField()),Docs_Report_Url=Concat(Value('/media/'), 'Docs_Report',output_field=CharField()),
-                    Vital_ID=F('Vitals__id')).values()
+                    Vital_ID=F('Vitals__id'),Time_In=Concat(F('Time__hour'),Value(':'),F('Time__minute'), output_field=CharField())).values()
                 pc_hist=list(pc_hist)
 
                 # vitals
                 vitalHist=vitalHist.annotate(Patient_ID=F('Patient_Id__Patient_Id'),Balance=F('Patient_Id__Balance'),Age=F('Patient_Id__Age'),Last_Seen=Cast('Patient_Id__Last_Visit', output_field=DateField()),
                     Fullname=Concat(F('Patient_Id__First_Name'),Value(' '),F("Patient_Id__Surname"),output_field=CharField()),Profile=F('Patient_Id__Profile'),First_Name=F('Patient_Id__First_Name'),
-                    Surname=F('Patient_Id__Surname'),Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),Modality=F('Procedure__Modality__Modality')).values()
+                    Surname=F('Patient_Id__Surname'),Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),Modality=F('Procedure__Modality__Modality'),
+                    Time_In=Concat(F('Time__hour'),Value(':'),F('Time__minute'), output_field=CharField()),
+                    ).values()
                 vitalHist=list(vitalHist)
 
                 context.update({'total_incoming':f'{len(vitalHist)} Patients waiting',

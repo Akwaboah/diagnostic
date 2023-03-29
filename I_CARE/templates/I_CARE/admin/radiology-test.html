@@ -82,7 +82,7 @@
         <div class="content ">
             <div class="col-md-12 col-lg-12 col-xl-12">
                 <div class="row">
-                    <div class="col-md-5">
+                    <div class="col-md-6">
                         <div class="card card-table mb-5">
                             <div class="card-header p-0">
                                 <button id="tabCount" class="nav-link active bg-warning text-white"><span
@@ -95,6 +95,7 @@
                                         style="cursor: pointer;">
                                         <thead>
                                             <tr class="tb_r">
+                                                <th>Time</th>
                                                 <th>Patient ID</th>
                                                 <th>Status</th>
                                                 <th>Modality</th>
@@ -110,13 +111,12 @@
                                             </tr>
                                         </tfoot> {% endcomment %}
                                         <tbody></tbody>
-                                        
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-7">
+                    <div class="col-md-6">
                         <div class="card">
                             <div class="card-body pt-0 pb-0 mb-2">
                                 <form method="POST" enctype="multipart/form-data">
@@ -248,6 +248,7 @@
                     },
                 },
                 columns: [
+                    {"data": "Time_In"},
                     {"render": function (data, type, JsonResultRow, meta) {
                             if (String(JsonResultRow.Profile).includes('avatar')) {
                                 return `<h2 class="table-avatar">
@@ -265,6 +266,7 @@
                                         </h2>`
                             }
                         }},
+                    
                     {"data": "Status"},
                     {"data": "Modality"},
                     {"data": "Procedure_Name"}],
