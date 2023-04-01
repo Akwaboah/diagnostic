@@ -420,8 +420,9 @@ class OPD(View):
             if form.is_valid():
                 procedure_list=request.POST.getlist('Procedure_Name')
                 exam_room_list=request.POST.getlist('Exam_Room')
-                procedure_data=Procedures.objects.filter(id__in=procedure_list)
-                totalCost=procedure_data.aggregate(sum=Sum('Charge'))['sum']
+                print('procedure_list: ',procedure_list)
+                print('exam_room_list: ',exam_room_list)
+                totalCost=Procedures.objects.filter(id__in=procedure_list).aggregate(sum=Sum('Charge'))['sum']
                 totalCost= totalCost if totalCost else Decimal(0)
                 referred_facility=request.POST['Referring_Facility'] or None
                 patient_init_id=gen_pat_id()
@@ -434,19 +435,18 @@ class OPD(View):
                 form.save()
                 Patients_Checker.objects.create(Patient_Id=patient_init_id)
                 # check if patient been registered from appointment then update patient id
-                if isinstance(kwargs['page'],int):
-                    Appoitment.objects.filter(Phone=request.POST['Tel']).update(Patient_Id=patient_init_id)
-                for index,data in enumerate(procedure_data):
+                for index,data in enumerate(procedure_list):
                     try:
                         exam_room=exam_room_list[index]
                     except IndexError:
                         exam_room="Default Room"
+                    proData=Procedures.objects.get(id=data)
                     Vitals.objects.create(
                         Patient_Id=form.instance,
-                        Procedure=data,
+                        Procedure=proData,
                         Referring_Facility=referred_facility,
                         Referred_Doctor=request.POST['Reffered_Doctor'],
-                        Treatment_Amount=data.Charge,
+                        Treatment_Amount=proData.Charge,
                         Insurance_Type=form.instance.Insurance_Type or 'None',
                         Insurance_Id=form.instance.Insurance_Id or 'xx-xxxx-xxxx',
                         Exam_Room=exam_room,
@@ -480,17 +480,17 @@ class OPD(View):
             patient_init_id=patData.first()
             referred_facility=request.POST['Referring_Facility'] or None
             # check procedures and apply bill to patient
-            for index,data in enumerate(procedure_data):
+            for index,proData in enumerate(procedure_data):
                 try:
                     exam_room=exam_room_list[index]
                 except IndexError:
                     exam_room="Default Room"
                 Vitals.objects.create(
                     Patient_Id=patient_init_id,
-                    Procedure=data,
+                    Procedure=proData,
                     Referring_Facility=referred_facility,
                     Referred_Doctor=request.POST['Reffered_Doctor'],
-                    Treatment_Amount=data.Charge,
+                    Treatment_Amount=proData.Charge,
                     Insurance_Type=request.POST['Insurance_Type'] or 'None',
                     Insurance_Id=request.POST['Insurance_Id'] or 'xx-xxxx-xxxx',
                     Exam_Room=exam_room,
@@ -517,18 +517,18 @@ class OPD(View):
             birthday_pat=Patients.objects.filter(DOB__day=clr_day,DOB__month=clr_month).exclude(Patient_Id__in=Birthday_Wishes.objects.filter(Due_Date=crl_date,Delivery_Status=True).values('Patient_Id__Patient_Id'))
             if birthday_pat:
                 sms_init=SMS()
-                for data in birthday_pat:
-                    msg=f'Hello {data.First_Name}, people might see you as just a client to us, but in reality you mean much more than that to us. You are a friend, whom we care so much about. Happy Birthday!'
-                    alert_res=asyncio.run(sms_init.SEND_ALERT([data.Tel],msg))
+                for proData in birthday_pat:
+                    msg=f'Hello {proData.First_Name}, people might see you as just a client to us, but in reality you mean much more than that to us. You are a friend, whom we care so much about. Happy Birthday!'
+                    alert_res=asyncio.run(sms_init.SEND_ALERT([proData.Tel],msg))
                     # check if sms is delivered then record to prevent sms repetitions
                     sms_dev_status=False
                     if isinstance(alert_res,dict):
                         if 'data' in alert_res:
                             sms_dev_status=True
                     obj, created = Birthday_Wishes.objects.get_or_create(
-                                    Patient_Id=data,
+                                    Patient_Id=proData,
                                     Due_Date=crl_date,
-                                    defaults={'Message':msg,'New_Age':crl_date.year-data.DOB.year,
+                                    defaults={'Message':msg,'New_Age':crl_date.year-proData.DOB.year,
                                             'Delivery_Status':sms_dev_status,'Due_Date': crl_date},
                                 )
                 birthday_pat.update(Age=crl_date.year-F('DOB__year'))
@@ -536,7 +536,7 @@ class OPD(View):
         return redirect(request.META.get('HTTP_REFERER'))
 
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Finance Manager','Receptionist','Secretary']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Finance Manager','Front Office Manager','CEO Secretary']),name='get')
 class Payment_Department(View):
     
     def dispatch(self,  *args, **kwargs):
@@ -550,7 +550,7 @@ class Payment_Department(View):
             journal=(Vitals.objects.all().order_by('-Date','Treatment_Amount').annotate(Patient_Ref=F('Patient_Id__Patient_Id'),Balance=F('Treatment_Amount')-F('Paid_Amount'),Treatment_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym'),output_field=CharField())).values())
             journal=json.dumps(list(journal), cls=DjangoJSONEncoder)
             # journal = serializers.serialize('json', journal)
-            pat_data=Patients.objects.all().order_by('-Date_Joined','Balance')
+            pat_data=Patients.objects.all().order_by('-Date_Joined')
             context.update({'journalData': journal,'pat_data':pat_data})
             return render(request,'I_CARE/admin/service-payment.html',context)
         
@@ -821,7 +821,7 @@ def csvFileReports(request,querySet,titleRow=[],headerRow=[],fileName=""):
     # End of CSV file in memory
     
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer','Lab Scientist','Nurse']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer','Lab Scientist','Nursing officer']),name='get')
 class General_Reports(View):
 
     def createSheetTitle(self,df,work_sheet,title,subtitle):
@@ -2754,7 +2754,8 @@ class Home_Page(View):
         return super(Home_Page,self).dispatch(*args, **kwargs)
 
     def get(self,request):
-        return render(request,"I_CARE/web/index.html",{'page':'web'})
+        return redirect('/staff/login')
+        # return render(request,"I_CARE/web/index.html",{'page':'web'})
 
 class Home_Page_Links(View):
     
@@ -2775,13 +2776,15 @@ class Home_Page_Links(View):
                 vitalWaiting=Vitals.objects.filter(Department='Consultation',Status='Waiting')
                 # # doctors complaints records
                 pc_hist=Presenting_Complaints.objects.exclude(Vitals__Department='Radiology').filter(Patient_Id__Patient_Id__in=vitalWaiting.values('Patient_Id__Patient_Id')).order_by('-Date').annotate(Patient_ID=F('Patient_Id__Patient_Id'),Technician=Concat(F('Tech_Instance__User__first_name'),Value(' '),F("Tech_Instance__User__last_name"),output_field=CharField()),Tech_Report_Url=Concat(Value('/media/'), 'Tech_Report',output_field=CharField()),
-                    Doctor=Concat(F('Docs_Instance__User__first_name'),Value(' '),F("Docs_Instance__User__last_name"),output_field=CharField()),Docs_Report_Url=Concat(Value('/media/'), 'Docs_Report',output_field=CharField()),Vital_ID=F('Vitals__id')).values()
+                    Doctor=Concat(F('Docs_Instance__User__first_name'),Value(' '),F("Docs_Instance__User__last_name"),output_field=CharField()),Docs_Report_Url=Concat(Value('/media/'), 'Docs_Report',output_field=CharField()),Vital_ID=F('Vitals__id'),
+                    Time_In=Concat(F('Time__hour'),Value(':'),F('Time__minute'), output_field=CharField())).values()
                 pc_hist=list(pc_hist)
                 
                 # vitals
                 vitalHist=vitalWaiting.annotate(Patient_ID=F('Patient_Id__Patient_Id'),Balance=F('Patient_Id__Balance'),Age=F('Patient_Id__Age'),Last_Seen=Cast('Patient_Id__Last_Visit', output_field=DateField()),
                     Fullname=Concat(F('Patient_Id__First_Name'),Value(' '),F("Patient_Id__Surname"),output_field=CharField()),Profile=F('Patient_Id__Profile'),First_Name=F('Patient_Id__First_Name'),
-                    Surname=F('Patient_Id__Surname'),Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),Modality=F('Procedure__Modality__Modality')).values()
+                    Surname=F('Patient_Id__Surname'),Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),Modality=F('Procedure__Modality__Modality'),
+                    Time_In=Concat(F('Time__hour'),Value(':'),F('Time__minute'), output_field=CharField())).values()
                 vitalHist=list(vitalHist)
 
                 context.update({'total_incoming':f'Active Patients({len(vitalHist)})',
@@ -2797,13 +2800,15 @@ class Home_Page_Links(View):
                 # doctors complaints records 
                 pc_hist=Presenting_Complaints.objects.filter(Patient_Id__Patient_Id__in=vitalHist.values('Patient_Id__Patient_Id')).order_by('-Date').annotate(Patient_ID=F('Patient_Id__Patient_Id'),Technician=Concat(F('Tech_Instance__User__first_name'),Value(' '),F("Tech_Instance__User__last_name"),output_field=CharField()),Tech_Report_Url=Concat(Value('/media/'), 'Tech_Report',output_field=CharField()),
                     Doctor=Concat(F('Docs_Instance__User__first_name'),Value(' '),F("Docs_Instance__User__last_name"),output_field=CharField()),Docs_Report_Url=Concat(Value('/media/'), 'Docs_Report',output_field=CharField()),
-                    Vital_ID=F('Vitals__id')).values()
+                    Vital_ID=F('Vitals__id'),Time_In=Concat(F('Time__hour'),Value(':'),F('Time__minute'), output_field=CharField())).values()
                 pc_hist=list(pc_hist)
 
                 # vitals
                 vitalHist=vitalHist.annotate(Patient_ID=F('Patient_Id__Patient_Id'),Balance=F('Patient_Id__Balance'),Age=F('Patient_Id__Age'),Last_Seen=Cast('Patient_Id__Last_Visit', output_field=DateField()),
                     Fullname=Concat(F('Patient_Id__First_Name'),Value(' '),F("Patient_Id__Surname"),output_field=CharField()),Profile=F('Patient_Id__Profile'),First_Name=F('Patient_Id__First_Name'),
-                    Surname=F('Patient_Id__Surname'),Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),Modality=F('Procedure__Modality__Modality')).values()
+                    Surname=F('Patient_Id__Surname'),Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),Modality=F('Procedure__Modality__Modality'),
+                    Time_In=Concat(F('Time__hour'),Value(':'),F('Time__minute'), output_field=CharField()),
+                    ).values()
                 vitalHist=list(vitalHist)
 
                 context.update({'total_incoming':f'{len(vitalHist)} Patients waiting',
