@@ -11,9 +11,19 @@
 	<!-- Bootstrap CSS -->
 	<link href="{% static 'web-assets/assets/css/invoice/bootstrap.min.css' %}" rel="stylesheet">
 	<style type="text/css">
+		/* Set height of receipt container to 148.5mm */
+		 
+		/* Set page size to A4 and margin to 0 */
+		@page {
+			size: A4;
+			margin: 0;
+		}
+		
 		body {
 			background: #eee;
 			margin-top: 5px;
+			{% comment %} margin: 0; {% endcomment %}
+        	padding: 0;
 		}
 
 		.text-danger strong {
@@ -24,13 +34,14 @@
 			background: #ffffff none repeat scroll 0 0;
 			border-bottom: 12px solid #333333;
 			border-top: 12px solid #9f181c;
-			margin-top: 10px;
-			margin-bottom: 10px;
-			padding: 10px 20px !important;
+			{% comment %} margin-top: 10px; {% endcomment %}
+			{% comment %} margin-bottom: 10px; {% endcomment %}
+			{% comment %} padding: 10px 20px !important; {% endcomment %}
 			position: relative;
 			box-shadow: 0 1px 21px #acacac;
 			color: #333333;
 			font-family: open sans;
+			height: 148.5mm;
 		}
 
 		.receipt-main p {
