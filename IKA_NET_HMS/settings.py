@@ -29,22 +29,39 @@ ALLOWED_HOSTS = ['*']
 
 
 # Application definition
-
-INSTALLED_APPS = [
-    # 'I_CARE.apps.ICareConfig',
-
+"""
+    These app's data are stored on the postgresql public schema
+"""
+SHARED_APPS = [
+    'django_tenants',  # mandatory
+    'client', # client app that handles client name and domain
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # add django channels
-    # 'channels',
+    # add our main app
     "I_CARE"
 ]
+TENANT_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+]
+
+INSTALLED_APPS = list(SHARED_APPS) + [ app for app in TENANT_APPS if app not in SHARED_APPS]
+
+TENANT_MODEL = "client.Client" # app.Model
+TENANT_DOMAIN_MODEL = "client.Domain" # app.Model
 
 MIDDLEWARE = [
+    # django_tenant middleware first
+    'django_tenants.middleware.main.TenantMainMiddleware',
+    # other middleware
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -83,21 +100,20 @@ WSGI_APPLICATION = "IKA_NET_HMS.wsgi.application"
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "framada",
-        "USER": "root",
-        "HOST":"localhost",
-        "PORT":"3306",
-        "PASSWORD":"ymcmbysl22"
+    'default': {
+        # Tenant Engine
+        'ENGINE': 'django_tenants.postgresql_backend',
+        'NAME': 'routhealt',
+        'USER': 'postgres',
+        'PASSWORD': 'ymcmbysl22',
+        'HOST': 'localhost',
+        'POST': '5432'
     }
 }
-# DATABASES = {
-# 'default': {
-#     'ENGINE': 'django.db.backends.sqlite3',
-#     'NAME': BASE_DIR / 'db.sqlite3',
-# }
-# }
+
+DATABASE_ROUTERS = (
+    'django_tenants.routers.TenantSyncRouter',
+)
 
 
 # Password validation
