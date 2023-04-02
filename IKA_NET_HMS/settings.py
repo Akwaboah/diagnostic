@@ -35,6 +35,7 @@ ALLOWED_HOSTS = ['*']
 SHARED_APPS = [
     'django_tenants',  # mandatory
     'client', # client app that handles client name and domain
+
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -51,6 +52,7 @@ TENANT_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "I_CARE"
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [ app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -103,7 +105,7 @@ DATABASES = {
     'default': {
         # Tenant Engine
         'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': 'routhealt',
+        'NAME': 'care',
         'USER': 'postgres',
         'PASSWORD': 'ymcmbysl22',
         'HOST': 'localhost',
@@ -162,18 +164,6 @@ if os.getcwd()=='/home':
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# CHANNEL_LAYERS = {
-# 	"default": {
-# 		"BACKEND": "channels.layers.InMemoryChannelLayer"
-# 	}
-# }
-# CHANNEL_LAYERS = {
-#     "default": {
-#         "BACKEND": "channels_redis.core.RedisChannelLayer",
-#         # "CONFIG": {
-#         #     "hosts": [(env("REDIS_HOST"), env.int("REDIS_PORT"))],
-#         # },
-#     },
-# }
+SHOW_PUBLIC_IF_NO_TENANT_FOUND=True
 
 
