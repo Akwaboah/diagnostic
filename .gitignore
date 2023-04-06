@@ -2,6 +2,7 @@
 **I_CARE/__pycache__/
 **I_CARE/templatetags/__pycache__/
 **IKA_NET_HMS/__pycache__/
+**I_CARE/migrations/
 
 # Media and static files
 media

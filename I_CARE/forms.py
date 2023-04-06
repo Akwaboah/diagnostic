@@ -1,7 +1,6 @@
 from I_CARE.models import Insurance, Patients,User_Details,Stocks
 from django import forms
-from django.contrib.auth.models import Group
-from I_CARE.utils import countries as country_tuple, user_levels,DATE_INPUT_FORMATS
+from I_CARE.utils import countries as country_tuple,DATE_INPUT_FORMATS
 
 
 class Patients_Form(forms.ModelForm):

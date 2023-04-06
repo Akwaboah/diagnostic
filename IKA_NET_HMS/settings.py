@@ -85,7 +85,7 @@ WSGI_APPLICATION = "IKA_NET_HMS.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "framada",
+        "NAME": "smartcare",
         "USER": "root",
         "HOST":"localhost",
         "PORT":"3306",

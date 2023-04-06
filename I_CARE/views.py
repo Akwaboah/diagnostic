@@ -348,28 +348,23 @@ class OPD(View):
 
         if kwargs['page']=='dashboard' or kwargs['page']=='app_mesg':
             app_data=Appoitment.objects.all()
-            pastApp=app_data.filter(Preferred_Date__lt=datetime.now())
             todayApp=app_data.filter(Preferred_Date=datetime.now())
-            upcomingApp=app_data.filter(Preferred_Date__gt=datetime.now()).order_by('-Date')
-            msg=Message.objects.all().order_by('-Date')
             chartData = (
                 Vitals.objects.filter(Date__range=self.currentWeek())
                 .annotate(weekday_name=get_weekday_expression('Date'))
                 ).order_by('Date')
             visitors = (
-                chartData
-                .values('weekday_name').distinct()
-                .annotate(count=Count('Patient_Id'))
-            ).order_by('Date')
+                chartData.values('weekday_name')
+                .annotate(count=Count('Patient_Id',distinct=True))
+            ) 
             procedures = (
                 chartData
-                .values('weekday_name','Procedure__Modality__Acronym').distinct()
-                .annotate(count=Count('Patient_Id'),Procedure=F('Procedure__Modality__Acronym'))
-            ).order_by('Date')
+                .values('weekday_name','Procedure__Modality__Acronym')
+                .annotate(count=Count('Procedure__Modality__Acronym'))
+            ).order_by('weekday_name')
             visitors = json.dumps(list(visitors),cls=DecimalEncoder)
             procedures = json.dumps(list(procedures),cls=DecimalEncoder)
-            context.update({'todayApp':todayApp,'tdApp':len(todayApp),'upcomingApp':upcomingApp,'tupApp':len(upcomingApp),
-            'pastApp':pastApp,'tpastApp':len(pastApp),'msgRecieved':msg,'tmsgRec':len(msg),'visChart':visitors,'proChart':procedures})
+            context.update({'todayApp':todayApp,'tdApp':len(todayApp),'visChart':visitors,'proChart':procedures})
             if kwargs['page']=='app_mesg':
                 return render(request,'I_CARE/admin/opd-pat-app-mesg.html',context)
             return render(request,'I_CARE/admin/opd-dashboard.html',context)
@@ -420,8 +415,6 @@ class OPD(View):
             if form.is_valid():
                 procedure_list=request.POST.getlist('Procedure_Name')
                 exam_room_list=request.POST.getlist('Exam_Room')
-                print('procedure_list: ',procedure_list)
-                print('exam_room_list: ',exam_room_list)
                 totalCost=Procedures.objects.filter(id__in=procedure_list).aggregate(sum=Sum('Charge'))['sum']
                 totalCost= totalCost if totalCost else Decimal(0)
                 referred_facility=request.POST['Referring_Facility'] or None
@@ -591,10 +584,10 @@ class Payment_Department(View):
                     Payment_Type=request.POST['Mode'], Approved_By=Loged_User(request),
                     Payment_Comment=request.POST['Comment'],
                 )
-                data.Paid_Amount=F('Treatment_Amount')
+                data.Paid_Amount=data.Treatment_Amount
                 data.Department=data.Procedure.Tag
                 data.Trans_Id=transID
-            Vitals.objects.bulk_update(jData,['Department','Trans_Id'])
+            Vitals.objects.bulk_update(jData,['Department','Trans_Id','Paid_Amount'])
             Patients.objects.filter(Patient_Id=request.POST['Patient_Id']).update(Balance=F('Balance')+totalAmount)
             Journal_History_Checker.objects.create(Trans_Id=transID,Cashier=Loged_User(request))
             sms=SMS()

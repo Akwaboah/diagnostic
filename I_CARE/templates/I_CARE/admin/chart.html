@@ -1,23 +1,8 @@
 <script>
-    'use strict';
-    function generateColors(num) {
-        var colors = [];
-        var letters = '0123456789ABCDEF';
-        for (var i = 0; i < num; i++) {
-            var color = '#';
-            for (var j = 0; j < 6; j++) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            colors.push(color);
-        }
-        return colors;
-    }
-    var colors = generateColors(20);
 
-    const size = 350;
     $(document).ready(function () {
-        // Chart for Procedures within a week
-        
+        let colors = ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0', '#546E7A', '#26a69a', '#D10CE8', '#7bdcb5', '#9b5de5', '#f15bb5', '#45b6fe', '#1de9b6', '#ff6347', '#ff7f50', '#4169E1', '#FF00FF', '#00FFFF', '#0000FF', '#FFFF00'];
+
         let visChart = JSON.parse('{{ visChart|escapejs }}');
         let vistChartLabels = [];
         let chartDays = [];
@@ -28,29 +13,95 @@
             data.push(element.count);
         });
 
+        let colorList = colors.slice(); // Make a copy of the colors array
+        let series = [{
+            data, colors: []
+        }];
+
+        // Set a different color for each data point in the series
+        for (let i = 0; i < data.length; i++) {
+            let colorIndex = i % colorList.length;
+            let color = colorList[colorIndex];
+            series[0].colors.push(color);
+        }
+
+        // Remove the colors that have already been used
+        colorList.splice(0, data.length % colorList.length);
+
+        // Bar chart on visitors
+        var options = {
+            series,
+            chart: {
+                type: 'bar',
+                height: 250,
+                toolbar: {
+                    show: false,
+                },
+            },
+            plotOptions: {
+                bar: {
+                    distributed: true,
+                    borderRadius: 4,
+                    horizontal: false,
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            xaxis: {
+                categories: chartDays,
+            }
+
+        };
+
+        var chart = new ApexCharts(document.querySelector("#visitors"), options);
+        chart.render();
+
+        // Procedures Chart
+
         let proChart = JSON.parse('{{ proChart|escapejs }}');
-        let proChartLabels = [];
-        let procedureData = [];
-        proChart.forEach((element,index) => {
-            proChartLabels.push(element.weekday_name);
-            procedureData.push({
-                name: element.Procedure,
-                color: colors[index+5],
-                data: [element.count],
+        let weekdayNameToIndex = {
+            "Mon": 0,
+            "Tue": 1,
+            "Wed": 2,
+            "Thu": 3,
+            "Fri": 4,
+            "Sat": 5,
+            "Sun": 6,
+        };
+
+        let chartData = {};
+        proChart.forEach((element) => {
+            let weekdayName = element.weekday_name;
+            let acronym = element.Procedure__Modality__Acronym;
+            let count = element.count;
+            let index = weekdayNameToIndex[weekdayName];
+            if (!(acronym in chartData)) {
+                chartData[acronym] = Array(7).fill(0);
+            }
+            chartData[acronym][index] = count;
+        });
+
+        let proChartLabels = Object.keys(chartData);
+
+        let seriesData = [];
+        Object.keys(chartData).forEach((acronym) => {
+            seriesData.push({
+                name: acronym,
+                data: chartData[acronym]
             });
         });
-        
-        var optionsBar = {
+
+        let optionsBar = {
             chart: {
                 type: 'bar',
                 height: 250,
                 width: '100%',
-                stacked: true,
+                stacked: false,
                 toolbar: {
                     show: false
                 },
             },
-
             dataLabels: {
                 enabled: false
             },
@@ -60,10 +111,9 @@
                     horizontal: false,
                 }
             },
-
-            series: procedureData,
-            labels: proChartLabels,
+            series: seriesData,
             xaxis: {
+                categories: Object.keys(weekdayNameToIndex),
                 labels: {
                     show: true
                 },
@@ -94,46 +144,11 @@
                     fontSize: '18px'
                 }
             }
-
         };
 
-        var chartBar = new ApexCharts(document.querySelector('#procedure'), optionsBar);
+        let chartBar = new ApexCharts(document.querySelector('#procedure'), optionsBar);
         chartBar.render();
 
-        // Bar chart on visitors
-        var options = {
-            series: [{
-                data
-            }],
-            chart: {
-                type: 'bar',
-                height: 250,
-                toolbar: {
-                    show: false,
-                },
-            },
-            plotOptions: {
-                bar: {
-                    distributed: true,
-                    borderRadius: 4,
-                    horizontal: false,
-                }
-            },
-            colors: colors,
-            dataLabels: {
-                enabled: false
-            },
-            xaxis: {
-                categories: chartDays,
-            }
-
-        };
-
-        var chart = new ApexCharts(document.querySelector("#visitors"), options);
-        chart.render();
-       
-
     });
-
 
 </script>
