@@ -78,7 +78,7 @@
                     <a class="nav-link" href="#tab2" data-toggle="tab">Complete Registration</a>
                 </li>
             </ul>
-            <form method="POST" enctype="multipart/form-data">
+            <form method="POST" id="regForm" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="tab-content">
                     <!-- Patient Tab -->
@@ -452,8 +452,17 @@
         }
       
         return true;
-      }
+    }
       
+    $("#regForm").on('submit', function(e){
+        {% comment %} show a lading screen to the user {% endcomment %}
+        swal({
+            title: "Processing Request",
+            text: "please wait whiles we proccess your request",
+            imageUrl: "{% static 'admin/assets/img/loading.gif' %}",
+            showConfirmButton: false
+        });
+    });
 
 </script>
 

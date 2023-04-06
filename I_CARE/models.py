@@ -4,9 +4,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import User
-import os,sys
-from django.db.models.signals import post_delete, pre_save
-from django.dispatch import receiver
+import sys
 from django.db.models import F
 # Create your models here.
 
@@ -110,30 +108,6 @@ class User_Details(models.Model):
         self.Profile=compress_images(self.Profile)
         super(User_Details, self).save(*args, **kwargs)
 
-@receiver(pre_save, sender=User_Details)
-def pre_save_image(sender, instance, *args, **kwargs):
-    # print('moddel presave excuted')
-    """ instance old image file will delete from os """
-    try:
-        old_img = instance.__class__.objects.get(id=instance.id).Profile.path
-        try:
-            new_img = instance.Profile.path
-        except:
-            new_img = None
-        if new_img != old_img:
-            if os.path.exists(old_img):
-                os.remove(old_img)
-    except:
-        pass
-
-@receiver(post_delete, sender=User_Details)
-def post_save_image(sender, instance, *args, **kwargs):
-    """ Clean Old Image file """
-    try:
-        instance.Profile.delete(save=False)
-    except:
-        pass
-
 class Insurance(models.Model):
     Name = models.CharField(max_length=50,unique=True)
      
@@ -223,7 +197,7 @@ class Patients(models.Model):
     Tel=models.CharField(max_length=15)
     Emergency_Tel=models.CharField(max_length=15,null=True)
     Occupation=models.CharField(max_length=100,default='None')
-    Email=models.EmailField(default='someone@here.com')
+    Email=models.EmailField(default='someone@here.com',null=True)
     Date_Joined=models.DateField(auto_now=False)
     Last_Visit=models.DateTimeField(auto_now=False)
     Insurance_Type=models.ForeignKey(Insurance,on_delete=models.CASCADE,db_column='Insurance_Type',null=True)
@@ -270,30 +244,6 @@ class Birthday_Wishes(models.Model):
     class Meta:
         db_table = "birthday_wishes"
     
-@receiver(pre_save, sender=Patients)
-def pre_save_image(sender, instance, *args, **kwargs):
-    # print('moddel presave excuted')
-    """ instance old image file will delete from os """
-    try:
-        old_img = instance.__class__.objects.get(id=instance.id).Profile.path
-        try:
-            new_img = instance.Profile.path
-        except:
-            new_img = None
-        if new_img != old_img:
-            if os.path.exists(old_img):
-                os.remove(old_img)
-    except:
-        pass
-
-@receiver(post_delete, sender=Patients)
-def post_save_image(sender, instance, *args, **kwargs):
-    """ Clean Old Image file """
-    try:
-        instance.Profile.delete(save=False)
-    except:
-        pass
-
 class Vitals(models.Model):
     Patient_Id= models.ForeignKey(Patients,on_delete=models.CASCADE,db_column='Patient_Id')
     Procedure = models.ForeignKey(Procedures,on_delete=models.CASCADE,db_column='Procedure')
@@ -314,7 +264,7 @@ class Vitals(models.Model):
     Time=models.TimeField(auto_now=True)
 
     def __str__(self):
-        return f'{self.Patient_Id}({self.Procedure})'
+        return f'Date:({self.Date})=>{self.Patient_Id}({self.Procedure})'
 
     class Meta:
         db_table = "vitals"
@@ -378,7 +328,7 @@ class Journal_History(models.Model):
     Paid_Amount = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Payment_Type=models.CharField(max_length=20)
     Approved_By=models.CharField(max_length=50)
-    Payment_Comment=models.TextField(null=True)
+    Payment_Comment=models.TextField(null=True, default="None")
     Date=models.DateField(auto_now=True)
     Time=models.TimeField(auto_now=True)
 
@@ -596,3 +546,5 @@ class Drugs_Prescriptions(models.Model):
     class Meta:
         db_table = "drugs_prescriptions"
 
+# import signals.py at the bottom of models.py
+import I_CARE.signals
