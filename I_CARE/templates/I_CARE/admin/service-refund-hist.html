@@ -19,13 +19,13 @@
 				<small class="unread-msg">{{debt_pat}}</small>
             </a>
         </li>
-		<li class="active">
+		<li>
             <a href="{% url 'nursing' 'journal-history' %}">
                 <i class="fas fa-money"></i>
                 <span>Payment History</span>
             </a>
         </li>
-		<li>
+		<li class="active">
             <a href="{% url 'nursing' 'refund-history' %}">
                 <i class="fas fa-recycle"></i>
                 <span>Refund History</span>
@@ -41,25 +41,19 @@
 <div class="row">
 	<div class="col-md-12">
 		<div class="card card-table mb-5">
-			{% comment %} <div class="card-header p-1">
-				<div class="col">
-                    <div class="row justify-content-start"> 
-                        <button class="nav-link active bg-warning p-1 mr-2 text-white">Payment History</button>
-                    </div>
-                </div>
-			</div> {% endcomment %}
 			<div class="card-body">
 				<div class="table-responsive p-2">
 					<table id="patientTable" class="table table-bordered table-hover table-center mb-0">
 						<thead>
 							<tr>
                                 <th>Date</th>
-								<th>Code</th>
+                                <th>Request By</th>
 								<th>Patient ID</th>
                                 <th>Procedure</th>
                                 <th>Charge</th>
-								<th>Cashier</th>
-								<th>Mode</th>
+								<th>Statement</th>
+                                <th>Approved By</th>
+								<th>Status</th>
                                 <th></th>
 							</tr>
 						</thead>
@@ -72,30 +66,50 @@
 											<span class="d-block text-info text-capitalize"><i class="fa fa-clock-o"></i> {{vit.Time}}</span></a>
 									</h2>
 								</td>
-                                <td>{{vit.Payment_Journal.Trans_Id}}</td>
+                                <td>{{vit.Logger}}</td>
 								<td>
 									<h2 class="table-avatar">
 										<a href="javascript:void(0);">
-                                            {{vit.Payment_Journal.Patient_Id}}
-											<span>#{{vit.Payment_Journal.Patient_Id.Patient_Id}}</span></a>
+                                            {{vit.Patient_Id}}
+											<span>#{{vit.Patient_Id.Patient_Id}}</span></a>
 									</h2>
 								</td>
-								<td>{{vit.Payment_Journal.Procedure}}</td>
-								<td>{{vit.Payment_Journal.Treatment_Amount}}</td>
-								<td>{{vit.Approved_By}}</td>
-                                <td>{{vit.Payment_Type}}</td>
+								<td>{{vit.Procedure}}</td>
+								<td>{{vit.Treatment_Amount}}</td>
+                                <td>{{vit.Reversal_Statement}}</td>
+                                <td>{{vit.Approved_By}}</td>
+                                <td class="text-left">
+                                    <div class="table-action">
+                                        {% if vit.Status == 'Pending' %}
+                                            <a class="btn btn-sm bg-warning-light">
+                                                {{vit.Status}}
+                                            </a>
+                                        {% elif vit.Status == 'Reject' %}
+                                            <a class="btn btn-sm bg-danger-light">
+                                                {{vit.Status}}
+                                            </a>
+                                        {% else %}
+                                            <a class="btn btn-sm bg-info-light">
+                                                {{vit.Status}}
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
                                 <td class="text-left">
 									<div class="table-action">
-										<a class="btn btn-sm bg-success-light" 
-                                        href="{% url 'nursing' vit.Payment_Journal.Trans_Id %}"
+                                        {% if vit.Status == 'Pending' %}
+                                        <a class="btn btn-sm bg-success-light" 
+                                        href="javascript:abortRefundRequest('{{vit.id}}','{{vit.Treatment_Amount}}','{{vit.Patient_Id}}','{{vit.Procedure}}','{{vit.Date|date:"d M, Y"}}')"
                                          class="btn btn-sm">
-											<i class="fas fa-file-pdf"></i>
+											<i class="fas fa-rotate-left"></i>
 										</a>
-										<a class="btn btn-sm {% if vit.isRequested %}bg-warning-light{% else %}bg-success-light{% endif %}" 
-                                        href="javascript:requestRefund('{{vit.id}}','{{vit.Payment_Journal.Treatment_Amount}}','{{vit.Payment_Journal.Patient_Id}}','{{vit.Payment_Journal.Procedure}}','{{vit.Date|date:"d M, Y"}}')"
+                                        {% else %}
+                                        <a class="btn btn-sm bg-success-light" 
+                                        href="#"
                                          class="btn btn-sm">
-											<i class="fas fa-recycle"></i>
+											<i class="fas fa-check"></i>
 										</a>
+                                        {% endif %}
 									</div>
 								</td>
 							</tr>
@@ -132,6 +146,7 @@
 
 <script>
     
+   
     $(document).ready(function () {
 
         patientTable = $('#patientTable').DataTable({
@@ -148,55 +163,49 @@
          
     })
     
-    function requestRefund(id,amount,pat,name,date){
+    function abortRefundRequest(id,amount,pat,name,date){
         swal({
             title: "Are you sure?",
-            text: `You want to place a refund request of ${amount} GHS,
+            text: `You want to abort this request of ${amount} GHS,
             Description:${name}, Patient:${pat}, Date:${date}?`,
-            type: "input",
-            inputPlaceholder: "Write you statement to continue...",
             showCancelButton: true,
             confirmButtonColor: "#DD6B55",
-            confirmButtonText: "Yes, request",
+            confirmButtonText: "Yes, abort",
             cancelButtonText: "No, cancel",
             closeOnConfirm: false,
             closeOnCancel: true
-        },function(inputValue){
-            if (inputValue === false) return false;
-            if (inputValue === "") {
-              swal.showInputError("You need to write a precise statement!");
-              return false
+        },function(isConfirm){
+            if(isConfirm){
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'nursing' 'abort-refund-request' %}",
+                    data: {
+                        ID: id,
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        dataType: "json",
+                    },
+                    beforeSend: function () {
+                        // show progress whiles request in pregess to avoid many submission
+                        swal({
+                            title: "Processing Request... ",
+                            text: "please wait whiles we proccess your request",
+                            imageUrl: "{% static 'admin/assets/img/loading.gif' %}",
+                            showConfirmButton: false
+                        });
+                    },
+                    success: function (data) {
+                        swal.close();
+                        window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                        setTimeout(function() {
+                            window.location.reload();
+                        },1200);
+                    },
+                    error: function (request,status,error) {
+                        window.parent.showNotification(null, `Error occured: ${request.responseText}`, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                        swal.close();
+                    }
+                });
             }
-            $.ajax({
-                type: "POST",
-                url: "{% url 'nursing' 'request-refund' %}",
-                data: {
-                    ID: id,
-                    Statement: inputValue,
-                    csrfmiddlewaretoken: '{{ csrf_token }}',
-                    dataType: "json",
-                },
-                beforeSend: function () {
-                    // show progress whiles request in pregess to avoid many submission
-                    swal({
-                        title: "Processing Request... ",
-                        text: "please wait whiles we proccess your request",
-                        imageUrl: "{% static 'admin/assets/img/loading.gif' %}",
-                        showConfirmButton: false
-                    });
-                },
-                success: function (data) {
-                    swal.close();
-                    window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
-                    setTimeout(function() {
-                        window.location.reload();
-                    },1500);
-                },
-                error: function (request,status,error) {
-                    window.parent.showNotification(null, `Error occured: ${request.responseText}`, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
-                    swal.close();
-                }
-            });
         });
     }
 

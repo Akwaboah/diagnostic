@@ -34,6 +34,10 @@ def compress_images(uploadedImage,width=200,height=200,format='JPEG'):
 def default_static_image_path():
     return "/static/admin/assets/img/profiles/avatar.png"
 
+def requisition_attachment_path(instance, filename):
+    path = 'requisition/{0}/{1}'.format(instance.Placeholder.User, filename)
+    return str(path)
+
 def patients_profile_path(instance, filename):
     path = 'patients/{0}/{1}'.format(instance.Patient_Id, filename)
     return str(path)
@@ -329,6 +333,7 @@ class Journal_History(models.Model):
     Payment_Type=models.CharField(max_length=20)
     Approved_By=models.CharField(max_length=50)
     Payment_Comment=models.TextField(null=True, default="None")
+    isRequested=models.BooleanField(default=False)
     Date=models.DateField(auto_now=True)
     Time=models.TimeField(auto_now=True)
 
@@ -349,6 +354,28 @@ class Journal_History_Checker(models.Model):
 
     def __str__(self):
         return '{0}-{1}'.format(self.Cashier,self.Trans_Id)
+
+# Payment Journal Reversal Request
+class Journal_History_Reversal (models.Model):
+    Patient_Id= models.ForeignKey(Patients,on_delete=models.CASCADE,db_column='Patient_Id')
+    Vitals_Id=models.IntegerField() #this fields represent the vital hist. id
+    Journal_History_Id=models.IntegerField() #this fields represent the payment hist. id
+    Procedure=models.CharField(max_length=50) 
+    Treatment_Amount = models.DecimalField(max_digits=50,decimal_places=2)
+    Paid_Amount = models.DecimalField(max_digits=50,decimal_places=2)
+    Payment_Type=models.CharField(max_length=20)
+    Approved_By=models.CharField(max_length=50,default='Pending')
+    Reversal_Statement=models.TextField()
+    Status=models.CharField(max_length=20, default="Pending")
+    Logger=models.CharField(max_length=50)
+    Date=models.DateField(auto_now=True)
+    Time=models.TimeField(auto_now=True)
+
+    def __str__(self):
+        return ('%s(%s)-%s'%(self.Patient_Id,self.Paid_Amount,self.Reversal_Statement))
+
+    class Meta:
+        db_table = "journal_history_reversal"
 
 # Requisition Approval_Authority
 class Approval_Authority(models.Model):
@@ -372,7 +399,8 @@ class Requisition(models.Model):
     Quantity = models.IntegerField()
     Price = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Total_Cost = models.DecimalField(max_digits=50,decimal_places=2,default=0)
-    Approval_Authority=models.ManyToManyField(Approval_Authority, db_column="Approval_Authority")
+    Attachment = models.ImageField(default=default_static_image_path, null=True, blank=True, upload_to=requisition_attachment_path)
+    # Approval_Authority=models.ManyToManyField(Approval_Authority, db_column="Approval_Authority")
     Approval_Status=models.CharField(max_length=50,default='Pending')
     Delivery_Status=models.CharField(max_length=50,default='Not Received')
     Approved_By=models.CharField(max_length=50,default='Pending')
@@ -383,6 +411,10 @@ class Requisition(models.Model):
         db_table = "requisition"
         verbose_name='Requisition'
 
+    def save(self, *args, **kwargs):
+        self.Attachment=compress_images(self.Attachment)
+        super(Requisition, self).save(*args, **kwargs)
+    
 # Web Models
 class Appoitment(models.Model):
     Name=models.CharField(max_length=50)

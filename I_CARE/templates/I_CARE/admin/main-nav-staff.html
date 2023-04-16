@@ -47,11 +47,12 @@
                 </ul>
             </li>		
             {% if request.user.is_superuser == True %}
-            <li class="has-submenu {% if 'Requisition' in page %}active{% endif %}">
-                <a href="javascript:void(0)">Requisition<i class="fas fa-chevron-down"></i></a>
+            <li class="has-submenu {% if page in 'Requisition,Pending Refunds' %}active{% endif %}">
+                <a href="javascript:void(0)">Requisition & More<i class="fas fa-chevron-down"></i></a>
                 <ul class="submenu">
                     <li><a href="{% url 'requisition' 'place-request' %}">Request & More</a></li>
                     <li><a href="{% url 'requisition' 'pending-request' %}">Pending Request</a></li>
+                    <li><a href="{% url 'requisition' 'pending-refunds' %}">Pending Refunds</a></li>
                 </ul>
             </li>
             {% else %}

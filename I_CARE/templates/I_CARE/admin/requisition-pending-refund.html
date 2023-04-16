@@ -32,54 +32,6 @@
     <!-- Main CSS -->
     <link rel="stylesheet" href="{% static 'web-assets/assets/css/style.css' %}">
 
-
-    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-			<script src="assets/js/html5shiv.min.js"></script>
-			<script src="assets/js/respond.min.js"></script>
-		<![endif]-->
-    <!-- <style>
-        /* Make the image fully responsive */
-        .carousel-inner img {
-            width: 100%;
-            height: 100%;
-        }
-    </style> -->
-    <script>
-        var timer = 0;
-        var PERIOD_VISIBLE =120000;
-        var PERIOD_NOT_VISIBLE = 60000;
-     
-        function onLoad() {
-            timer = setInterval(checkBirthDays, (document.hidden) ? PERIOD_NOT_VISIBLE : PERIOD_VISIBLE);
-            if(document.addEventListener) document.addEventListener("visibilitychange", visibilityChanged);
-        }
-     
-        function visibilityChanged() {
-            clearTimeout(timer);
-            timer = setInterval(checkBirthDays, (document.hidden) ? PERIOD_NOT_VISIBLE : PERIOD_VISIBLE);
-        }
-     
-        function checkBirthDays() { 
-            // Check server for today's birthdays
-            $.ajax({
-                type: "POST",
-                url: "{% url 'opd' 'birthdays' %}",
-                data: {
-                    csrfmiddlewaretoken: '{{ csrf_token }}',
-                    dataType: "json"
-                },
-                success: function (data) {
-                    // window.parent.showNotification(null, data['message'], 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
-                    // swal.close();
-                },
-                error: function (request,status,error) {
-                    // swal(`Error Occurred: ${request.responseText}, please try again :)`, "error");
-                }
-            });
-        }
-     
-    </script>
 </head>
 
 <body>
@@ -98,7 +50,7 @@
                 <div class="col-md-12 col-12">
                     <nav aria-label="breadcrumb" class="page-breadcrumb">
                         <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="#">Home</a></li>
+                            <li class="breadcrumb-item"><a href="#">{{bus_info.Bus_Name_Abbr}}</a></li>
                             <li class="breadcrumb-item active" aria-current="page">{{page}}</li>
                         </ol>
                     </nav>
@@ -120,78 +72,78 @@
                             <div class="card-header p-1">
                                 <div class="col">
                                     <div class="row justify-content-start"> 
-                                        <button class="nav-link active bg-warning p-1 mr-2 text-white">All Departments</button>
+                                        <button class="nav-link active bg-warning p-1 mr-2 text-white">Refund History</button>
                                     </div>
                                 </div>
                             </div>
-                            <div class="card-body">
-                                <div class="table-responsive p-2">
-                                    <table id="patientTable" class="table table-bordered table-hover table-center mb-0">
+                            <div class="card-body p-1">
+                                <div class="table-responsive">
+                                    <table style="cursor: pointer" id="requisitionTable" class="table table-bordered table-hover table-center mb-0">
                                         <thead>
                                             <tr>
                                                 <th>Date</th>
+                                                <th>Request From</th>
                                                 <th>Patient ID</th>
-                                                <th>Contact No. & Emergency No.</th>
-                                                {% comment %} <th>Modality</th> {% endcomment %}
                                                 <th>Procedure</th>
+                                                <th>Charge</th>
+                                                <th>Statement</th>
+                                                <th>Approved By</th>
                                                 <th>Status</th>
-                                                <th>Technician</th>
-                                                <th>Attachment</th>
-                                                <th>Radiologist</th>
-                                                <th>Final Report</th>
+                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% for vit in vitalHist %}
+                                            {% for vit in reqHist %}
                                             <tr>
                                                 <td>
                                                     <h2 class="table-avatar">
-                                                        <a href="javascript:void(0)">{{vit.Date|date:"D M d, Y"}}
+                                                        <a href="javascript:void(0)">{{vit.Date|date:"d M, Y"}}
                                                             <span class="d-block text-info text-capitalize"><i class="fa fa-clock-o"></i> {{vit.Time}}</span></a>
                                                     </h2>
                                                 </td>
+                                                <td>{{vit.Logger}}</td>
                                                 <td>
                                                     <h2 class="table-avatar">
-                                                        <a href="javascript:void(0);">{{vit.Patient_Id}}
+                                                        <a href="javascript:void(0);">
+                                                            {{vit.Patient_Id}}
                                                             <span>#{{vit.Patient_Id.Patient_Id}}</span></a>
                                                     </h2>
                                                 </td>
-                                                <td>{{vit.Patient_Id.Tel}}/{{vit.Patient_Id.Emergency_Tel}}</td>
-                                                {% comment %} <td>{{vit.Vitals.Procedure.Modality.Modality}}</td> {% endcomment %}
-                                                <td>{{vit.Vitals.Procedure}}</td>
-                                                <td>{{vit.Vitals.Status}}</td>
-                                                <td class="text-capitalize">{{vit.Tech_Instance}}</td>
+                                                <td>{{vit.Procedure}}</td>
+                                                <td>{{vit.Treatment_Amount}}</td>
+                                                <td>{{vit.Reversal_Statement}}</td>
+                                                <td>{{vit.Approved_By}}</td>
                                                 <td class="text-left">
                                                     <div class="table-action">
-                                                        {% if 'avatar' in vit.Tech_Report.url %}
-                                                        <a href="javascript:void(0)" class="btn btn-sm bg-danger-light">
-                                                            <i class="fa fa-file"></i> Preview
-                                                        </a>
+                                                        {% if vit.Status == 'Pending' %}
+                                                            <a class="btn btn-sm bg-warning-light">
+                                                                {{vit.Status}}
+                                                            </a>
+                                                        {% elif vit.Status == 'Reject' %}
+                                                            <a class="btn btn-sm bg-danger-light">
+                                                                {{vit.Status}}
+                                                            </a>
                                                         {% else %}
-                                                        <a target="_blank" href="{{vit.Tech_Report.url}}" class="btn btn-sm bg-success-light">
-                                                            <i class="fa fa-file"></i> Preview
-                                                        </a>
+                                                            <a class="btn btn-sm bg-info-light">
+                                                                {{vit.Status}}
+                                                            </a>
                                                         {% endif %}
-                                                        {% comment %} <a target="_blank" href="{% if 'avatar' in vit.Tech_Report.url %}#{% else %}{{vit.Tech_Report.url}}{% endif %}" class="btn btn-sm bg-success-light">
-                                                            <i class="fa fa-file"></i> Preview
-                                                        </a> {% endcomment %}
                                                     </div>
                                                 </td>
-                                                <td class="text-capitalize">{{vit.Docs_Instance}}</td>
                                                 <td class="text-left">
                                                     <div class="table-action">
-                                                        {% if 'avatar' in vit.Docs_Report.url %}
-                                                        <a href="javascript:void(0)" class="btn btn-sm bg-danger-light">
-                                                            <i class="fa fa-file"></i> Print Out
+                                                        {% if vit.Status == 'Pending' %}
+                                                        <a class="btn btn-sm bg-info-light" 
+                                                        onclick='actionRequest("{{vit.id}}","{{vit.Treatment_Amount}}","{{vit.Logger}}","{{vit.Procedure}}","{{vit.Reversal_Statement}}","Approved","approve")'>
+                                                            Approve
+                                                        </a>
+                                                        <a class="btn btn-sm bg-danger-light"
+                                                        onclick='actionRequest("{{vit.id}}","{{vit.Treatment_Amount}}","{{vit.Logger}}","{{vit.Procedure}}","{{vit.Reversal_Statement}}","Reject","reject")'>
+                                                            Reject
                                                         </a>
                                                         {% else %}
-                                                        <a target="_blank" href="{{vit.Docs_Report.url}}" class="btn btn-sm bg-success-light">
-                                                            <i class="fa fa-file"></i> Print Out
-                                                        </a>
+                                                        <a class="btn btn-sm bg-success-light">Complete</a>
                                                         {% endif %}
-                                                        {% comment %} <a target="_blank" href="{% if 'avatar' in vit.Docs_Report.url %}#{% else %}{{vit.Docs_Report.url}}{% endif %}" class="btn btn-sm bg-success-light">
-                                                            <i class="fa fa-line-chart"></i> Print Out
-                                                        </a> {% endcomment %}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -246,31 +198,62 @@
 
     <!-- personal scripts -->
     <script>
-
-        let patientTable;
-
+         
         $(document).ready(function () {
 
-            patientTable = $('#patientTable').DataTable({
+            $('#requisitionTable').DataTable({
                 // destroy : true,  
                 paging: true,
                 ordering: false,
-                info: true,
+                info: false,
                 searching:true,
                 pageLength:15,
                 bLengthChange:false,
-                stateSave: true,
                 lengthMenu: [ [15, 30, 45, -1], [15, 30, 45, "All"] ]
             });
             
-        })
-        
+        })  
+        function actionRequest(jnrId,amount,placeHolder,description,statement,newStatus,note) {
+            let color="#DD6B55";
+            if (note != 'reject') {
+                color="#41B9B5"
+            }
+            swal({
+                    title: "Are you sure?",
+                    text: `You want to ${note} the refund of ${amount} GHS request From:${placeHolder}, Description:${description}, Statement:${statement}?`,
+                    // imageUrl: '',
+                    showCancelButton: true,
+                    confirmButtonColor: color,
+                    confirmButtonText: `Yes, ${note}`,
+                    cancelButtonText: "No, cancel",
+                    closeOnConfirm: false,
+                    closeOnCancel: true
+                }, function (isConfirm) {
+                    if (isConfirm) {
+                        $.ajax({
+                            type: "POST",
+                            url: "{% url 'requisition' 'alter-refund-request' %}",
+                            data: {
+                                jnrID: jnrId,
+                                newStaus: newStatus,
+                                csrfmiddlewaretoken: '{{ csrf_token }}',
+                                dataType: "json"
+                            },
+                            success: function (data) {
+                                // window.parent.showNotification(null, data['message'], 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                                // swal.close();
+                                window.location.reload()
+                            },
+                            error: function (data) {
+                                swal("Error Occured", "Request aborted, please try again :)", "error");
+                            }
+                        });
+                    }
+                });
+            
+        }
+    
     </script>
-
-   
-    <!-- extends child js into this block tag -->
-    {% block extra-js %}
-    {% endblock extra-js %}
 
     <!-- Messages Handler -->
     {% for message in messages %} {% if message.tags == "info" %}

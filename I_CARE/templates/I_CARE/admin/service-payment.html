@@ -25,6 +25,12 @@
                 <span>Payment History</span>
             </a>
         </li>
+        <li>
+            <a href="{% url 'nursing' 'refund-history' %}">
+                <i class="fas fa-recycle"></i>
+                <span>Refund History</span>
+            </a>
+        </li>
     </ul>
 </nav>
 {% endblock dashboard-menu %}
@@ -96,8 +102,8 @@
 									<div class="table-action">
 										<a class="btn btn-sm bg-success-light" 
                                         href="javascript:showPayment('{{vit.Patient_Id}}','{{vit.First_Name}}','{{vit.Surname}}','{{vit.Gender}}',
-                                        '{{vit.Age}}','{{vit.Nationality}}','{{vit.Residence}}','{{vit.Tel}}','{{vit.Occupation}}','{{vit.Balance}}',
-                                        '{{vit.Insurance_Type.Name}}','{{vit.Insurance_Id}}','{{vit.Profile.url}}');"
+                                        '{{vit.Age}}','{{vit.Nationality}}','{{vit.Residence}}','{{vit.Tel}}','{{vit.Tel}}','{{vit.Occupation}}',
+                                        '{{vit.Balance}}','{{vit.Insurance_Type.Name}}','{{vit.Insurance_Id}}','{{vit.Profile.url}}');"
                                          class="btn btn-sm bg-success-light">
 											<i class="fas fa-money-bill"></i> Payment
 										</a>
@@ -146,9 +152,9 @@
     let Patient_Bal;
     let Fname;
     let PTel;
-
+    
     $(document).ready(function () {
-
+        
         patientTable = $('#patientTable').DataTable({
             // destroy : true,  
             paging: true,
@@ -187,23 +193,29 @@
     
     // bills/jurnal data
     const journalData=(JSON.parse ('{{journalData|safe}}'))
-     
-    function showPayment(patient_id,fname,sname,gender,age,nat,res,tel,occup,bal,insur_name,insur_id,profile_image) {
+    
+    function showPayment(patient_id,fname,sname,gender,age,nat,res,tel,emerg,occup,bal,insur_name,insur_id,profile_image) {
         journalEntryTable.clear().draw();
         let posNo=0
         for (var i = 0; i < journalData.length; i++) {
             if (journalData[i].Patient_Ref==patient_id) {
                 posNo+=1
-                journalEntryTable.row.add([posNo,journalData[i].Date,journalData[i].Treatment_Name,journalData[i].Treatment_Amount,journalData[i].Paid_Amount,journalData[i].Balance,journalData[i].Logger]).draw(false);
+                if(parseFloat(journalData[i].Paid_Amount)>0){
+                    journalEntryTable.row.add([posNo,journalData[i].Date,journalData[i].Treatment_Name,journalData[i].Treatment_Amount,journalData[i].Paid_Amount,journalData[i].Balance,journalData[i].Logger,
+                    "<a class='btn btn-sm  text-white' href='javascript:void(0)' role='button' aria-haspopup='false' aria-expanded='false'> <i class='fa fa-check text-success'></i></a>"]).draw(false);
+                }else{
+                    journalEntryTable.row.add([posNo,journalData[i].Date,journalData[i].Treatment_Name,journalData[i].Treatment_Amount,journalData[i].Paid_Amount,journalData[i].Balance,journalData[i].Logger,
+                    "<a class='btn btn-sm  text-white' href='javascript:void(0)' role='button' onclick=removeProcedure(" + "'" + "" + journalData[i].id + "" + "'" +','+ "'" + "" + journalData[i].Treatment_Name + "" + "'" + "); aria-haspopup='false' aria-expanded='false'> <i class='fa fa-trash text-danger'></i></a>"]).draw(false);
+                }
             }
         }
         // set patient details
         document.getElementById('JName').innerText=fname+" "+sname+"/"+patient_id;
         document.getElementById('JGender').innerText=gender+"/"+age;
         document.getElementById('JAddress').innerText=nat+"/"+res;
-        document.getElementById('JContact').innerText=tel+"/"+occup;
+        document.getElementById('JContact').innerText=tel+"/"+emerg;
         document.getElementById('JBalance').innerText=bal+" GHS";
-        document.getElementById('Insurance').innerText=`${insur_name}(${insur_id})`;
+        document.getElementById('Insurance').innerText=`${occup}/${insur_name}(${insur_id})`;
 
         // 
         var imgAttr = document.getElementById('JProfile');
@@ -229,6 +241,53 @@
         }else{
             amount.setCustomValidity('')
         }
+    }
+    
+    function removeProcedure(id,name){
+        swal({
+            title: "Are you sure?",
+            text: `You want to remove '${name}' as a procedure from patient records?`,
+            // imageUrl: '',
+            showCancelButton: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Yes, remove",
+            cancelButtonText: "No, cancel",
+            closeOnConfirm: false,
+            closeOnCancel: true
+        }, function (isConfirm) {
+            if (isConfirm) {
+                $('#paymentModal').modal('hide');
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'nursing' 'remove-procedure' %}",
+                    data: {
+                        ID: id,
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        dataType: "json",
+                    },
+                    beforeSend: function () {
+                        // show progress whiles request in pregess to avoid many submission
+                        swal({
+                            title: "Processing Request... ",
+                            text: "please wait whiles we proccess your request",
+                            imageUrl: "{% static 'admin/assets/img/loading.gif' %}",
+                            showConfirmButton: false
+                        });
+                    },
+                    success: function (data) {
+                        swal.close();
+                        window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                        setTimeout(function() {
+                            window.location.reload();
+                        },1000);
+                    },
+                    error: function (request,status,error) {
+                        window.parent.showNotification(null, `Error occured: ${request.responseText}`, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                        swal.close();
+                    }
+                });
+            }
+        });
     }
 
     $("#journalPaymentForm").on('submit',function (e) {

@@ -91,7 +91,7 @@
                                 </div>
                             </div>
                             <div class="card-body p-1">
-                                <form method="POST">
+                                <form method="POST" enctype="multipart/form-data">
                                     {% csrf_token %}
                                     <div class="row">
                                         <div class="col-md-7 col-sm-7">
@@ -128,7 +128,13 @@
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-md-12 col-sm-12">
+                                        <div class="col-md-7 col-sm-7">
+                                            <div class="form-group">
+                                                <input type="file" class="form-control form-control-file" name="Docs">
+                                                <label>Attach docs(reference)</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5 col-sm-5">
                                             <div class="form-group">
                                                 <div class="submit-section pull-right">
                                                     <button type="submit" class="btn btn-md btn-primary">Place Request</button>
@@ -160,7 +166,7 @@
                                                 <th>Qty</th>
                                                 <th>Price</th>
                                                 <th>Total Cost</th>
-                                                <th>Approval Authorities</th>
+                                                <th>Attachment</th>
                                                 <th>Approved By</th>
                                                 <th>Status</th>
                                             </tr>
@@ -184,10 +190,18 @@
                                                 <td>{{vit.Quantity}}</td>
                                                 <td>{{vit.Price}}</td>
                                                 <td class="text-capitalize">{{vit.Total_Cost}}</td>
-                                                <td class="text-capitalize">
-                                                    {% for auth in vit.Approval_Authority.all %}
-                                                    <li>{{ auth.Authorizer }}</li>
-                                                    {% endfor %}
+                                                <td class="text-left">
+                                                    <div class="table-action">
+                                                        {% if 'avatar' in vit.Attachment.url %}
+                                                        <a href="javascript:void(0)" class="btn btn-sm bg-danger-light">
+                                                            <i class="fa fa-file"></i> Preview
+                                                        </a>
+                                                        {% else %}
+                                                        <a target="_blank" href="{{vit.Attachment.url}}" class="btn btn-sm bg-success-light">
+                                                            <i class="fa fa-file"></i> Preview
+                                                        </a>
+                                                        {% endif %}
+                                                    </div>
                                                 </td>
                                                 <td>{{vit.Approved_By}}</td>
                                                 <td class="text-left">

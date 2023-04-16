@@ -45,41 +45,6 @@
             height: 100%;
         }
     </style> -->
-    <script>
-        var timer = 0;
-        var PERIOD_VISIBLE =120000;
-        var PERIOD_NOT_VISIBLE = 60000;
-     
-        function onLoad() {
-            timer = setInterval(checkBirthDays, (document.hidden) ? PERIOD_NOT_VISIBLE : PERIOD_VISIBLE);
-            if(document.addEventListener) document.addEventListener("visibilitychange", visibilityChanged);
-        }
-     
-        function visibilityChanged() {
-            clearTimeout(timer);
-            timer = setInterval(checkBirthDays, (document.hidden) ? PERIOD_NOT_VISIBLE : PERIOD_VISIBLE);
-        }
-     
-        function checkBirthDays() { 
-            // Check server for today's birthdays
-            $.ajax({
-                type: "POST",
-                url: "{% url 'opd' 'birthdays' %}",
-                data: {
-                    csrfmiddlewaretoken: '{{ csrf_token }}',
-                    dataType: "json"
-                },
-                success: function (data) {
-                    // window.parent.showNotification(null, data['message'], 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
-                    // swal.close();
-                },
-                error: function (request,status,error) {
-                    // swal(`Error Occurred: ${request.responseText}, please try again :)`, "error");
-                }
-            });
-        }
-     
-    </script>
 </head>
 
 <body>
@@ -138,7 +103,7 @@
                                                 <th>Qty</th>
                                                 <th>Price</th>
                                                 <th>Total Cost</th>
-                                                <th>Approval Authorities</th>
+                                                <th>Attachment</th>
                                                 <th>Approved By</th>
                                                 <th>Status</th>
                                                 <th>Actions</th>
@@ -161,11 +126,24 @@
                                                 <td>{{vit.Quantity}}</td>
                                                 <td>{{vit.Price}}</td>
                                                 <td class="text-capitalize">{{vit.Total_Cost}}</td>
-                                                <td class="text-capitalize">
+                                                <td class="text-left">
+                                                    <div class="table-action">
+                                                        {% if 'avatar' in vit.Attachment.url %}
+                                                        <a href="javascript:void(0)" class="btn btn-sm bg-danger-light">
+                                                            <i class="fa fa-file"></i> Preview
+                                                        </a>
+                                                        {% else %}
+                                                        <a target="_blank" href="{{vit.Attachment.url}}" class="btn btn-sm bg-success-light">
+                                                            <i class="fa fa-file"></i> Preview
+                                                        </a>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                                {% comment %} <td class="text-capitalize">
                                                     {% for subtask in vit.Approval_Authority.all %}
                                                     <li>{{ subtask.Authorizer }}</li>
                                                     {% endfor %}
-                                                </td>
+                                                </td> {% endcomment %}
                                                 <td>{{vit.Approved_By}}</td>
                                                 <td class="text-left">
                                                     <div class="table-action">
@@ -189,13 +167,13 @@
                                                         {% if vit.Approval_Status in 'Approved,Reject' %}
                                                         <a class="btn btn-sm bg-success-light">Complete</a>
                                                         {% else %}
-                                                        {% if user_info == vit.Approval_Authority.all.0.Authorizer %}
+                                                        {% if user_info.Level in 'Medical Director,CEO,Facility Director' %}
                                                         <a class="btn btn-sm bg-info-light" 
-                                                        onclick='acctionRequest("{{vit.id}}","{{vit.Placeholder}}","{{vit.Description}}","{{vit.Delivery_Timeline}}","{{vit.Total_Cost}}","Approved","approve")'>
+                                                        onclick='actionRequest("{{vit.id}}","{{vit.Placeholder}}","{{vit.Description}}","{{vit.Delivery_Timeline}}","{{vit.Quantity}}","{{vit.Total_Cost}}","Approved","approve")'>
                                                             Approve
                                                         </a>
                                                         <a class="btn btn-sm bg-danger-light"
-                                                        onclick='acctionRequest("{{vit.id}}","{{vit.Placeholder}}","{{vit.Description}}","{{vit.Delivery_Timeline}}","{{vit.Total_Cost}}","Reject","reject")'>
+                                                        onclick='actionRequest("{{vit.id}}","{{vit.Placeholder}}","{{vit.Description}}","{{vit.Delivery_Timeline}}","{{vit.Quantity}}","{{vit.Total_Cost}}","Reject","reject")'>
                                                             Reject
                                                         </a>
                                                         {% else %}
@@ -313,14 +291,14 @@
             
         })
          {% endcomment %}
-        function acctionRequest(reqID,placeHolder,description,timeLine,totalCost,newStatus,note) {
+        function actionRequest(reqID,placeHolder,description,timeLine,qty,totalCost,newStatus,note) {
             let color="#DD6B55";
-            if (note != 'deny') {
+            if (note != 'reject') {
                 color="#41B9B5"
             }
             swal({
                     title: "Are you sure?",
-                    text: `You want to ${note} a request From:${placeHolder}, Description:${description}, DeliveryTimeline:${timeLine} with the Total Cost of ${totalCost} GHS?`,
+                    text: `You want to ${note} a request From:${placeHolder}, Description:${description}, DeliveryTimeline:${timeLine}, Quantity:${qty} with the Total Cost of ${totalCost} GHS?`,
                     // imageUrl: '',
                     showCancelButton: true,
                     confirmButtonColor: color,
@@ -333,7 +311,7 @@
     
                         $.ajax({
                             type: "POST",
-                            url: "{% url 'requisition' 'alter-request' %}",
+                            url: "{% url 'requisition' 'alter-requisition-request' %}",
                             data: {
                                 requestID: reqID,
                                 newStaus: newStatus,
@@ -341,9 +319,11 @@
                                 dataType: "json"
                             },
                             success: function (data) {
-                                // window.parent.showNotification(null, data['message'], 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
-                                // swal.close();
-                                window.location.reload()
+                                swal.close();
+                                window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                                setTimeout(function() {
+                                    window.location.reload();
+                                },1200);
                             },
                             error: function (data) {
                                 swal("Error Occured", "Request aborted, please try again :)", "error");
@@ -354,7 +334,6 @@
             
         }
     
-
     </script>
 
     <!-- Messages Handler -->
