@@ -109,7 +109,7 @@
                                                     <label>Name/ID:<b id="Name">_ _ _ _ _ _ _ _ _ _ _</b> <br>
                                                            Gender/Age:<b id="Gender">_ _ _ _ _ _ _ _ _ _ _</b> <br>
                                                            Nationality/Residence:<b id="Address">_ _ _ _ _ _ _ _ _ _ _</b> <br>
-                                                           Tel/Occupation:<b id="Contact">_ _ _ _ _ _ _ _ _ _ _</b><br>
+                                                           Tel/Emerg. No./Occupation:<b id="Contact">_ _ _ _ _ _ _ _ _ _ _</b><br>
                                                            Insurance:<b id="Insurance">_ _ _ _ _ _ _ _ _ _ _</b><br>
                                                            Last Seen:<b id="Last_Visit">_ _ _ _ _ _ _ _ _ _ _</b>
                                                     </label>
@@ -280,15 +280,14 @@
             },
             success: function (data) {
                 swal.close();
-                const patient_data=JSON.parse(data.pat_data)
-                document.getElementById('Name').innerText=patient_data['First_Name']+" "+patient_data['Surname']+"/"+patient_data['Patient_Id'];
-                document.getElementById('Gender').innerText=patient_data['Gender']+"/"+patient_data['Age'];
-                document.getElementById('Address').innerText=patient_data['Nationality']+"/"+patient_data['Residence'];
-                document.getElementById('Contact').innerText=patient_data['Tel']+"/"+patient_data['Occupation'];
-                document.getElementById('Insurance').innerText=`${patient_data['Insurance_Name']}(${patient_data['Insurance_Id']})`;
-                document.getElementById('Last_Visit').innerText=`${patient_data['Last_Visit']}`;
+                document.getElementById('Name').innerText=`${data.First_Name} ${data.Surname}/${data.Patient_Id}`;
+                document.getElementById('Gender').innerText=`${data.Gender}/${data.Age}`;
+                document.getElementById('Address').innerText=`${data.Nationality}/${data.Residence}`;
+                document.getElementById('Contact').innerText=`${data.Tel}/${data.Emergency_Tel}/${data.Occupation}`;
+                document.getElementById('Insurance').innerText=`${data.Insurance_Name}(${data.Insurance_Id})`;
+                document.getElementById('Last_Visit').innerText=`${data.Last_Visit}`;
 
-                let image=patient_data['Profile']
+                let image=data.Profile
                 var imgAttr = document.getElementById('img_profile');
                 imgAttr.src = image;
                 
@@ -301,14 +300,12 @@
 
         });
    
-   }
+    }
 
 </script>
 
 {% endblock extra-js %}
 
 </body>
-
-<!-- doccure/doctor-dashboard.html  30 Nov 2019 04:12:09 GMT -->
 
 </html>

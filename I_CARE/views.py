@@ -8,9 +8,6 @@ import json
 import requests
 import io
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use('Agg')  # Use a non-interactive backend
 from openpyxl import Workbook
 from openpyxl.chart.label import DataLabelList
 from openpyxl.utils import get_column_letter
@@ -20,6 +17,8 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 import csv
 from django.utils.encoding import smart_str
 from django.shortcuts import render,HttpResponse,redirect
+from django.core import serializers
+from django.http import JsonResponse
 from django.views.generic.base import View
 from django.contrib.auth import authenticate,login, logout
 from django.contrib.auth.models import Group,User
@@ -38,7 +37,7 @@ from I_CARE.models import Business_Info, Patients, User_Details,Patients_Checker
     Appoitment,Message,Procedures,Presenting_Complaints,Journal_History,Treatment_Alert,\
     Birthday_Wishes,Stocks_Department,Supplier,Stocks,New_Stocks,Stocks_Checker,Drugs_Prescriptions,\
     Insurance,Referring_Facilities,Requisition,Approval_Authority,Journal_History_Checker,Payment_Journal,\
-    Modalities
+    Modalities,Journal_History_Reversal
 
 from I_CARE.forms import Patients_Form,Staff_Form,Stocks_Form
 from I_CARE.decorators import class_allow_users, unauthenticated_staffs
@@ -142,6 +141,7 @@ class SMS:
             _headers = {'api-key':self.bus_info.Sms_Api_Key,
                         'Content-Type': 'application/json'}
             response = requests.request('POST',_url, headers=_headers, data=json.dumps(_payload))
+            print('SMS response: ', response.text)
             return json.loads(response.text)
         except requests.exceptions.RequestException as e:
             return ("Poor/Network connection error occured")
@@ -387,20 +387,16 @@ class OPD(View):
             return render(request,'I_CARE/admin/opd-complaints.html',context)
         elif kwargs['page']=='search-patient':
             pat_data=Patients.objects.get(Patient_Id=request.GET['Patient_Id'])
+            pat_data_dict = serializers.serialize('python', [pat_data])[0]['fields']
+            # pat_data_dict.pop('_state') # remove the ModelState attribute
             if str(pat_data.Profile).__contains__('avatar'):
-                img_data=str(pat_data.Profile)
+                pat_data_dict['Profile']=str(pat_data.Profile)
             else:
-                img_data=str(pat_data.Profile.url)
-            insurance_name='None'
-            if pat_data.Insurance_Type:
-                insurance_name=pat_data.Insurance_Type.Name 
-            info_data={'First_Name':pat_data.First_Name,'Surname':pat_data.Surname,
-                    'DOB':str(pat_data.DOB),'Age':pat_data.Age,'Gender':pat_data.Gender,'Insurance_Id':pat_data.Insurance_Id,
-                    'Residence':pat_data.Residence,'Nationality':pat_data.Nationality,'Insurance_Name':insurance_name,
-                    'Profile':img_data,'Tel':pat_data.Tel,'Occupation':pat_data.Occupation,'Patient_Id':pat_data.Patient_Id,
-                    'Last_Visit':str(datetime.strptime(str(pat_data.Last_Visit.date()),"%Y-%m-%d").strftime('%a, %d %b %Y')),
-                    'Emergency_Tel':pat_data.Emergency_Tel,'Email':pat_data.Email}
-            return HttpResponse(json.dumps({'pat_data':json.dumps(info_data)}),content_type='application/json')
+                pat_data_dict['Profile']=str(pat_data.Profile.url)
+            # Format the datetime field
+            pat_data_dict['Last_Visit'] = pat_data_dict['Last_Visit'].strftime('%a, %b %d, %Y %H:%M %p')
+            pat_data_dict['DOB'] = datetime.strptime(str(pat_data_dict['DOB']), '%Y-%m-%d').strftime('%d-%m-%Y')
+            return JsonResponse(pat_data_dict)
        
     @transaction.atomic(using=None, savepoint=True, durable=True)
     def post(self,request,*args,**kwargs):
@@ -552,6 +548,11 @@ class Payment_Department(View):
             context.update({'pat_data':pat_data})
             return render(request,'I_CARE/admin/service-payment-hist.html',context)
         
+        elif kwargs['page']=='refund-history':
+            pat_data=Journal_History_Reversal.objects.all().order_by('-Date')
+            context.update({'pat_data':pat_data})
+            return render(request,'I_CARE/admin/service-refund-hist.html',context)
+        
         else:
             transID=kwargs['page']
             jnrData=Journal_History.objects.filter(Payment_Journal__Trans_Id=transID)
@@ -593,7 +594,41 @@ class Payment_Department(View):
             sms=SMS()
             msg_bdy=sms.getPAYMENT_MSG(request.POST['First_Name'],totalAmount)
             asyncio.run(sms.SEND_ALERT([request.POST['Tel']],msg_bdy))
+            # data = {'message': 'Payment recorded successfully', 'transID': transID}
+            # response = HttpResponse(json.dumps(data), content_type='application/json')
+            # response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            # response['Pragma'] = 'no-cache'
+            # response['Expires'] = '0'
+            # return response
             return HttpResponse(json.dumps({'message':'Payment recorded successfully','transID':transID}),content_type='application/json')
+        elif kwargs['page']=='remove-procedure':
+            Vitals.objects.filter(id=request.POST['ID']).delete()
+            return HttpResponse(json.dumps({'message':'Procedure removed successfully'}),content_type='application/json')
+        elif kwargs['page']=='request-refund':
+            jnr_data=Journal_History.objects.filter(id=request.POST['ID'])
+            jnr_data_instance=jnr_data.first()
+            if jnr_data_instance.isRequested:
+                msg='A request is pending for this transaction already. Thank you'
+            else:
+                Journal_History_Reversal.objects.create(
+                    Patient_Id= jnr_data_instance.Payment_Journal.Patient_Id,
+                    Vitals_Id=jnr_data_instance.Payment_Journal.id,
+                    Journal_History_Id=jnr_data_instance.id,
+                    Procedure=jnr_data_instance.Payment_Journal.Procedure, 
+                    Treatment_Amount = jnr_data_instance.Payment_Journal.Treatment_Amount,
+                    Paid_Amount =jnr_data_instance.Payment_Journal.Paid_Amount,
+                    Payment_Type=jnr_data_instance.Payment_Type,
+                    Reversal_Statement=request.POST['Statement'],
+                    Logger=Loged_User(request),
+                )
+                jnr_data.update(isRequested=True)
+                msg='Request placed successfully'
+            return HttpResponse(json.dumps({'message':msg}),content_type='application/json')
+        elif kwargs['page']=='abort-refund-request':
+            rev_data=Journal_History_Reversal.objects.filter(id=request.POST['ID'])
+            Journal_History.objects.filter(id=rev_data.first().Journal_History_Id).update(isRequested=False)
+            rev_data.update(Status='Abort',Approved_By=Loged_User(request))
+            return HttpResponse(json.dumps({'message':'Request aborted successfully'}),content_type='application/json')
         elif kwargs['page']=='del-folder':
             Patients.objects.filter(Patient_Id=request.POST['Patient_Id']).delete()
             return HttpResponse(json.dumps({'message':request.POST['Name']}),content_type='application/json')
@@ -727,51 +762,71 @@ class Requisition_Form(View):
             reqHist=Requisition.objects.all().order_by('-Date')
             context.update({'reqHist':reqHist})
             return render(request,'I_CARE/admin/requisition-pending.html',context)
+        elif kwargs['page']=='pending-refunds':
+            reqHist=Journal_History_Reversal.objects.exclude(Status='Abort').order_by('-Date')
+            context.update({'reqHist':reqHist,'page':'Pending Refunds'})
+            return render(request,'I_CARE/admin/requisition-pending-refund.html',context)
     
     @transaction.atomic(using=None, savepoint=True, durable=True)
     def post(self,request,*args,**kwargs):
         if kwargs['page']=='place-request':
-            total_cost=(Decimal(request.POST['Total_Cost']))
-            authorizer=Approval_Authority.objects.filter(Limited_Amount__gte=total_cost)
-            if authorizer:
-                reqData=Requisition(
-                    Placeholder=User_Details.objects.get(User=request.user),
-                    Description=request.POST['Description'],
-                    Delivery_Timeline=str(request.POST['Delivery_Tm']).title(),
-                    Quantity=request.POST['Quantity'],
-                    Price=request.POST['Price'],
-                    Total_Cost=request.POST['Total_Cost']
-                )
-                reqData.save()
-                for data in authorizer:
-                    reqData.Approval_Authority.add(data)
+            # total_cost=(Decimal(request.POST['Total_Cost']))
+            # authorizer=Approval_Authority.objects.filter(Limited_Amount__gte=total_cost)
+            # if authorizer:
+                file = request.FILES.get('Docs', None)
+                if file:
+                    reqData=Requisition.objects.create(
+                        Placeholder=User_Details.objects.get(User=request.user),
+                        Description=request.POST['Description'],
+                        Delivery_Timeline=str(request.POST['Delivery_Tm']).title(),
+                        Quantity=request.POST['Quantity'],
+                        Price=request.POST['Price'],
+                        Total_Cost=request.POST['Total_Cost'],
+                        Attachment=file
+                    )
+                else:
+                    reqData=Requisition.objects.create(
+                        Placeholder=User_Details.objects.get(User=request.user),
+                        Description=request.POST['Description'],
+                        Delivery_Timeline=str(request.POST['Delivery_Tm']).title(),
+                        Quantity=request.POST['Quantity'],
+                        Price=request.POST['Price'],
+                        Total_Cost=request.POST['Total_Cost']
+                    )
+                # reqData.save()
+                # for data in authorizer:
+                #     reqData.Approval_Authority.add(data)
                 messages.success(request,'Request placed successfully')
-            else:
-                messages.success(request,'Your request is above threshold')
-        elif kwargs['page']=='pending-request':
-            total_cost=(Decimal(request.POST['Total_Cost']))
-            authorizer=Approval_Authority.objects.filter(Q(Min_Amount__lte=total_cost) & Q(Max_Amount__gte=total_cost)).first()
-            if authorizer:
-                Requisition.objects.filter(id=request.POST['Request_Id']).update(
-                    Description=request.POST['Description'],
-                    Delivery_Timeline=str(request.POST['Delivery_Tm']).title(),
-                    Quantity=request.POST['Quantity'],
-                    Price=request.POST['Price'],
-                    Total_Cost=request.POST['Total_Cost'],
-                    Approval_Authority=authorizer,
-                )
-                messages.success(request,'Request update successful')
-            else:
-                messages.success(request,'Your request is above limit')
-        elif kwargs['page']=='alter-request':
+            # else:
+            #     messages.success(request,'Your request is above threshold')
+        elif kwargs['page']=='alter-requisition-request':
             Requisition.objects.filter(id=request.POST['requestID']).update(
                 Approval_Status=request.POST['newStaus'],
                 Approved_By=Loged_User(request)
             )
-            messages.success(request,'Request processed successfully')
-        return redirect(request.META.get('HTTP_REFERER'))
-# Reporting
+            return HttpResponse(json.dumps({'message':'Request processed successfully'}), content_type='application/json')
+        elif kwargs['page']=='alter-refund-request':
+            newStatus=request.POST['newStaus']
+            rev_data=Journal_History_Reversal.objects.filter(id=request.POST['jnrID'])
+            rev_data_instance=rev_data.first()
+            # if refund is approved, 1. Delete Journal_History and Vitals of that as well
+            # Note. auto delete of vitals auto remove charge from patient account so resolve that
+            if newStatus == 'Approved':
+                viData=Vitals.objects.filter(id=rev_data_instance.Vitals_Id)
+                viDataInstance=viData.first()
+                patData=viDataInstance.Patient_Id
+                patData.Balance=patData.Balance-viDataInstance.Treatment_Amount
+                patData.save()
+                viData.delete()
+                Journal_History.objects.filter(id=rev_data_instance.Journal_History_Id).delete()
+            else:
+                Journal_History.objects.filter(id=rev_data_instance.Journal_History_Id).update(isRequested=False)
+            rev_data.update(Status=newStatus,Approved_By=Loged_User(request))
+            return HttpResponse(json.dumps({'message':'Request processed successfully'}), content_type='application/json')
 
+        return redirect(request.META.get('HTTP_REFERER'))
+
+# Reporting
 def csvFileReports(request,querySet,titleRow=[],headerRow=[],fileName=""):
     try:
 
@@ -814,7 +869,7 @@ def csvFileReports(request,querySet,titleRow=[],headerRow=[],fileName=""):
     # End of CSV file in memory
     
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer','Lab Scientist','Nursing officer']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer','Lab Scientist','Nursing officer','Commercial Manager']),name='get')
 class General_Reports(View):
 
     def createSheetTitle(self,df,work_sheet,title,subtitle):
