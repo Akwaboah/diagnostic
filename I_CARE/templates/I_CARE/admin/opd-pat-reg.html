@@ -418,11 +418,13 @@
     }
 
     function CalcAge(date) {
-        let result = date.trim().split('-');
-        result = String(result[2]).split('_')[0]
-        const curr_data = new Date().getFullYear()
-        let age = Number(curr_data) - Number(result)
-        if (String(result).length == 0) {
+        var birthdate = new Date(date);  
+        const today = new Date();
+        var age = today.getFullYear() - birthdate.getFullYear() - 
+                    (today.getMonth() < birthdate.getMonth() || 
+                    (today.getMonth() === birthdate.getMonth() && today.getDate() < birthdate.getDate()));
+        //now calculate the age of the user  
+        if (isNaN(age)) {
             age = 0
         }
         $("#id_Age").val(`${age} Years`).change()

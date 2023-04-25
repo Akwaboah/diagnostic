@@ -378,18 +378,18 @@ class Journal_History_Reversal (models.Model):
         db_table = "journal_history_reversal"
 
 # Requisition Approval_Authority
-class Approval_Authority(models.Model):
-    Limited_Amount = models.DecimalField(max_digits=50,decimal_places=2,unique=True)
-    Authorizer=models.OneToOneField(User_Details, on_delete=models.CASCADE, db_column="Authorizer")
-    Date=models.DateField(auto_now=True)
-    Time=models.TimeField(auto_now=True)
+# class Approval_Authority(models.Model):
+#     Limited_Amount = models.DecimalField(max_digits=50,decimal_places=2,unique=True)
+#     Authorizer=models.OneToOneField(User_Details, on_delete=models.CASCADE, db_column="Authorizer")
+#     Date=models.DateField(auto_now=True)
+#     Time=models.TimeField(auto_now=True)
 
-    def __str__(self):
-        return f'{self.Authorizer}-({self.Limited_Amount})'
+#     def __str__(self):
+#         return f'{self.Authorizer}-({self.Limited_Amount})'
 
-    class Meta:
-        db_table = "approval_authority"
-        verbose_name='Requisition Authorizer'
+#     class Meta:
+#         db_table = "approval_authority"
+#         verbose_name='Requisition Authorizer'
 
 # Requisition
 class Requisition(models.Model):

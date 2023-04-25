@@ -4,7 +4,7 @@ from django.dispatch import receiver
 from django.db.models import F
 from I_CARE.models import Patients, User_Details, Vitals
 
-# Patients Singals
+# Patients Signals
 @receiver(pre_save, sender=Patients)
 def pre_save_image(sender, instance, *args, **kwargs):
     # print('moddel presave excuted')

@@ -36,7 +36,7 @@ from django.db.models import F,Value,CharField,Sum,ExpressionWrapper,DecimalFiel
 from I_CARE.models import Business_Info, Patients, User_Details,Patients_Checker,Vitals,\
     Appoitment,Message,Procedures,Presenting_Complaints,Journal_History,Treatment_Alert,\
     Birthday_Wishes,Stocks_Department,Supplier,Stocks,New_Stocks,Stocks_Checker,Drugs_Prescriptions,\
-    Insurance,Referring_Facilities,Requisition,Approval_Authority,Journal_History_Checker,Payment_Journal,\
+    Insurance,Referring_Facilities,Requisition,Journal_History_Checker,Payment_Journal,\
     Modalities,Journal_History_Reversal
 
 from I_CARE.forms import Patients_Form,Staff_Form,Stocks_Form
@@ -525,7 +525,7 @@ class OPD(View):
         return redirect(request.META.get('HTTP_REFERER'))
 
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Finance Manager','Front Office Manager','CEO Secretary']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Finance Manager','Front Office Manager','CEO Secretary']),name='get')
 class Payment_Department(View):
     
     def dispatch(self,  *args, **kwargs):
@@ -636,7 +636,7 @@ class Payment_Department(View):
         return redirect(request.META.get('HTTP_REFERER'))
 
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer','Lab Scientist']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Radiographer','Sonographer','Lab Scientist']),name='get')
 class Imaging(View):
     
     def dispatch(self, request, *args, **kwargs):
@@ -683,7 +683,7 @@ class Imaging(View):
             return redirect(request.META.get('HTTP_REFERER'))
         
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Lab Scientist']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Lab Scientist']),name='get')
 class Laboratory(View):
 
     def dispatch(self, request, *args, **kwargs):
@@ -712,7 +712,7 @@ class Laboratory(View):
             return redirect(request.META.get('HTTP_REFERER'))
 
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Radiographer','Sonographer']),name='get')
 class Doctors(View):
 
     def dispatch(self,  *args, **kwargs):
@@ -869,7 +869,7 @@ def csvFileReports(request,querySet,titleRow=[],headerRow=[],fileName=""):
     # End of CSV file in memory
     
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer','Lab Scientist','Nursing officer','Commercial Manager']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Radiographer','Sonographer','Lab Scientist','Nursing officer','Commercial Manager']),name='get')
 class General_Reports(View):
 
     def createSheetTitle(self,df,work_sheet,title,subtitle):
@@ -2495,7 +2495,7 @@ class General_Reports(View):
                 return redirect(request.META.get('HTTP_REFERER'))     
 
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Pharmacist']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Pharmacist']),name='get')
 class Pharmacy(View):
     context={'page':'Pharmacy'}
 
