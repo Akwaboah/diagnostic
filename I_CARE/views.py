@@ -37,7 +37,7 @@ from I_CARE.models import Business_Info, Patients, User_Details,Patients_Checker
     Appoitment,Message,Procedures,Presenting_Complaints,Journal_History,Treatment_Alert,\
     Birthday_Wishes,Stocks_Department,Supplier,Stocks,New_Stocks,Stocks_Checker,Drugs_Prescriptions,\
     Insurance,Referring_Facilities,Requisition,Journal_History_Checker,Payment_Journal,\
-    Modalities,Journal_History_Reversal
+    Modalities,Journal_History_Reversal,Societies
 
 from I_CARE.forms import Patients_Form,Staff_Form,Stocks_Form
 from I_CARE.decorators import class_allow_users, unauthenticated_staffs
@@ -200,6 +200,9 @@ class CUS_SMS(View):
                 asyncio.run(sms_init.SEND_ALERT(contacts,custom_msg))
             elif forward_to=='Custom Receiver':
                 asyncio.run(sms_init.SEND_ALERT(custom_tel,custom_msg))
+            else:
+                contacts=list(Patients.objects.filter(Societies__id=forward_to).values_list('Tel',flat=True))
+                asyncio.run(sms_init.SEND_ALERT(contacts,custom_msg))
             return HttpResponse(json.dumps({'message':usr_status}),content_type='application/json')
         elif kwargs['page']=='tm-msg':
             Treatment_Alert.objects.create(
@@ -278,7 +281,7 @@ class Auth_Staffs(View):
                 return HttpResponse(json.dumps({'message':'Email already taken, suggest a valid one'}),content_type='application/json')
             else:
                 # Save django user
-                if User_Level in ['CEO','Project Director','Medical Director','Finance Manager','Commercial Manager']:
+                if User_Level in ['CEO','Project Director','Medical Director','Finance Manager','Commercial Manager','IT Manager']:
                     user_obj = User.objects.create_superuser(username=Username,first_name=name1,
                         last_name=name2,email=Email,password=Password)
                 else:
@@ -388,6 +391,10 @@ class OPD(View):
         elif kwargs['page']=='search-patient':
             pat_data=Patients.objects.get(Patient_Id=request.GET['Patient_Id'])
             pat_data_dict = serializers.serialize('python', [pat_data])[0]['fields']
+            # Add the list of society IDs and names to the dictionary
+            patSocieties=pat_data.Societies.all()
+            pat_data_dict['Societies'] = [society.id for society in patSocieties]
+            pat_data_dict['Group'] = [{'id':society.id, 'name':society.Name} for society in patSocieties]
             # pat_data_dict.pop('_state') # remove the ModelState attribute
             if str(pat_data.Profile).__contains__('avatar'):
                 pat_data_dict['Profile']=str(pat_data.Profile)
@@ -410,6 +417,7 @@ class OPD(View):
             msg='Process initiated at the payment department...'
             if form.is_valid():
                 procedure_list=request.POST.getlist('Procedure_Name')
+                society_list=request.POST.getlist('Societies')
                 exam_room_list=request.POST.getlist('Exam_Room')
                 totalCost=Procedures.objects.filter(id__in=procedure_list).aggregate(sum=Sum('Charge'))['sum']
                 totalCost= totalCost if totalCost else Decimal(0)
@@ -423,6 +431,10 @@ class OPD(View):
                 commit_form.Last_Visit=timezone.now()
                 form.save()
                 Patients_Checker.objects.create(Patient_Id=patient_init_id)
+                # save society or group
+                patInstance=form.instance
+                for index,data in enumerate(society_list):
+                    patInstance.add_society(Societies.objects.get(id=data))
                 # check if patient been registered from appointment then update patient id
                 for index,data in enumerate(procedure_list):
                     try:
@@ -456,6 +468,14 @@ class OPD(View):
                 commit_form=form.save(commit=False)
                 commit_form.Gender=request.POST['gender']
                 form.save()
+                # update society or group
+                society_list=request.POST.getlist('Societies')
+                patInstance=form.instance
+                for index,data in enumerate(society_list):
+                    patInstance.add_society(Societies.objects.get(id=data))
+                else:
+                    default_society, _ = Societies.objects.get_or_create(Name='No Society')
+                    patInstance.add_society(default_society)
                 messages.success(request,'%s demo. updated successfully'%(request.POST['First_Name']))
             else:
                 messages.success(request,'Error occured:%s'%form.errors)
@@ -869,7 +889,7 @@ def csvFileReports(request,querySet,titleRow=[],headerRow=[],fileName=""):
     # End of CSV file in memory
     
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Radiographer','Sonographer','Lab Scientist','Nursing officer','Commercial Manager']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Finance Manager','Radiographer','Sonographer','Lab Scientist','Nursing officer','Commercial Manager']),name='get')
 class General_Reports(View):
 
     def createSheetTitle(self,df,work_sheet,title,subtitle):

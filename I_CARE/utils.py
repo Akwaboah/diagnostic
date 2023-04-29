@@ -2,7 +2,7 @@ countries= (("","Select Nationality"),('Afghan', 'Afghan'), ('Albanian', 'Albani
 hospital_departments=['Radiology','Laboratory']
 user_levels= (('CEO','CEO'),('Facility Manager','Facility Manager'),('Medical Director','Medical Director'),('Finance Manager','Finance Manager'),('Commercial Manager','Commercial Manager'),
     ('Procurement Manager','Procurement Manager'),('Radiographer','Radiographer'),('Sonographer','Sonographer'),('Lab Scientist','Lab Scientist'),
-    ('Pharmacist','Pharmacist'),('Nursing officer','Nursing officer'),('Front Office Manager','Front Office Manager'),('CEO Secretary ','CEO Secretary'))
+    ('Pharmacist','Pharmacist'),('Nursing officer','Nursing officer'),('Front Office Manager','Front Office Manager'),('CEO Secretary ','CEO Secretary'),('IT Manager','IT Manager'))
 
 # this is used in Patients Registration Form for DateField dateformat 
 DATE_INPUT_FORMATS=['%d-%m-%Y','%Y-%m-%d']

@@ -191,6 +191,20 @@
                                                         </select>
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-lg-3 col-form-label">Society/Group</label>
+                                        <div class="col-lg-9">
+                                            <div class="row">
+                                                <div class="col-lg-12">
+                                                    <div class="form-group">
+                                                        <select style="width: 100%" id="societies" name="Societies" multiple="multiple"
+                                                            class="js-states form-control">
+                                                        </select>
+                                                    </div>
+                                                </div>
                                                 <div class="col-md-5 col-5">
                                                     <button type="submit" class="btn btn-md btn-primary">INITIATE PROCEDURE</button>
                                                 </div>
@@ -256,6 +270,16 @@
             // tokenSeparators: [',', ' '], // entering a space or a comma will create tag
         });
         
+        $('#societies').select2({
+            dropdownAutoWidth: true,
+            multiple: true,
+            width: '100%',
+            placeholder: "Add society/group",
+            allowClear: false,
+            // tags: true , //helps for adding new data which is not in option
+            // tokenSeparators: [',', ' '], // entering a space or a comma will create tag
+        });
+
         $('.select2-search__field').css('width', '100%'); // select2 placeholder css
     });
 
@@ -291,7 +315,12 @@
                 var imgAttr = document.getElementById('img_profile');
                 imgAttr.src = image;
                 
-                // window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                // Preload the patient's societies into the select2 field
+                var selectedSocieties = data.Group;
+                $("#societies").empty(); //clear existing options
+                selectedSocieties.forEach(function(society) {
+                    $("#societies").append(new Option(society.name, society.id, true, true));
+                });
             },
             error: function (data) {
                 window.parent.showNotification(null, "Error occurred whiles retriving data", 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');

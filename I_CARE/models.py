@@ -178,6 +178,17 @@ class Exam_Room(models.Model):
         db_table = "exam_room"
         verbose_name='Exam Room'
 
+class Societies(models.Model):
+    Name = models.CharField(max_length=100, unique=True)
+    Date=models.DateField(auto_now=True)
+    
+    def __str__(self):
+        return self.Name
+
+    class Meta:
+        db_table = "societies"
+        verbose_name='Societie'
+
 class Patients_Checker(models.Model):
     Patient_Id = models.CharField(max_length=20, primary_key=True, unique=True)
     Reg_Date = models.DateField(auto_now=True)
@@ -208,8 +219,10 @@ class Patients(models.Model):
     Insurance_Id=models.CharField(max_length=50,default='xxx-xxxx-xxx')
     Balance=models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Status=models.CharField(max_length=20,default='Waiting')
+    Societies = models.ManyToManyField(Societies, related_name='patients', db_column='Societies')
+
     Time=models.TimeField(auto_now=True)
-     
+    
     def __str__(self):
         return '%s %s'%(self.First_Name,self.Surname)
 
@@ -224,6 +237,12 @@ class Patients(models.Model):
         self.Profile=compress_images(self.Profile)
         super(Patients, self).save(*args, **kwargs)
 
+    def add_society(self, society):
+        if not self.Societies.filter(pk=society.pk).exists():
+            self.Societies.add(society)
+            if self.Societies.filter(Name='No Society').exists() and len(self.Societies.all())>1:
+                self.Societies.remove(Societies.objects.get(Name='No Society'))
+            
 class Treatment_Alert(models.Model):
     Message = models.TextField()
     Treatments = models.TextField()
