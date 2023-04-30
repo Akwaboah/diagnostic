@@ -112,7 +112,7 @@
                             <!--Patient List Tab -->
                             <div class="tab-pane fade show active" id="pat_list">
                                 <div class="row justify-content-center">
-                                    <div class="col-10">
+                                    <div class="col-12">
                                         <div class="card card-table mb-5">
                                             <div class="card-body p-3">
                                                 <div class="table-responsive">
@@ -126,6 +126,7 @@
                                                                 <th>Procedure</th>
                                                                 <th>Referring Facility</th>
                                                                 <th>Referring Doctor</th>
+                                                                <th>Req. Forms</th>
                                                                 <th>Last Seen</th>
                                                             </tr>
                                                         </thead>
@@ -143,7 +144,7 @@
                             <!--Lab Test Tab -->
                             <div class="tab-pane fade" id="pat_lab_test">
                                 <div class="row justify-content-center">
-                                    <div class="col-10">
+                                    <div class="col-12">
                                         <h4 class="card-title text-w-100 text-white" id="testPatDetails">Patient Details</h4>
                                         <div class="card card-table mb-5">
                                             <div class="card-body p-3">
@@ -161,6 +162,7 @@
                                                                         <th>Test Result</th>
                                                                         <th>Attachment</th>
                                                                         <th>Att. Name</th>
+                                                                        <th>Action</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
@@ -304,37 +306,48 @@
                         document.getElementById('tabCount').innerHTML=json_obj.total_incoming;
                     },
                 },
-                columns: [
-                    {"render": function (data, type, JsonResultRow, meta) {
-                            if (String(JsonResultRow.Profile).includes('avatar')) {
-                                return `<h2 class="table-avatar">
-                                        <a href="${JsonResultRow.Profile}" class="avatar avatar-sm mr-2">
-                                            <img class="avatar-img rounded-circle"  src="${JsonResultRow.Profile}" alt="User Image">
-                                        </a>
-                                        <a href="javascript:void(0);">${JsonResultRow.Fullname}<span>#${JsonResultRow.Patient_ID}</span></a>
-                                        </h2>`
-                            } else {
-                                return `<h2 class="table-avatar">
-                                        <a href="/media/${JsonResultRow.Profile}" class="avatar avatar-sm mr-2">
-                                            <img class="avatar-img rounded-circle"  src="/media/${JsonResultRow.Profile}" alt="User Image">
-                                        </a>
-                                        <a href="javascript:void(0);">${JsonResultRow.Fullname}<span>#${JsonResultRow.Patient_ID}</span></a>
-                                        </h2>`
-                            }
-                        }},
-                    { "data": "Age" },
-                    { "data": "Modality" ,"orderable" : true },
-                    { "data": "Procedure_Name"},
-                    { "data": "Referring_Facility"},
-                    { "data": "Referred_Doctor"},
-                    {"data": "Last_Seen" }],
-                paging: false,
+                paging: true,
                 ordering: true,
                 info: false,
                 searching: true,
                 bLengthChange: false,
                 pageLength: 6,
                 lengthMenu: [[6, 12, 18, -1], [6, 12, 18, "All"]],
+                columns: [
+                    {"render": function (data, type, JsonResultRow, meta) {
+                        if (String(JsonResultRow.Profile).includes('avatar')) {
+                            return `<h2 class="table-avatar">
+                                    <a href="${JsonResultRow.Profile}" class="avatar avatar-sm mr-2">
+                                        <img class="avatar-img rounded-circle"  src="${JsonResultRow.Profile}" alt="User Image">
+                                    </a>
+                                    <a href="javascript:void(0);">${JsonResultRow.Fullname}<span>#${JsonResultRow.Patient_ID}</span></a>
+                                    </h2>`;
+                        } else {
+                            return `<h2 class="table-avatar">
+                                    <a href="/media/${JsonResultRow.Profile}" class="avatar avatar-sm mr-2">
+                                        <img class="avatar-img rounded-circle"  src="/media/${JsonResultRow.Profile}" alt="User Image">
+                                    </a>
+                                    <a href="javascript:void(0);">${JsonResultRow.Fullname}<span>#${JsonResultRow.Patient_ID}</span></a>
+                                    </h2>`;
+                        }
+                    }
+                    },
+                    { "data": "Age" },
+                    { "data": "Modality" ,"orderable" : true },
+                    { "data": "Procedure_Name"},
+                    { "data": "Referring_Facility"},
+                    { "data": "Referred_Doctor"},
+                    {"render": function ( data, type, JsonResultRow, meta ) {
+                        if (String(JsonResultRow.Referred_Forms).includes('avatar')) {
+                            // prevent accessing media link if no file attache
+                            return '<a target="_blank" href="javascript:void(0)" class="btn btn-sm bg-danger-light">No Forms</a>'
+                        } else {
+                            return '<a target="_blank" href="/media/'+ JsonResultRow.Referred_Forms + '" class="btn btn-sm bg-success-light"><i class="fa fa-file"></i> Preview </a>'
+                        }
+                    }
+                    },
+                    {"data": "Last_Seen" }
+                ],
             });
             // refresh patientsTable every 12 seconds to load new data
             setInterval( function () {
@@ -353,7 +366,6 @@
                 },false ); // user paging is not reset on reload
             }, 12000); // reload every 12 sec
  
-            
             labTable = $('#labTable').DataTable({
                 paging: false,
                 ordering: false,
@@ -362,7 +374,10 @@
                 bLengthChange: false,
                 pageLength: 7,
                 lengthMenu: [[7, 14, 21, -1], [7, 14, 21, "All"]],
-                columnDefs: [ {
+                columnDefs: [{
+                    "targets": [0],
+                    "visible":false,
+                },{
                     "targets": [4],
                     "visible":false,
                     "render": function ( data, type, row, meta ) {
@@ -382,14 +397,16 @@
                             {% comment %} return '<a class="d-inline-block text-danger fw-normal w-100 h-100 pe-auto" href="'+ data + '">' + row[6] + '</a>'; {% endcomment %}
                         }
                     }
-                } 
-                ,{
+                },{
                     "targets": [6],
                     "visible":false,
-                } ,{
-                    "targets": [0],
-                    "visible":false,
-                } ]
+                },{
+                    "targets": [7],
+                    "visible":true,
+                    "render": function ( data, type, row, meta ) {
+                        return '<a onclick="pushBack('+ row[0] + ');" class="btn btn-sm bg-warning-light">Push Back</a>'
+                    }
+                }]
             }); 
 
         });
@@ -471,27 +488,9 @@
                 if (Patient_Id == data.Patient_ID) {
                     com_cat = data.Complaint_Category
                     com_type = data.Complaint_Type
-                    if (com_cat == "Medical Condition") {
-                        // populate medconTable table
-                        medconTable.row.add([data.Date, data.Complaint_Type, data.Complaints, data.Complaint_Ans]).draw(false);
-                    } else if (com_type == 'PC') {
-                        // populate pcTable table
-                        pcTable.row.add([data.Date, data.Complaints, data.Duration + "-" + data.Duration_In]).draw(false);
-                    } else if (com_type == 'INVESTIGATION') {
-                        // populate pcTable table
-                        investTable.row.add([data.Date, data.Complaints]).draw(false);
-                    } else if (com_type == 'TREATMENT MANAGEMENT') {
-                        // populate treatMTable table
-                        treatMTable.row.add([data.Date, data.Treatment_Plan, data.Treatment_Done, data.Treatment_Other, data.Review_Date]).draw(false);
-                    } else if (com_type == 'EXAMINATION') {
-                        // populate examTable table
-                        examTable.row.add([data.Date, data.General_Exam, data.Systemic_Enquiry, data.Extraoral_Exam, data.Intraoral_Exam]).draw(false);
-                    } else if (com_type == 'DIAGNOSIS') {
-                        // populate diagTable table
-                        diagTable.row.add([data.Date, data.Complaints]).draw(false);
-                    } else if (com_type == 'LAB TEST' || com_type == 'RADIOLOGY') {
+                    if (com_type == 'LAB TEST' || com_type == 'RADIOLOGY') {
                         // populate labTable table
-                        labTable.row.add([data.Vital_ID, data.Date, data.Technician, com_cat, data.Complaints,data.Tech_Report_Url,data.Tech_Report_Name]).draw(false);
+                        labTable.row.add([data.Vital_ID, data.Date, data.Technician, com_cat, data.Complaints,data.Tech_Report_Url,data.Tech_Report_Name,data.id]).draw(false);
                         $('.user-tabs a[href="#pat_lab_test"]').tab('show')
                         $('#Test_Pat_Id').val(data.Patient_ID);
                     }
@@ -534,7 +533,51 @@
             });
         });
         // end of table click
-  
+        
+        function pushBack(vitId){
+            swal({
+                title: "Are you sure?",
+                text: `You want to push this patient back to the imaging department?`,
+                // imageUrl: '',
+                showCancelButton: true,
+                confirmButtonColor: '#DD6B55',
+                confirmButtonText: `Yes, push back`,
+                cancelButtonText: "No, cancel",
+                closeOnConfirm: false,
+                closeOnCancel: true
+            }, function (isConfirm) {
+                if (isConfirm) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{% url 'doc' 'reverse-test' %}",
+                        data: {
+                            Vital_Id: vitId,
+                            csrfmiddlewaretoken: '{{ csrf_token }}',
+                            dataType: "json"
+                        },
+                        beforeSend: function () {
+                            // show progress whiles request in pregess to avoid many submission
+                            swal({
+                                title: "Processing Request",
+                                text: "please wait whiles we proccess your request",
+                                imageUrl: "{% static 'admin/assets/img/loading.gif' %}",
+                                showConfirmButton: false
+                            });
+                        },
+                        success: function (data) {
+                            window.parent.showNotification(null, data['message'], 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                            swal.close();
+                            setTimeout(function(){
+                                window.location.reload()
+                            },1500)
+                        },
+                        error: function (data) {
+                            swal("Error Occured", "Request aborted, please try again :)", "error");
+                        }
+                    });
+                }
+            });
+        }
 
     </script>
 

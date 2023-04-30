@@ -265,10 +265,10 @@
                                                     </div>
                                                 </div>
                                                 <div class="row">
-                                                    <label class="col-lg-3 col-form-label">Referring Facility/Doctor</label>
+                                                    <label class="col-lg-3 col-form-label">Referring Facility/Doctor/Forms</label>
                                                     <div class="col-lg-9">
                                                         <div class="row">
-                                                            <div class="col-md-6 col-6">
+                                                            <div class="col-md-4 col-4">
                                                                 <div class="form-group">
                                                                     <select id="referring_facility" name="Referring_Facility"
                                                                         class="js-states form-control">
@@ -278,7 +278,7 @@
                                                                     </select>
                                                                 </div>
                                                             </div>
-                                                            <div class="col-md-6 col-6">
+                                                            <div class="col-md-4 col-4">
                                                                 <div
                                                                     class="input-group input-group-md d-flex justify-content-between">
                                                                     <div class="input-group-prepend">
@@ -286,6 +286,11 @@
                                                                                 class="fa fa-user-nurse"></i></span>
                                                                     </div>
                                                                     {{form.Reffered_Doctor}}
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-4 col-4">
+                                                                <div class="form-group">
+                                                                    <input type="file" class="form-control form-control-md" name="Referred_Files">
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -440,12 +445,16 @@
         // imgAttr.style.height = "100px";
     }
 
-    function CalcAge(date) {
-        var birthdate = new Date(date);  
-        const today = new Date();
-        var age = today.getFullYear() - birthdate.getFullYear() - 
-                    (today.getMonth() < birthdate.getMonth() || 
-                    (today.getMonth() === birthdate.getMonth() && today.getDate() < birthdate.getDate()));
+    function CalcAge(dateString) { 
+        var today = new Date();
+        var parts = dateString.split("-");
+        var birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        var age = today.getFullYear() - birthDate.getFullYear();
+        var monthDiff = today.getMonth() - birthDate.getMonth();
+
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
         //now calculate the age of the user  
         if (isNaN(age)) {
             age = 0

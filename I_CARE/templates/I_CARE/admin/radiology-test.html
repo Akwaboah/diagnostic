@@ -82,7 +82,7 @@
         <div class="content ">
             <div class="col-md-12 col-lg-12 col-xl-12">
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-7">
                         <div class="card card-table mb-5">
                             <div class="card-header p-0">
                                 <button id="tabCount" class="nav-link active bg-warning text-white"><span
@@ -100,6 +100,7 @@
                                                 <th>Status</th>
                                                 <th>Modality</th>
                                                 <th>Procedure</th>
+                                                <th>Req. Forms</th>
                                             </tr>
                                         </thead>
                                         {% comment %} <tfoot>
@@ -116,7 +117,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-5">
                         <div class="card">
                             <div class="card-body pt-0 pb-0 mb-2">
                                 <form method="POST" enctype="multipart/form-data">
@@ -151,25 +152,23 @@
                                         <textarea id="Complaints" name="Complaints" rows="8" cols="8" class="form-control"
                                         placeholder="Notes/Comments"></textarea>
                                         <br>
+                                        <div class="form-group">
+                                            <input name="procedure_name" id="procedure_name" class="form-control"
+                                            readonly type="text">
+                                        </div>
                                         <div class="row">
-                                            <div class="col-md-4 col-sm-4">
+                                            {% comment %} <div class="col-md-4 col-sm-4" hidden>
                                                 <div class="form-group">
-                                                    <select name="procedure_name" id="procedure_name"
-                                                        required class="js-states form-control">
-                                                        <option value="" selected>Select Procedure</option>
-                                                        {% for val in scan_types %}
-                                                        <option value="{{val}}">{{val}}</option>
-                                                        {% endfor %}
-                                                    </select>
+                                                   
                                                 </div>
-                                            </div>
-                                            <div class="col-md-5 col-sm-5">
+                                            </div> {% endcomment %}
+                                            <div class="col-md-8 col-sm-8">
                                                 <div class="form-group">
                                                     <input type="file" class="form-control form-control-file" name="Docs">
                                                     <label>Attach report/docs</label>
                                                 </div>
                                             </div>
-                                            <div class="col-md-3 col-sm-3 col-3">
+                                            <div class="col-md-4 col-sm-4 col-4">
                                                 <div class="submit-section pull-right">
                                                     <button type="submit" class="btn btn-md btn-primary">Save Result</button>
                                                 </div>
@@ -184,11 +183,6 @@
             </div>
         </div>
         <!-- /Page Content -->
-
-        <!-- Footer -->
-        {% comment %} {% include 'I_CARE/web/footer.html' %} {% endcomment %}
-        <!-- /Footer -->
-
     </div>
     <!-- /Main Wrapper -->
 
@@ -265,11 +259,20 @@
                                         <a href="javascript:void(0);">${JsonResultRow.Fullname}<span>#${JsonResultRow.Patient_ID}</span></a>
                                         </h2>`
                             }
-                        }},
-                    
+                        }
+                    },
                     {"data": "Status"},
                     {"data": "Modality"},
-                    {"data": "Procedure_Name"}],
+                    {"data": "Procedure_Name"},
+                    {"render": function ( data, type, JsonResultRow, meta ) {
+                        if (String(JsonResultRow.Referred_Forms).includes('avatar')) {
+                            // prevent accessing media link if no file attache
+                            return '<a target="_blank" href="javascript:void(0)" class="btn btn-sm bg-danger-light">No Forms</a>'
+                        } else {
+                            return '<a target="_blank" href="/media/'+ JsonResultRow.Referred_Forms + '" class="btn btn-sm bg-success-light"><i class="fa fa-file"></i> Preview </a>'
+                        }
+                    }
+                }],
                 paging: false,
                 ordering: false,
                 info: false,

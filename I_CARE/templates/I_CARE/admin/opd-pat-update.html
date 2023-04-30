@@ -287,6 +287,7 @@
 <script src="{% static 'admin/assets/js/mask.js' %}"></script>
 
 <script>
+
     $(function () {
         $("#id_Nationality").select2();
         $("#searchPat").select2();
@@ -379,12 +380,16 @@
         // imgAttr.style.height = "100px";
     }
 
-    function CalcAge(date) {
-        var birthdate = new Date(date);  
-        const today = new Date();
-        var age = today.getFullYear() - birthdate.getFullYear() - 
-                    (today.getMonth() < birthdate.getMonth() || 
-                    (today.getMonth() === birthdate.getMonth() && today.getDate() < birthdate.getDate()));
+    function CalcAge(dateString) { 
+        var today = new Date();
+        var parts = dateString.split("-");
+        var birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        var age = today.getFullYear() - birthDate.getFullYear();
+        var monthDiff = today.getMonth() - birthDate.getMonth();
+
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
         //now calculate the age of the user  
         if (isNaN(age)) {
             age = 0

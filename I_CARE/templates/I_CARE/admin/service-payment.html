@@ -319,7 +319,11 @@
                 swal.close();
                 window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
                 setTimeout(function() {
-                    window.location="/nursing/"+data.transID;
+                    if (data.transID=='None'){
+                        window.location.reload()
+                    }else{
+                        window.location="/nursing/"+data.transID;
+                    }
                 },1500);
             },
             error: function (request,status,error) {

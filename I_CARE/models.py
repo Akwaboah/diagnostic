@@ -274,6 +274,7 @@ class Vitals(models.Model):
     Status=models.CharField(max_length=50,default='Waiting')
     Referring_Facility=models.CharField(max_length=100,null=True,default='None')
     Referred_Doctor=models.CharField(max_length=50,null=True,default='None')
+    Referred_Forms = models.FileField(upload_to=patients_docs_path,default=default_static_image_path,null=True,blank=True)
     # payment side
     Treatment_Amount = models.DecimalField(max_digits=50,decimal_places=2)
     Paid_Amount = models.DecimalField(max_digits=50,decimal_places=2,default=0)
@@ -395,20 +396,6 @@ class Journal_History_Reversal (models.Model):
 
     class Meta:
         db_table = "journal_history_reversal"
-
-# Requisition Approval_Authority
-# class Approval_Authority(models.Model):
-#     Limited_Amount = models.DecimalField(max_digits=50,decimal_places=2,unique=True)
-#     Authorizer=models.OneToOneField(User_Details, on_delete=models.CASCADE, db_column="Authorizer")
-#     Date=models.DateField(auto_now=True)
-#     Time=models.TimeField(auto_now=True)
-
-#     def __str__(self):
-#         return f'{self.Authorizer}-({self.Limited_Amount})'
-
-#     class Meta:
-#         db_table = "approval_authority"
-#         verbose_name='Requisition Authorizer'
 
 # Requisition
 class Requisition(models.Model):

@@ -281,7 +281,7 @@ class Auth_Staffs(View):
                 return HttpResponse(json.dumps({'message':'Email already taken, suggest a valid one'}),content_type='application/json')
             else:
                 # Save django user
-                if User_Level in ['CEO','Project Director','Medical Director','Finance Manager','Commercial Manager','IT Manager']:
+                if User_Level in ['CEO','Project Director','Medical Director','Facility Manager','Finance Manager','Commercial Manager','IT Manager']:
                     user_obj = User.objects.create_superuser(username=Username,first_name=name1,
                         last_name=name2,email=Email,password=Password)
                 else:
@@ -360,6 +360,7 @@ class OPD(View):
                 chartData.values('weekday_name')
                 .annotate(count=Count('Patient_Id',distinct=True))
             ) 
+            print(visitors)
             procedures = (
                 chartData
                 .values('weekday_name','Procedure__Modality__Acronym')
@@ -419,7 +420,8 @@ class OPD(View):
                 procedure_list=request.POST.getlist('Procedure_Name')
                 society_list=request.POST.getlist('Societies')
                 exam_room_list=request.POST.getlist('Exam_Room')
-                totalCost=Procedures.objects.filter(id__in=procedure_list).aggregate(sum=Sum('Charge'))['sum']
+                procedure_data=Procedures.objects.filter(id__in=procedure_list)
+                totalCost=procedure_data.aggregate(sum=Sum('Charge'))['sum']
                 totalCost= totalCost if totalCost else Decimal(0)
                 referred_facility=request.POST['Referring_Facility'] or None
                 patient_init_id=gen_pat_id()
@@ -435,24 +437,27 @@ class OPD(View):
                 patInstance=form.instance
                 for index,data in enumerate(society_list):
                     patInstance.add_society(Societies.objects.get(id=data))
+                referredFiles = request.FILES['Referred_Files']
                 # check if patient been registered from appointment then update patient id
-                for index,data in enumerate(procedure_list):
+                for index,proData in enumerate(procedure_data):
                     try:
                         exam_room=exam_room_list[index]
                     except IndexError:
                         exam_room="Default Room"
-                    proData=Procedures.objects.get(id=data)
-                    Vitals.objects.create(
-                        Patient_Id=form.instance,
-                        Procedure=proData,
-                        Referring_Facility=referred_facility,
-                        Referred_Doctor=request.POST['Reffered_Doctor'],
-                        Treatment_Amount=proData.Charge,
-                        Insurance_Type=form.instance.Insurance_Type or 'None',
-                        Insurance_Id=form.instance.Insurance_Id or 'xx-xxxx-xxxx',
-                        Exam_Room=exam_room,
-                        Logger=Loged_User(request))
-                  
+                    vitals_args={
+                        'Patient_Id':form.instance,
+                        'Procedure':proData,
+                        'Referring_Facility':referred_facility,
+                        'Referred_Doctor':request.POST['Reffered_Doctor'],
+                        'Treatment_Amount':proData.Charge,
+                        'Insurance_Type':form.instance.Insurance_Type or 'None',
+                        'Insurance_Id':form.instance.Insurance_Id or 'xx-xxxx-xxxx',
+                        'Exam_Room':exam_room,
+                        'Logger':Loged_User(request)}
+                    if referredFiles:
+                        vitals_args['Referred_Forms'] = referredFiles
+                    Vitals.objects.create(**vitals_args)
+                    
                 msg='Process initiated at the payment department...'
                 # check referring facility if saved already or not
                 saveFacility(referred_facility)
@@ -488,22 +493,26 @@ class OPD(View):
             patData=Patients.objects.filter(Patient_Id=request.POST['searchPat'])
             patient_init_id=patData.first()
             referred_facility=request.POST['Referring_Facility'] or None
+            referredFiles = request.FILES['Referred_Files']
             # check procedures and apply bill to patient
             for index,proData in enumerate(procedure_data):
                 try:
                     exam_room=exam_room_list[index]
                 except IndexError:
                     exam_room="Default Room"
-                Vitals.objects.create(
-                    Patient_Id=patient_init_id,
-                    Procedure=proData,
-                    Referring_Facility=referred_facility,
-                    Referred_Doctor=request.POST['Reffered_Doctor'],
-                    Treatment_Amount=proData.Charge,
-                    Insurance_Type=request.POST['Insurance_Type'] or 'None',
-                    Insurance_Id=request.POST['Insurance_Id'] or 'xx-xxxx-xxxx',
-                    Exam_Room=exam_room,
-                    Logger=Loged_User(request))
+                vitals_args={
+                    'Patient_Id':patient_init_id,
+                    'Procedure':proData,
+                    'Referring_Facility':referred_facility,
+                    'Referred_Doctor':request.POST['Reffered_Doctor'],
+                    'Treatment_Amount':proData.Charge,
+                    'Insurance_Type':request.POST['Insurance_Type'] or 'None',
+                    'Insurance_Id':request.POST['Insurance_Id'] or 'xx-xxxx-xxxx',
+                    'Exam_Room':exam_room,
+                    'Logger':Loged_User(request)}
+                if referredFiles:
+                    vitals_args['Referred_Forms'] = referredFiles
+                Vitals.objects.create(**vitals_args)
             # update insurance details
             updatingFields={}
             if request.POST['Insurance_Id']:
@@ -596,6 +605,10 @@ class Payment_Department(View):
         if kwargs['page']=='journal-payment':
             transID=create_trans_id()
             patientID=request.POST['Patient_Id']
+            patData=Patients.objects.filter(Patient_Id=request.POST['Patient_Id'])
+            # first check if patients balance is okay for payment
+            if patData.first().Balance==0:
+                return HttpResponse(json.dumps({'message':'Patient account refreshed successfully','transID':'None'}),content_type='application/json')
             totalAmount=Decimal(request.POST['Amount'])
             jData=Vitals.objects.exclude(Paid_Amount=F('Treatment_Amount')).filter(Patient_Id__Patient_Id=patientID)
             for data in jData:
@@ -609,7 +622,7 @@ class Payment_Department(View):
                 data.Department=data.Procedure.Tag
                 data.Trans_Id=transID
             Vitals.objects.bulk_update(jData,['Department','Trans_Id','Paid_Amount'])
-            Patients.objects.filter(Patient_Id=request.POST['Patient_Id']).update(Balance=F('Balance')+totalAmount)
+            patData.update(Balance=F('Balance')+totalAmount)
             Journal_History_Checker.objects.create(Trans_Id=transID,Cashier=Loged_User(request))
             sms=SMS()
             msg_bdy=sms.getPAYMENT_MSG(request.POST['First_Name'],totalAmount)
@@ -766,7 +779,12 @@ class Doctors(View):
             vit_data.save()
             messages.success(request,'Report approved and available to print')
             return redirect(request.META.get('HTTP_REFERER'))
-        
+        elif kwargs['page']=='reverse-test':
+            vitData=Vitals.objects.filter(id=request.POST['Vital_Id'])
+            department=vitData.first().Procedure.Tag
+            vitData.update(Department=department)
+            return HttpResponse(json.dumps({'message':'Patient successfully push back'}), content_type='application/json')
+
 class Requisition_Form(View):
 
     def dispatch(self,  *args, **kwargs):
