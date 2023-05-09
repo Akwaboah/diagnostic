@@ -391,6 +391,7 @@
                                         <th>Date</th>
                                         <th>Procedure</th>
                                         <th>Charge</th>
+                                        <th>Discount</th>
                                         <th>Paid</th>
                                         <th>Balance</th>
                                         <th>Issued By</th>
@@ -440,6 +441,11 @@
                                         <option value="Staffs">Staff</option>
                                         <option value="All Patients">Patients</option>
                                         <option value="Custom Receiver">Custom Receiver's</option>
+                                        <optgroup label="Societies/Group">
+                                            {% for val in group_society %}
+                                            <option value="{{val.id}}">{{val.Name}}</option>
+                                            {% endfor %}
+                                        </optgroup>
                                     </select>
                                 </div>
                                 <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">

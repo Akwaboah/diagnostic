@@ -1,4 +1,4 @@
-from I_CARE.models import Insurance, Patients,User_Details,Stocks
+from I_CARE.models import Insurance, Patients,Societies,User_Details,Stocks
 from django import forms
 from I_CARE.utils import countries as country_tuple,DATE_INPUT_FORMATS
 
@@ -20,11 +20,12 @@ class Patients_Form(forms.ModelForm):
     Reffered_Doctor=forms.CharField(required=False,widget=forms.TextInput(attrs={'autocomplete': 'off','placeholder':'Referring Doctor','data-tab': 'tab2'}))
     Insurance_Type = forms.ModelChoiceField(queryset=Insurance.objects.all(), required=False,widget=forms.Select(attrs={'data-tab': 'tab2'}))
     Insurance_Id=forms.CharField(required=False,widget=forms.TextInput(attrs={'autocomplete': 'off','placeholder':'Insurance ID','data-tab': 'tab2'}))
-     
+    
     class Meta:
         model = Patients
         fields = '__all__'
-        exclude = {'Patient_Id','Gender','Date_Joined','Last_Visit','Department','Status','Balance','Procedure'}
+        exclude = {'Patient_Id','Gender','Date_Joined','Last_Visit','Department','Status',
+                   'Balance','Procedure','Societies'}
    
     def __init__(self, *args, **kwargs):
         super(Patients_Form, self).__init__(*args, **kwargs)

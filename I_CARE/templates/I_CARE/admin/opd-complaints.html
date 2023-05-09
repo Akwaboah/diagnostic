@@ -69,7 +69,7 @@
 <div class="row">
     <div class="col-md-12">
         <!-- <h4 class="mb-2">Presenting Complaints/Vitals</h4> -->
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data" id="regForm">
             {% csrf_token %}
             <div class="row">
                 <div class="col-md-12">
@@ -119,10 +119,10 @@
                                     </div>
                                     <hr>
                                     <div class="row">
-                                        <label class="col-lg-3 col-form-label">Referring Facility/Doctor</label>
+                                        <label class="col-lg-3 col-form-label">Referring Facility/Doctor/Forms</label>
                                         <div class="col-lg-9">
                                             <div class="row">
-                                                <div class="col-md-6 col-6">
+                                                <div class="col-md-4 col-4">
                                                     <div class="form-group">
                                                         <select id="referring_facility" name="Referring_Facility"
                                                             required class="js-states form-control">
@@ -132,7 +132,7 @@
                                                         </select>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-6 col-6">
+                                                <div class="col-md-4 col-4">
                                                     <div
                                                         class="input-group input-group-md d-flex justify-content-between">
                                                         <div class="input-group-prepend">
@@ -140,6 +140,11 @@
                                                                     class="fa fa-user-nurse"></i></span>
                                                         </div>
                                                         <input placeholder="Refferring Doctor" type="text" name="Reffered_Doctor" class="form-control form-control-md">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4 col-4">
+                                                    <div class="form-group">
+                                                        <input type="file" class="form-control form-control-md" name="Referred_Files">
                                                     </div>
                                                 </div>
                                             </div>
@@ -191,8 +196,32 @@
                                                         </select>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-5 col-5">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-lg-3 col-form-label">Society/Group</label>
+                                        <div class="col-lg-9">
+                                            <div class="row">
+                                                <div class="col-lg-12">
+                                                    <div class="form-group">
+                                                        <select style="width: 100%" id="societies" name="Societies" multiple="multiple"
+                                                            class="js-states form-control">
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4 col-4">
                                                     <button type="submit" class="btn btn-md btn-primary">INITIATE PROCEDURE</button>
+                                                </div>
+                                                <div class="col-md-3 col-3">
+                                                    <div class="form-group">
+                                                        <input type="number" step="any" placeholder="Discount(GHS)" class="form-control form-control-md" name="Discount">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-5 col-5">
+                                                    <div class="form-group">
+                                                        <input type="text" placeholder="Reason eg. Customer Loyalty" class="form-control form-control-md text-align-center" name="Discount_Reason">
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -256,6 +285,16 @@
             // tokenSeparators: [',', ' '], // entering a space or a comma will create tag
         });
         
+        $('#societies').select2({
+            dropdownAutoWidth: true,
+            multiple: true,
+            width: '100%',
+            placeholder: "Add society/group",
+            allowClear: false,
+            // tags: true , //helps for adding new data which is not in option
+            // tokenSeparators: [',', ' '], // entering a space or a comma will create tag
+        });
+
         $('.select2-search__field').css('width', '100%'); // select2 placeholder css
     });
 
@@ -291,7 +330,12 @@
                 var imgAttr = document.getElementById('img_profile');
                 imgAttr.src = image;
                 
-                // window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
+                // Preload the patient's societies into the select2 field
+                var selectedSocieties = data.Group;
+                $("#societies").empty(); //clear existing options
+                selectedSocieties.forEach(function(society) {
+                    $("#societies").append(new Option(society.name, society.id, true, true));
+                });
             },
             error: function (data) {
                 window.parent.showNotification(null, "Error occurred whiles retriving data", 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
@@ -302,6 +346,16 @@
    
     }
 
+    $("#regForm").on('submit', function(e){
+        {% comment %} show a lading screen to the user {% endcomment %}
+        swal({
+            title: "Processing Request",
+            text: "please wait whiles we proccess your request",
+            imageUrl: "{% static 'admin/assets/img/loading.gif' %}",
+            showConfirmButton: false
+        });
+    });
+    
 </script>
 
 {% endblock extra-js %}

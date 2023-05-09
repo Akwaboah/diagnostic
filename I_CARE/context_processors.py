@@ -1,6 +1,7 @@
 from datetime import datetime
 from I_CARE.models import Exam_Room,Patients, User_Details,\
-    Business_Info,Procedures,Referring_Facilities,Insurance,Modalities
+    Business_Info,Procedures,Referring_Facilities,Insurance,\
+    Modalities,Societies
 from I_CARE.utils import user_levels,hospital_departments
 
 def global_data(request):
@@ -17,4 +18,5 @@ def global_data(request):
     'exam_rooms':Exam_Room.objects.all(),'procedures':Procedures.objects.all().order_by('Procedure'),
     'total_pat':total_pat,'pat_data':pat_data,'today_pat':today_pat,'debt_pat':debt_pat,
     'user_info':user_info,'groups_level':dict(user_levels),'modalities':Modalities.objects.all(),
-    'referring_facilities':Referring_Facilities.objects.all().order_by('id'),'accpet_insurance':Insurance.objects.all().order_by('-id')}
+    'referring_facilities':Referring_Facilities.objects.all().order_by('id'),
+    'group_society':Societies.objects.all(),'accpet_insurance':Insurance.objects.all().order_by('-id')}

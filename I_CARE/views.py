@@ -2,6 +2,9 @@ import asyncio
 from datetime import datetime,date,time,timedelta
 import io
 import calendar
+from django.core.mail import EmailMessage
+from smtplib import SMTPAuthenticationError, SMTPException
+from django.conf import settings
 from django.utils import timezone
 from decimal import Decimal
 import json
@@ -36,12 +39,12 @@ from django.db.models import F,Value,CharField,Sum,ExpressionWrapper,DecimalFiel
 from I_CARE.models import Business_Info, Patients, User_Details,Patients_Checker,Vitals,\
     Appoitment,Message,Procedures,Presenting_Complaints,Journal_History,Treatment_Alert,\
     Birthday_Wishes,Stocks_Department,Supplier,Stocks,New_Stocks,Stocks_Checker,Drugs_Prescriptions,\
-    Insurance,Referring_Facilities,Requisition,Approval_Authority,Journal_History_Checker,Payment_Journal,\
-    Modalities,Journal_History_Reversal
+    Insurance,Referring_Facilities,Requisition,Journal_History_Checker,Payment_Journal,\
+    Modalities,Journal_History_Reversal,Societies,Vitals_Discount
 
 from I_CARE.forms import Patients_Form,Staff_Form,Stocks_Form
 from I_CARE.decorators import class_allow_users, unauthenticated_staffs
-from I_CARE.utils import user_levels
+from I_CARE.utils import user_levels, user_levels_list
 
 # Manager imports
 from collections import defaultdict
@@ -180,6 +183,30 @@ class SMS:
         msg='Hi %s, your payment of %s has been comfirmed, Thank You.'%(first_name,amount)
         return msg
 
+class CUS_MAIL:
+    
+    def __init__(self,subject:str,body:str,to_email:list) -> None:
+        self.subject=subject
+        self.body=body
+        self.to_email=to_email
+
+    def sendMail(self,email_to_type:str="None") -> str:
+        # check the email_to_types
+        if email_to_type=="Auth":
+            userMail = User.objects.filter(groups__name__in=user_levels_list[:4])
+            self.to_email=list(userMail.values_list('email',flat=True))
+        email_message=EmailMessage(self.subject,self.body,settings.EMAIL_HOST_USER,self.to_email)
+        # Attempt to send the email
+        try:
+            email_message.send()
+            return (f"Email sent successfully to '{self.to_email}'")
+        except SMTPAuthenticationError:
+            return ("Failed to authenticate with SMTP server. Check your credentials.")
+        except SMTPException as e:
+            return (f"An error occurred while sending the email: {e}")
+        except Exception as e:
+            return (f"An unexpected error occurred: {e}")
+
 class CUS_SMS(View):
 
     def post(self,request, *args,**kwargs):
@@ -200,6 +227,9 @@ class CUS_SMS(View):
                 asyncio.run(sms_init.SEND_ALERT(contacts,custom_msg))
             elif forward_to=='Custom Receiver':
                 asyncio.run(sms_init.SEND_ALERT(custom_tel,custom_msg))
+            else:
+                contacts=list(Patients.objects.filter(Societies__id=forward_to).values_list('Tel',flat=True))
+                asyncio.run(sms_init.SEND_ALERT(contacts,custom_msg))
             return HttpResponse(json.dumps({'message':usr_status}),content_type='application/json')
         elif kwargs['page']=='tm-msg':
             Treatment_Alert.objects.create(
@@ -278,7 +308,7 @@ class Auth_Staffs(View):
                 return HttpResponse(json.dumps({'message':'Email already taken, suggest a valid one'}),content_type='application/json')
             else:
                 # Save django user
-                if User_Level in ['CEO','Project Director','Medical Director','Finance Manager','Commercial Manager']:
+                if User_Level in ['CEO','Project Director','Medical Director','Facility Manager','Finance Manager','Commercial Manager','IT Manager']:
                     user_obj = User.objects.create_superuser(username=Username,first_name=name1,
                         last_name=name2,email=Email,password=Password)
                 else:
@@ -357,6 +387,7 @@ class OPD(View):
                 chartData.values('weekday_name')
                 .annotate(count=Count('Patient_Id',distinct=True))
             ) 
+            print(visitors)
             procedures = (
                 chartData
                 .values('weekday_name','Procedure__Modality__Acronym')
@@ -388,6 +419,10 @@ class OPD(View):
         elif kwargs['page']=='search-patient':
             pat_data=Patients.objects.get(Patient_Id=request.GET['Patient_Id'])
             pat_data_dict = serializers.serialize('python', [pat_data])[0]['fields']
+            # Add the list of society IDs and names to the dictionary
+            patSocieties=pat_data.Societies.all()
+            pat_data_dict['Societies'] = [society.id for society in patSocieties]
+            pat_data_dict['Group'] = [{'id':society.id, 'name':society.Name} for society in patSocieties]
             # pat_data_dict.pop('_state') # remove the ModelState attribute
             if str(pat_data.Profile).__contains__('avatar'):
                 pat_data_dict['Profile']=str(pat_data.Profile)
@@ -410,8 +445,10 @@ class OPD(View):
             msg='Process initiated at the payment department...'
             if form.is_valid():
                 procedure_list=request.POST.getlist('Procedure_Name')
+                society_list=request.POST.getlist('Societies')
                 exam_room_list=request.POST.getlist('Exam_Room')
-                totalCost=Procedures.objects.filter(id__in=procedure_list).aggregate(sum=Sum('Charge'))['sum']
+                procedure_data=Procedures.objects.filter(id__in=procedure_list)
+                totalCost=procedure_data.aggregate(sum=Sum('Charge'))['sum']
                 totalCost= totalCost if totalCost else Decimal(0)
                 referred_facility=request.POST['Referring_Facility'] or None
                 patient_init_id=gen_pat_id()
@@ -423,25 +460,47 @@ class OPD(View):
                 commit_form.Last_Visit=timezone.now()
                 form.save()
                 Patients_Checker.objects.create(Patient_Id=patient_init_id)
+                # save society or group
+                patInstance=form.instance
+                for index,data in enumerate(society_list):
+                    patInstance.add_society(Societies.objects.get(id=data))
+                referredFiles = request.FILES.get('Referred_Files', None)
+                vitDataList=[]
                 # check if patient been registered from appointment then update patient id
-                for index,data in enumerate(procedure_list):
+                for index,proData in enumerate(procedure_data):
                     try:
                         exam_room=exam_room_list[index]
                     except IndexError:
                         exam_room="Default Room"
-                    proData=Procedures.objects.get(id=data)
-                    Vitals.objects.create(
-                        Patient_Id=form.instance,
-                        Procedure=proData,
-                        Referring_Facility=referred_facility,
-                        Referred_Doctor=request.POST['Reffered_Doctor'],
-                        Treatment_Amount=proData.Charge,
-                        Insurance_Type=form.instance.Insurance_Type or 'None',
-                        Insurance_Id=form.instance.Insurance_Id or 'xx-xxxx-xxxx',
-                        Exam_Room=exam_room,
-                        Logger=Loged_User(request))
-                  
+                    vitals_args={
+                        'Patient_Id':form.instance,
+                        'Procedure':proData,
+                        'Referring_Facility':referred_facility,
+                        'Referred_Doctor':request.POST['Reffered_Doctor'],
+                        'Treatment_Amount':proData.Charge,
+                        'Insurance_Type':form.instance.Insurance_Type or 'None',
+                        'Insurance_Id':form.instance.Insurance_Id or 'xx-xxxx-xxxx',
+                        'Exam_Room':exam_room,
+                        'Logger':Loged_User(request)}
+                    if referredFiles:
+                        vitals_args['Referred_Forms'] = referredFiles
+                    vitData=Vitals.objects.create(**vitals_args)
+                    vitDataList.append(vitData)
                 msg='Process initiated at the payment department...'
+                # check if there's a discount then handle that 
+                discount=Decimal(request.POST['Discount'] or 0)
+                if discount>0:
+                    vitDis=Vitals_Discount.objects.create(
+                        Patient_Id = patInstance,
+                        Total_Cost = totalCost,
+                        Discount = discount,
+                        Reason= request.POST['Discount_Reason'],
+                        Logger = Loged_User(request),
+                    )
+                    # add the procedures in a bulk form instead of add
+                    vitDis.Procedure.set(procedure_data)
+                    vitDis.Vital.set(vitDataList)
+                    msg='Process initiated, discount auth. required'
                 # check referring facility if saved already or not
                 saveFacility(referred_facility)
                 sms=SMS()
@@ -456,6 +515,14 @@ class OPD(View):
                 commit_form=form.save(commit=False)
                 commit_form.Gender=request.POST['gender']
                 form.save()
+                # update society or group
+                society_list=request.POST.getlist('Societies')
+                patInstance=form.instance
+                for index,data in enumerate(society_list):
+                    patInstance.add_society(Societies.objects.get(id=data))
+                else:
+                    default_society, _ = Societies.objects.get_or_create(Name='No Society')
+                    patInstance.add_society(default_society)
                 messages.success(request,'%s demo. updated successfully'%(request.POST['First_Name']))
             else:
                 messages.success(request,'Error occured:%s'%form.errors)
@@ -468,22 +535,28 @@ class OPD(View):
             patData=Patients.objects.filter(Patient_Id=request.POST['searchPat'])
             patient_init_id=patData.first()
             referred_facility=request.POST['Referring_Facility'] or None
+            referredFiles = request.FILES.get('Referred_Files', None)
+            vitDataList=[]
             # check procedures and apply bill to patient
             for index,proData in enumerate(procedure_data):
                 try:
                     exam_room=exam_room_list[index]
                 except IndexError:
                     exam_room="Default Room"
-                Vitals.objects.create(
-                    Patient_Id=patient_init_id,
-                    Procedure=proData,
-                    Referring_Facility=referred_facility,
-                    Referred_Doctor=request.POST['Reffered_Doctor'],
-                    Treatment_Amount=proData.Charge,
-                    Insurance_Type=request.POST['Insurance_Type'] or 'None',
-                    Insurance_Id=request.POST['Insurance_Id'] or 'xx-xxxx-xxxx',
-                    Exam_Room=exam_room,
-                    Logger=Loged_User(request))
+                vitals_args={
+                    'Patient_Id':patient_init_id,
+                    'Procedure':proData,
+                    'Referring_Facility':referred_facility,
+                    'Referred_Doctor':request.POST['Reffered_Doctor'],
+                    'Treatment_Amount':proData.Charge,
+                    'Insurance_Type':request.POST['Insurance_Type'] or 'None',
+                    'Insurance_Id':request.POST['Insurance_Id'] or 'xx-xxxx-xxxx',
+                    'Exam_Room':exam_room,
+                    'Logger':Loged_User(request)}
+                if referredFiles:
+                    vitals_args['Referred_Forms'] = referredFiles
+                vitData=Vitals.objects.create(**vitals_args)
+                vitDataList.append(vitData)
             # update insurance details
             updatingFields={}
             if request.POST['Insurance_Id']:
@@ -494,8 +567,22 @@ class OPD(View):
             if updatingFields:
                 patData.update(**updatingFields)
             patData.update(Balance=F('Balance')-totalCost)
-           
             msg='Process initiated at the payment department...'
+            # check if there's a discount then handle that 
+            discount=Decimal(request.POST['Discount'] or 0) 
+            if discount>0:
+                vitDis=Vitals_Discount.objects.create(
+                    Patient_Id = patient_init_id,
+                    Total_Cost = totalCost,
+                    Discount = discount,
+                    Reason= request.POST['Discount_Reason'],
+                    Logger = Loged_User(request),
+                )
+                # add the procedures in a bulk form instead of add
+                vitDis.Procedure.set(procedure_data)
+                vitDis.Vital.set(vitDataList)
+                msg='Process initiated, discount auth. required'
+            
             # check referring facility if saved already or not
             saveFacility(referred_facility)
             messages.success(request,msg)
@@ -525,7 +612,7 @@ class OPD(View):
         return redirect(request.META.get('HTTP_REFERER'))
 
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Finance Manager','Front Office Manager','CEO Secretary']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Finance Manager','Front Office Manager','CEO Secretary']),name='get')
 class Payment_Department(View):
     
     def dispatch(self,  *args, **kwargs):
@@ -536,7 +623,7 @@ class Payment_Department(View):
          
         if kwargs['page']=='pat-journal':
             # load patients journal 
-            journal=(Vitals.objects.all().order_by('-Date','Treatment_Amount').annotate(Patient_Ref=F('Patient_Id__Patient_Id'),Balance=F('Treatment_Amount')-F('Paid_Amount'),Treatment_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym'),output_field=CharField())).values())
+            journal=(Vitals.objects.all().order_by('-Date','Treatment_Amount').annotate(Patient_Ref=F('Patient_Id__Patient_Id'),Grand_Cost=F('Treatment_Amount')+F('Discounted'),Balance=F('Treatment_Amount')-F('Paid_Amount'),Treatment_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym'),output_field=CharField())).values())
             journal=json.dumps(list(journal), cls=DjangoJSONEncoder)
             # journal = serializers.serialize('json', journal)
             pat_data=Patients.objects.all().order_by('-Date_Joined')
@@ -576,6 +663,10 @@ class Payment_Department(View):
         if kwargs['page']=='journal-payment':
             transID=create_trans_id()
             patientID=request.POST['Patient_Id']
+            patData=Patients.objects.filter(Patient_Id=request.POST['Patient_Id'])
+            # first check if patients balance is okay for payment
+            if patData.first().Balance==0:
+                return HttpResponse(json.dumps({'message':'Patient account refreshed successfully','transID':'None'}),content_type='application/json')
             totalAmount=Decimal(request.POST['Amount'])
             jData=Vitals.objects.exclude(Paid_Amount=F('Treatment_Amount')).filter(Patient_Id__Patient_Id=patientID)
             for data in jData:
@@ -589,7 +680,7 @@ class Payment_Department(View):
                 data.Department=data.Procedure.Tag
                 data.Trans_Id=transID
             Vitals.objects.bulk_update(jData,['Department','Trans_Id','Paid_Amount'])
-            Patients.objects.filter(Patient_Id=request.POST['Patient_Id']).update(Balance=F('Balance')+totalAmount)
+            patData.update(Balance=F('Balance')+totalAmount)
             Journal_History_Checker.objects.create(Trans_Id=transID,Cashier=Loged_User(request))
             sms=SMS()
             msg_bdy=sms.getPAYMENT_MSG(request.POST['First_Name'],totalAmount)
@@ -636,7 +727,7 @@ class Payment_Department(View):
         return redirect(request.META.get('HTTP_REFERER'))
 
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer','Lab Scientist']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Radiographer','Sonographer','Lab Scientist']),name='get')
 class Imaging(View):
     
     def dispatch(self, request, *args, **kwargs):
@@ -683,7 +774,7 @@ class Imaging(View):
             return redirect(request.META.get('HTTP_REFERER'))
         
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Lab Scientist']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Lab Scientist']),name='get')
 class Laboratory(View):
 
     def dispatch(self, request, *args, **kwargs):
@@ -712,7 +803,7 @@ class Laboratory(View):
             return redirect(request.META.get('HTTP_REFERER'))
 
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Radiographer','Sonographer']),name='get')
 class Doctors(View):
 
     def dispatch(self,  *args, **kwargs):
@@ -746,7 +837,12 @@ class Doctors(View):
             vit_data.save()
             messages.success(request,'Report approved and available to print')
             return redirect(request.META.get('HTTP_REFERER'))
-        
+        elif kwargs['page']=='reverse-test':
+            vitData=Vitals.objects.filter(id=request.POST['Vital_Id'])
+            department=vitData.first().Procedure.Tag
+            vitData.update(Department=department)
+            return HttpResponse(json.dumps({'message':'Patient successfully push back'}), content_type='application/json')
+
 class Requisition_Form(View):
 
     def dispatch(self,  *args, **kwargs):
@@ -763,9 +859,13 @@ class Requisition_Form(View):
             context.update({'reqHist':reqHist})
             return render(request,'I_CARE/admin/requisition-pending.html',context)
         elif kwargs['page']=='pending-refunds':
-            reqHist=Journal_History_Reversal.objects.exclude(Status='Abort').order_by('-Date')
+            reqHist=Journal_History_Reversal.objects.order_by('-Date')
             context.update({'reqHist':reqHist,'page':'Pending Refunds'})
             return render(request,'I_CARE/admin/requisition-pending-refund.html',context)
+        elif kwargs['page']=='discount-approval':
+            reqHist=Vitals_Discount.objects.all().order_by('-Date')
+            context.update({'reqHist':reqHist,'page':'Discount Approval'})
+            return render(request,'I_CARE/admin/requisition-discount-approval.html',context)
     
     @transaction.atomic(using=None, savepoint=True, durable=True)
     def post(self,request,*args,**kwargs):
@@ -823,6 +923,45 @@ class Requisition_Form(View):
                 Journal_History.objects.filter(id=rev_data_instance.Journal_History_Id).update(isRequested=False)
             rev_data.update(Status=newStatus,Approved_By=Loged_User(request))
             return HttpResponse(json.dumps({'message':'Request processed successfully'}), content_type='application/json')
+        elif kwargs['page']=='discount-approval':
+            newStatus=request.POST['newStaus']
+            vitDiscData=Vitals_Discount.objects.filter(id=request.POST['jnrID'])
+            # if discount is approved, find the vitals attached and spread the discount for it 
+            if newStatus == 'Approved':
+                vitInstance=vitDiscData.first()
+                totalDiscount=vitInstance.Discount
+                discountApproved=0
+                vitData=vitInstance.Vital.all().filter(Paid_Amount=0)
+                if vitData:
+                    for x in vitData:
+                        deductAmount=0
+                        if totalDiscount > 0:
+                            if x.Treatment_Amount >= totalDiscount:
+                                deductAmount=totalDiscount
+                            else:
+                                deductAmount=x.Treatment_Amount
+                            # check and pass on vitals to imaging dep. if discount paid off
+                            if x.Treatment_Amount-deductAmount == 0:
+                                x.Department=x.Procedure.Tag
+                                x.Trans_Id='Discounted'
+                            x.Treatment_Amount -= deductAmount
+                            x.Discounted = deductAmount
+                            totalDiscount -= deductAmount
+                            discountApproved += deductAmount
+                        else:
+                            break
+                    msg=f"{discountApproved} GHS disbursed as discount to {vitInstance.Patient_Id}"
+                    # update the patient balance
+                    patData=vitInstance.Patient_Id
+                    patData.Balance += discountApproved
+                    patData.save()
+                else:
+                    msg="Discount not applied, payment already done"
+                Vitals.objects.bulk_update(vitData,['Treatment_Amount','Discounted','Department'])
+            else:
+                msg="Discount rejected successfully"
+            vitDiscData.update(Status=newStatus,Approved_By=Loged_User(request))
+            return HttpResponse(json.dumps({'message':msg}), content_type='application/json')
 
         return redirect(request.META.get('HTTP_REFERER'))
 
@@ -869,7 +1008,7 @@ def csvFileReports(request,querySet,titleRow=[],headerRow=[],fileName=""):
     # End of CSV file in memory
     
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Radiographer','Sonographer','Lab Scientist','Nursing officer','Commercial Manager']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Finance Manager','Radiographer','Sonographer','Lab Scientist','Nursing officer','Commercial Manager']),name='get')
 class General_Reports(View):
 
     def createSheetTitle(self,df,work_sheet,title,subtitle):
@@ -2495,7 +2634,7 @@ class General_Reports(View):
                 return redirect(request.META.get('HTTP_REFERER'))     
 
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Pharmacist']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Pharmacist']),name='get')
 class Pharmacy(View):
     context={'page':'Pharmacy'}
 

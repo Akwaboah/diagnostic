@@ -200,11 +200,11 @@
         for (var i = 0; i < journalData.length; i++) {
             if (journalData[i].Patient_Ref==patient_id) {
                 posNo+=1
-                if(parseFloat(journalData[i].Paid_Amount)>0){
-                    journalEntryTable.row.add([posNo,journalData[i].Date,journalData[i].Treatment_Name,journalData[i].Treatment_Amount,journalData[i].Paid_Amount,journalData[i].Balance,journalData[i].Logger,
+                if(parseFloat(journalData[i].Paid_Amount)>0 || parseFloat(journalData[i].Balance) == 0 ){
+                    journalEntryTable.row.add([posNo,journalData[i].Date,journalData[i].Treatment_Name,journalData[i].Grand_Cost,journalData[i].Discounted,journalData[i].Paid_Amount,journalData[i].Balance,journalData[i].Logger,
                     "<a class='btn btn-sm  text-white' href='javascript:void(0)' role='button' aria-haspopup='false' aria-expanded='false'> <i class='fa fa-check text-success'></i></a>"]).draw(false);
                 }else{
-                    journalEntryTable.row.add([posNo,journalData[i].Date,journalData[i].Treatment_Name,journalData[i].Treatment_Amount,journalData[i].Paid_Amount,journalData[i].Balance,journalData[i].Logger,
+                    journalEntryTable.row.add([posNo,journalData[i].Date,journalData[i].Treatment_Name,journalData[i].Grand_Cost,journalData[i].Discounted,journalData[i].Paid_Amount,journalData[i].Balance,journalData[i].Logger,
                     "<a class='btn btn-sm  text-white' href='javascript:void(0)' role='button' onclick=removeProcedure(" + "'" + "" + journalData[i].id + "" + "'" +','+ "'" + "" + journalData[i].Treatment_Name + "" + "'" + "); aria-haspopup='false' aria-expanded='false'> <i class='fa fa-trash text-danger'></i></a>"]).draw(false);
                 }
             }
@@ -319,7 +319,11 @@
                 swal.close();
                 window.parent.showNotification(null, data.message, 'top', 'right', 'animated zoomInRight', 'animated zoomOutRight');
                 setTimeout(function() {
-                    window.location="/nursing/"+data.transID;
+                    if (data.transID=='None'){
+                        window.location.reload()
+                    }else{
+                        window.location="/nursing/"+data.transID;
+                    }
                 },1500);
             },
             error: function (request,status,error) {

@@ -178,6 +178,17 @@ class Exam_Room(models.Model):
         db_table = "exam_room"
         verbose_name='Exam Room'
 
+class Societies(models.Model):
+    Name = models.CharField(max_length=100, unique=True)
+    Date=models.DateField(auto_now=True)
+    
+    def __str__(self):
+        return self.Name
+
+    class Meta:
+        db_table = "societies"
+        verbose_name='Societie'
+
 class Patients_Checker(models.Model):
     Patient_Id = models.CharField(max_length=20, primary_key=True, unique=True)
     Reg_Date = models.DateField(auto_now=True)
@@ -208,8 +219,10 @@ class Patients(models.Model):
     Insurance_Id=models.CharField(max_length=50,default='xxx-xxxx-xxx')
     Balance=models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Status=models.CharField(max_length=20,default='Waiting')
+    Societies = models.ManyToManyField(Societies, related_name='patients', db_column='Societies')
+
     Time=models.TimeField(auto_now=True)
-     
+    
     def __str__(self):
         return '%s %s'%(self.First_Name,self.Surname)
 
@@ -224,6 +237,12 @@ class Patients(models.Model):
         self.Profile=compress_images(self.Profile)
         super(Patients, self).save(*args, **kwargs)
 
+    def add_society(self, society):
+        if not self.Societies.filter(pk=society.pk).exists():
+            self.Societies.add(society)
+            if self.Societies.filter(Name='No Society').exists() and len(self.Societies.all())>1:
+                self.Societies.remove(Societies.objects.get(Name='No Society'))
+            
 class Treatment_Alert(models.Model):
     Message = models.TextField()
     Treatments = models.TextField()
@@ -255,8 +274,10 @@ class Vitals(models.Model):
     Status=models.CharField(max_length=50,default='Waiting')
     Referring_Facility=models.CharField(max_length=100,null=True,default='None')
     Referred_Doctor=models.CharField(max_length=50,null=True,default='None')
+    Referred_Forms = models.FileField(upload_to=patients_docs_path,default=default_static_image_path,null=True,blank=True)
     # payment side
     Treatment_Amount = models.DecimalField(max_digits=50,decimal_places=2)
+    Discounted = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Paid_Amount = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Trans_Id=models.CharField(max_length=250)
     # insurance details
@@ -273,6 +294,34 @@ class Vitals(models.Model):
     class Meta:
         db_table = "vitals"
         verbose_name='Patient Procedure'
+    
+    def save(self, *args, **kwargs):
+        is_new = self._state.adding
+        super().save(*args, **kwargs)
+        if not is_new:
+            # The model instance was updated, so trigger a signal here
+            # Vitals_Update.send(sender=self.__class__, instance=self)
+            pass
+        
+class Vitals_Discount(models.Model):
+    Patient_Id= models.ForeignKey(Patients,on_delete=models.CASCADE,db_column='Patient_Id')
+    Procedure = models.ManyToManyField(Procedures,related_name='Procedures',db_column='Procedures')
+    Vital = models.ManyToManyField(Vitals,related_name='Vitals',db_column='Vitals')
+    Total_Cost = models.DecimalField(max_digits=50,decimal_places=2)
+    Discount = models.DecimalField(max_digits=50,decimal_places=2,default=0)
+    Reason=models.TextField(default='(?...)')
+    Status=models.CharField(max_length=50,default='Pending')
+    Logger=models.CharField(max_length=50)
+    Approved_By=models.CharField(max_length=50,default='Pending')
+    Date=models.DateField(auto_now=True)
+    Time=models.TimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Date:({self.Date})=>{self.Patient_Id}({self.Discount})'
+
+    class Meta:
+        db_table = "vitals_discount"
+        verbose_name='Discount On Procedure'
 
 # Patients Complaints By Doctors
 class Presenting_Complaints(models.Model):
@@ -376,20 +425,6 @@ class Journal_History_Reversal (models.Model):
 
     class Meta:
         db_table = "journal_history_reversal"
-
-# Requisition Approval_Authority
-class Approval_Authority(models.Model):
-    Limited_Amount = models.DecimalField(max_digits=50,decimal_places=2,unique=True)
-    Authorizer=models.OneToOneField(User_Details, on_delete=models.CASCADE, db_column="Authorizer")
-    Date=models.DateField(auto_now=True)
-    Time=models.TimeField(auto_now=True)
-
-    def __str__(self):
-        return f'{self.Authorizer}-({self.Limited_Amount})'
-
-    class Meta:
-        db_table = "approval_authority"
-        verbose_name='Requisition Authorizer'
 
 # Requisition
 class Requisition(models.Model):
