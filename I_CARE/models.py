@@ -277,6 +277,7 @@ class Vitals(models.Model):
     Referred_Forms = models.FileField(upload_to=patients_docs_path,default=default_static_image_path,null=True,blank=True)
     # payment side
     Treatment_Amount = models.DecimalField(max_digits=50,decimal_places=2)
+    Discounted = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Paid_Amount = models.DecimalField(max_digits=50,decimal_places=2,default=0)
     Trans_Id=models.CharField(max_length=250)
     # insurance details
@@ -293,6 +294,34 @@ class Vitals(models.Model):
     class Meta:
         db_table = "vitals"
         verbose_name='Patient Procedure'
+    
+    def save(self, *args, **kwargs):
+        is_new = self._state.adding
+        super().save(*args, **kwargs)
+        if not is_new:
+            # The model instance was updated, so trigger a signal here
+            # Vitals_Update.send(sender=self.__class__, instance=self)
+            pass
+        
+class Vitals_Discount(models.Model):
+    Patient_Id= models.ForeignKey(Patients,on_delete=models.CASCADE,db_column='Patient_Id')
+    Procedure = models.ManyToManyField(Procedures,related_name='Procedures',db_column='Procedures')
+    Vital = models.ManyToManyField(Vitals,related_name='Vitals',db_column='Vitals')
+    Total_Cost = models.DecimalField(max_digits=50,decimal_places=2)
+    Discount = models.DecimalField(max_digits=50,decimal_places=2,default=0)
+    Reason=models.TextField(default='(?...)')
+    Status=models.CharField(max_length=50,default='Pending')
+    Logger=models.CharField(max_length=50)
+    Approved_By=models.CharField(max_length=50,default='Pending')
+    Date=models.DateField(auto_now=True)
+    Time=models.TimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Date:({self.Date})=>{self.Patient_Id}({self.Discount})'
+
+    class Meta:
+        db_table = "vitals_discount"
+        verbose_name='Discount On Procedure'
 
 # Patients Complaints By Doctors
 class Presenting_Complaints(models.Model):
