@@ -1008,7 +1008,7 @@ def csvFileReports(request,querySet,titleRow=[],headerRow=[],fileName=""):
     # End of CSV file in memory
     
 @method_decorator(unauthenticated_staffs,name='get')
-@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Finance Manager','Radiographer','Sonographer','Lab Scientist','Nursing officer','Commercial Manager']),name='get')
+@method_decorator(class_allow_users(allowed_levels=['CEO','Medical Director','Facility Manager','Finance Manager','Radiographer','Sonographer','Lab Scientist','Nursing officer','Commercial Manager','IT Manager']),name='get')
 class General_Reports(View):
 
     def createSheetTitle(self,df,work_sheet,title,subtitle):
