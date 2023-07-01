@@ -1044,7 +1044,7 @@ class General_Reports(View):
             ]
     
     patAttHR=[
-        'Date','Patient ID','Patient Name','Gender','Contact Phone','Emergency Contact','Procedure','Referring Doctor','Referring Facility',
+        'Date','Patient ID','Patient Name','Gender','Contact Phone','Emergency Contact','Referring Doctor','Referring Facility',
         'Insurance Type','Insurance ID',
     ]
     
@@ -1546,17 +1546,17 @@ class General_Reports(View):
                 fileName="Patient Attendance Report(Daily)"
                 # Get patient data as a queryset
                 genData=Vitals.objects.all().filter(Date=start_date)
-                queriedData =(genData.values('Date')
-                .annotate(Patient_ID=F('Patient_Id__Patient_Id'), Patient_Name=Concat(F('Patient_Id__First_Name'),F('Patient_Id__Surname'),output_field=CharField()),
+                patAttListData=(genData.values('Date','Patient_Id__Patient_Id').distinct()
+                .annotate(Patient_Name=Concat(F('Patient_Id__First_Name'),ValueError(' '),F('Patient_Id__Surname'),output_field=CharField()),
                         Gender=F('Patient_Id__Gender'),Tel=F('Patient_Id__Tel'),Emmergency_Tel=F('Patient_Id__Emergency_Tel'),
-                        Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),
                         Doctor=F('Referred_Doctor'),Facility=F('Referring_Facility'),Insurance=F('Insurance_Type'),Insurance_ID=F('Insurance_Id')).order_by('Date')
                     )
                 if not genData:
                     messages.success(request,'No record found for the input date')
                     return redirect(request.META.get('HTTP_REFERER'))
+                
                 # Convert the queryset to a pandas DataFrame
-                df = pd.DataFrame.from_records(queriedData)
+                attDF = pd.DataFrame.from_records(patAttListData)
 
                 # Create an Excel file
                 output = io.BytesIO()
@@ -1568,16 +1568,16 @@ class General_Reports(View):
                 # Write the title
                 title = 'PATIENT ATTENDANCE REPORT(DAILY)'
                 subtitle=f'AS AT: {str(start_date.strftime("%d, %B %Y")).upper()}'
-                self.createSheetTitle(df,ws1,title,subtitle)
+                self.createSheetTitle(attDF,ws1,title,subtitle)
                 ws1.append([])
                 ws1.append(self.patAttHR)
-                for r in dataframe_to_rows(df, index=False, header=False):
+                for r in dataframe_to_rows(attDF, index=False, header=False):
                     ws1.append(r)
 
                 # create the second sheet
                 # preparing gender distribution chart
                 # group the dataframe by gender
-                df_gender_counts = df.groupby('Gender').size().reset_index(name='Number Of Patients')
+                df_gender_counts = attDF.groupby('Gender').size().reset_index(name='Number Of Patients')
                 # create the second sheet with pie chart distribution
                 ws2 = wb.create_sheet(title="Gender Distribution")
                 # Add the data to the worksheet
@@ -1652,17 +1652,16 @@ class General_Reports(View):
                 fileName="Patient Attendance Report(Weekly)"
                 # Get patient data as a queryset
                 genData=Vitals.objects.all().filter(Date__range=[start_date,end_date])
-                queriedData =(genData.values('Date')
-                .annotate(Patient_ID=F('Patient_Id__Patient_Id'), Patient_Name=Concat(F('Patient_Id__First_Name'),F('Patient_Id__Surname'),output_field=CharField()),
+                patAttListData=(genData.values('Date','Patient_Id__Patient_Id').distinct()
+                .annotate(Patient_Name=Concat(F('Patient_Id__First_Name'),ValueError(' '),F('Patient_Id__Surname'),output_field=CharField()),
                         Gender=F('Patient_Id__Gender'),Tel=F('Patient_Id__Tel'),Emmergency_Tel=F('Patient_Id__Emergency_Tel'),
-                        Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),
                         Doctor=F('Referred_Doctor'),Facility=F('Referring_Facility'),Insurance=F('Insurance_Type'),Insurance_ID=F('Insurance_Id')).order_by('Date')
                     )
                 if not genData:
                     messages.success(request,'No record found for the input date')
                     return redirect(request.META.get('HTTP_REFERER'))
                 # Convert the queryset to a pandas DataFrame
-                df = pd.DataFrame.from_records(queriedData)
+                df = pd.DataFrame.from_records(patAttListData)
 
                 # Create an Excel file
                 output = io.BytesIO()
@@ -1813,20 +1812,18 @@ class General_Reports(View):
                 fileName="Patient Attendance Report(Monthly)"
                 # Get patient data as a queryset
                 genData=Vitals.objects.all().filter(Date__range=[start_date,end_date])
-                queriedData =(genData.values('Date')
-                .annotate(Patient_ID=F('Patient_Id__Patient_Id'), Patient_Name=Concat(F('Patient_Id__First_Name'),F('Patient_Id__Surname'),output_field=CharField()),
+                patAttListData=(genData.values('Date','Patient_Id__Patient_Id').distinct()
+                .annotate(Patient_Name=Concat(F('Patient_Id__First_Name'),ValueError(' '),F('Patient_Id__Surname'),output_field=CharField()),
                         Gender=F('Patient_Id__Gender'),Tel=F('Patient_Id__Tel'),Emmergency_Tel=F('Patient_Id__Emergency_Tel'),
-                        Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),
                         Doctor=F('Referred_Doctor'),Facility=F('Referring_Facility'),Insurance=F('Insurance_Type'),Insurance_ID=F('Insurance_Id'),
-                        Month=Concat(F('Date__year'),Value('-'),F('Date__month'),output_field=CharField())
-                        ).order_by('Date')
+                        Month=Concat(F('Date__year'),Value('-'),F('Date__month'),output_field=CharField())).order_by('Date')
                     )
                 if not genData:
                     messages.success(request,'No record found for the input date')
                     return redirect(request.META.get('HTTP_REFERER'))
                 
                 # Convert the queryset to a pandas DataFrame
-                df = pd.DataFrame.from_records(queriedData)
+                df = pd.DataFrame.from_records(patAttListData)
                 # Group the data by month
                 df['Month'] = pd.to_datetime(df['Month'].astype(str), format='%Y-%m')
                 df['Month'] = df['Month'].apply(lambda x: x.strftime('%b-%Y'))
@@ -1983,20 +1980,18 @@ class General_Reports(View):
                 fileName="Patient Attendance Report(Yearly)"
                 # Get patient data as a queryset
                 genData=Vitals.objects.all().filter(Date__year__range=[start_date,end_date])
-                queriedData =(genData.values('Date')
-                .annotate(Patient_ID=F('Patient_Id__Patient_Id'), Patient_Name=Concat(F('Patient_Id__First_Name'),F('Patient_Id__Surname'),output_field=CharField()),
+                patAttListData=(genData.values('Date','Patient_Id__Patient_Id').distinct()
+                .annotate(Patient_Name=Concat(F('Patient_Id__First_Name'),ValueError(' '),F('Patient_Id__Surname'),output_field=CharField()),
                         Gender=F('Patient_Id__Gender'),Tel=F('Patient_Id__Tel'),Emmergency_Tel=F('Patient_Id__Emergency_Tel'),
-                        Procedure_Name=Concat(F('Procedure__Procedure'),Value('-'),F('Procedure__Modality__Acronym')),
                         Doctor=F('Referred_Doctor'),Facility=F('Referring_Facility'),Insurance=F('Insurance_Type'),Insurance_ID=F('Insurance_Id'),
-                        Year=F('Date__year')
-                        ).order_by('Date')
+                        Year=F('Date__year')).order_by('Date')
                     )
                 if not genData:
                     messages.success(request,'No record found for the input date')
                     return redirect(request.META.get('HTTP_REFERER'))
                 
                 # Convert the queryset to a pandas DataFrame
-                df = pd.DataFrame.from_records(queriedData)
+                df = pd.DataFrame.from_records(patAttListData)
                 # Group the data by Year
                 df_yearly = df.groupby('Year').size().reset_index(name='Number Of Patients')
 
@@ -2069,10 +2064,11 @@ class General_Reports(View):
                 ws4 = wb.create_sheet(title="Gender Distribution")
                 # Create the gender distribution chart data
                 genderData = (
-                    queriedData
+                    patAttListData
                     .values('Year', 'Gender')
-                    .annotate(count=Count('Gender'))
+                    .annotate(count=Count('Gender')).order_by('Year')
                 )
+                
                 # Convert the queryset to a pandas DataFrame
                 genderDf = pd.DataFrame.from_records(genderData)
                 # sort by year
