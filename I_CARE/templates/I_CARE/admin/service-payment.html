@@ -205,7 +205,7 @@
                     "<a class='btn btn-sm  text-white' href='javascript:void(0)' role='button' aria-haspopup='false' aria-expanded='false'> <i class='fa fa-check text-success'></i></a>"]).draw(false);
                 }else{
                     journalEntryTable.row.add([posNo,journalData[i].Date,journalData[i].Treatment_Name,journalData[i].Grand_Cost,journalData[i].Discounted,journalData[i].Paid_Amount,journalData[i].Balance,journalData[i].Logger,
-                    "<a class='btn btn-sm  text-white' href='javascript:void(0)' role='button' onclick=removeProcedure(" + "'" + "" + journalData[i].id + "" + "'" +','+ "'" + "" + journalData[i].Treatment_Name + "" + "'" + "); aria-haspopup='false' aria-expanded='false'> <i class='fa fa-trash text-danger'></i></a>"]).draw(false);
+                    "<a class='btn btn-sm  text-white' href='javascript:void(0)' role='button' onclick=removeProcedure(" + "'" + "" + journalData[i].id + "" + "'" +','+ "'" + "" + posNo + "" + "'" + "); aria-haspopup='false' aria-expanded='false'> <i class='fa fa-trash text-danger'></i></a>"]).draw(false);
                 }
             }
         }
@@ -246,7 +246,7 @@
     function removeProcedure(id,name){
         swal({
             title: "Are you sure?",
-            text: `You want to remove '${name}' as a procedure from patient records?`,
+            text: `You want to remove procedure at No.'${name}' on the list from patient records?`,
             // imageUrl: '',
             showCancelButton: true,
             confirmButtonColor: "#DD6B55",
