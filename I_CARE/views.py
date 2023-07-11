@@ -2256,6 +2256,33 @@ class General_Reports(View):
                 # Add the pie_chart to the worksheet
                 ws3.add_chart(pie_chart, "D2")
 
+                # Create the Referral sheet with Referral data
+                referalData =(genData.values('Payment_Journal__Referring_Facility').distinct().annotate(
+                    charge=Sum('Payment_Journal__Treatment_Amount')
+                ))
+                # Convert the queryset to a pandas DataFrame
+                df4 = pd.DataFrame.from_records(referalData)
+
+                # Write the title
+                title = 'Referring List'
+                subtitle=f'AS AT: {str(start_date.strftime("%d, %B %Y")).upper()}'
+                ws4 = wb.create_sheet(title=title)
+                self.createSheetTitle(df4,ws4,'REFERRAL LIST',subtitle)
+                ws4.append([])
+                ws4.append(['Referral Facility', 'Total Amount'])
+                for r in dataframe_to_rows(df4, index=False, header=False):
+                    ws4.append(r)
+                # Sum the charge field and write it to the worksheet
+                charge_sum = df4['charge'].sum()
+                total_charge_row = ['',f'Total: {charge_sum} GHS']
+                # Write the 'Total Charge' row to the worksheet
+                ws4.append([])
+                ws4.append(total_charge_row)
+
+                # Make the 'Total Charge' row bold
+                for cell in ws4[ws4.max_row]:
+                    cell.font = Font(bold=True,size=16)
+
                 # Save the workbook to the output buffer and prepare the response
                 wb.save(output)
                 output.seek(0)
@@ -2341,6 +2368,7 @@ class General_Reports(View):
 
                 # Add the pie_chart to the worksheet
                 ws2.add_chart(modality_chart, "D2")
+
                 # create the third sheet with pie chart distribution
                 ws3 = wb.create_sheet(title="Modality Distribution(%)")
                 modalityData = (
@@ -2375,6 +2403,33 @@ class General_Reports(View):
                 pie_chart.dataLabels = data_labels
                 # Add the pie_chart to the worksheet
                 ws3.add_chart(pie_chart, "D2")
+
+                # Create the Referral sheet with Referral data
+                referalData =(genData.values('Payment_Journal__Referring_Facility').distinct().annotate(
+                    charge=Sum('Payment_Journal__Treatment_Amount')
+                ))
+                # Convert the queryset to a pandas DataFrame
+                df4 = pd.DataFrame.from_records(referalData)
+
+                # Write the title
+                title = 'Referring List'
+                subtitle=f'DATE FROM: {str(start_date.strftime("%d, %B %Y")).upper()} to {str(end_date.strftime("%d, %B %Y")).upper()}'
+                ws4 = wb.create_sheet(title=title)
+                self.createSheetTitle(df4,ws4,'REFERRAL LIST',subtitle)
+                ws4.append([])
+                ws4.append(['Referral Facility', 'Total Amount'])
+                for r in dataframe_to_rows(df4, index=False, header=False):
+                    ws4.append(r)
+                # Sum the charge field and write it to the worksheet
+                charge_sum = df4['charge'].sum()
+                total_charge_row = ['',f'Total: {charge_sum} GHS']
+                # Write the 'Total Charge' row to the worksheet
+                ws4.append([])
+                ws4.append(total_charge_row)
+
+                # Make the 'Total Charge' row bold
+                for cell in ws4[ws4.max_row]:
+                    cell.font = Font(bold=True,size=16)
 
                 # Save the workbook to the output buffer and prepare the response
                 wb.save(output)
@@ -2496,6 +2551,33 @@ class General_Reports(View):
                 pie_chart.dataLabels = data_labels
                 # Add the pie_chart to the worksheet
                 ws3.add_chart(pie_chart, "D2")
+
+                # Create the Referral sheet with Referral data
+                referalData =(genData.annotate(Month=Concat(F('Date__year'),Value('-'),F('Date__month'),output_field=CharField()))
+                .values('Month','Payment_Journal__Referring_Facility').distinct().annotate(charge=Sum('Payment_Journal__Treatment_Amount'))
+                    )
+                # Convert the queryset to a pandas DataFrame
+                df4 = pd.DataFrame.from_records(referalData)
+
+                # Write the title
+                title = 'Referring List'
+                subtitle=f'DATE FROM: {str(start_date.strftime("%d, %B %Y")).upper()} to {str(end_date.strftime("%d, %B %Y")).upper()}'
+                ws4 = wb.create_sheet(title=title)
+                self.createSheetTitle(df4,ws4,'REFERRAL LIST',subtitle)
+                ws4.append([])
+                ws4.append(['Referring Facility','Month','Total Amount'])
+                for r in dataframe_to_rows(df4, index=False, header=False):
+                    ws4.append(r)
+                # Sum the charge field and write it to the worksheet
+                charge_sum = df4['charge'].sum()
+                total_charge_row = ['',f'Total: {charge_sum} GHS']
+                # Write the 'Total Charge' row to the worksheet
+                ws4.append([])
+                ws4.append(total_charge_row)
+
+                # Make the 'Total Charge' row bold
+                for cell in ws4[ws4.max_row]:
+                    cell.font = Font(bold=True,size=16)
 
                 # Save the workbook to the output buffer and prepare the response
                 wb.save(output)
