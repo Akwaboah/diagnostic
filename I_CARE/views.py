@@ -1048,7 +1048,7 @@ class General_Reports(View):
         'Insurance Type','Insurance ID',
     ]
     
-    revHR=['Date','Patient ID','Patient Name','Procedure','Modality','Charge','Exam Room','Cashier','Payment Type','Comments']
+    revHR=['Date','Patient ID','Patient Name','Procedure','Modality','Charge','Exam Room','Cashier','Payment Type','Comments','Referring Facility','Referring Doctor']
     
     def dispatch(self, request, *args, **kwargs):
         return super(General_Reports,self).dispatch(request, *args, **kwargs)
@@ -2163,7 +2163,8 @@ class General_Reports(View):
                 queriedData =(genData.values('Date')
                 .annotate(Patient_ID=F('Payment_Journal__Patient_Id__Patient_Id'), Patient_Name=Concat(F('Payment_Journal__Patient_Id__First_Name'),F('Payment_Journal__Patient_Id__Surname'),output_field=CharField()),
                         Procedure_Name=Concat(F('Payment_Journal__Procedure__Procedure'),Value('-'),F('Payment_Journal__Procedure__Modality__Acronym')),Modality=F('Payment_Journal__Procedure__Modality__Modality'),
-                        Charge=F('Payment_Journal__Treatment_Amount'),Exam_Room=F('Payment_Journal__Exam_Room'),Cashier=F('Approved_By'),Payment_Mode=F('Payment_Type'),Comment=F('Payment_Comment')).order_by('Date')
+                        Charge=F('Payment_Journal__Treatment_Amount'),Exam_Room=F('Payment_Journal__Exam_Room'),Cashier=F('Approved_By'),Payment_Mode=F('Payment_Type'),Comment=F('Payment_Comment'),
+                        Referring_Facility=F('Payment_Journal__Referring_Facility'),Referring_Doctor=F('Payment_Journal__Referred_Doctor')).order_by('Date')
                     )
                 if not genData:
                     messages.success(request,'No record found for the input date')
@@ -2300,7 +2301,8 @@ class General_Reports(View):
                 queriedData =(genData.values('Date')
                 .annotate(Patient_ID=F('Payment_Journal__Patient_Id__Patient_Id'), Patient_Name=Concat(F('Payment_Journal__Patient_Id__First_Name'),F('Payment_Journal__Patient_Id__Surname'),output_field=CharField()),
                         Procedure_Name=Concat(F('Payment_Journal__Procedure__Procedure'),Value('-'),F('Payment_Journal__Procedure__Modality__Acronym')),Modality=F('Payment_Journal__Procedure__Modality__Modality'),
-                        Charge=F('Payment_Journal__Treatment_Amount'),Exam_Room=F('Payment_Journal__Exam_Room'),Cashier=F('Approved_By'),Payment_Mode=F('Payment_Type'),Comment=F('Payment_Comment')).order_by('Date')
+                        Charge=F('Payment_Journal__Treatment_Amount'),Exam_Room=F('Payment_Journal__Exam_Room'),Cashier=F('Approved_By'),Payment_Mode=F('Payment_Type'),Comment=F('Payment_Comment'),
+                        Referring_Facility=F('Payment_Journal__Referring_Facility'),Referring_Doctor=F('Payment_Journal__Referred_Doctor')).order_by('Date')
                     )
                 if not genData:
                     messages.success(request,'No record found for the input date')
@@ -2417,7 +2419,7 @@ class General_Reports(View):
                 ws4 = wb.create_sheet(title=title)
                 self.createSheetTitle(df4,ws4,'REFERRAL LIST',subtitle)
                 ws4.append([])
-                ws4.append(['Referral Facility', 'Total Amount'])
+                ws4.append(['Referring Facility', 'Total Amount'])
                 for r in dataframe_to_rows(df4, index=False, header=False):
                     ws4.append(r)
                 # Sum the charge field and write it to the worksheet
@@ -2449,7 +2451,8 @@ class General_Reports(View):
                 .annotate(Patient_ID=F('Payment_Journal__Patient_Id__Patient_Id'), Patient_Name=Concat(F('Payment_Journal__Patient_Id__First_Name'),F('Payment_Journal__Patient_Id__Surname'),output_field=CharField()),
                         Procedure_Name=Concat(F('Payment_Journal__Procedure__Procedure'),Value('-'),F('Payment_Journal__Procedure__Modality__Acronym')),Modality=F('Payment_Journal__Procedure__Modality__Modality'),
                         Charge=F('Payment_Journal__Treatment_Amount'),Exam_Room=F('Payment_Journal__Exam_Room'),Cashier=F('Approved_By'),Payment_Mode=F('Payment_Type'),Comment=F('Payment_Comment'),
-                        Month=Concat(F('Date__year'),Value('-'),F('Date__month'),output_field=CharField())).order_by('Date')
+                        Month=Concat(F('Date__year'),Value('-'),F('Date__month'),output_field=CharField()),
+                        Referring_Facility=F('Payment_Journal__Referring_Facility'),Referring_Doctor=F('Payment_Journal__Referred_Doctor')).order_by('Date')
                     )
                 if not genData:
                     messages.success(request,'No record found for the input date')
@@ -2597,7 +2600,7 @@ class General_Reports(View):
                 .annotate(Patient_ID=F('Payment_Journal__Patient_Id__Patient_Id'), Patient_Name=Concat(F('Payment_Journal__Patient_Id__First_Name'),F('Payment_Journal__Patient_Id__Surname'),output_field=CharField()),
                         Procedure_Name=Concat(F('Payment_Journal__Procedure__Procedure'),Value('-'),F('Payment_Journal__Procedure__Modality__Acronym')),Modality=F('Payment_Journal__Procedure__Modality__Modality'),
                         Charge=F('Payment_Journal__Treatment_Amount'),Exam_Room=F('Payment_Journal__Exam_Room'),Cashier=F('Approved_By'),Payment_Mode=F('Payment_Type'),Comment=F('Payment_Comment'),
-                        Year=F('Date__year')).order_by('Date')
+                        Referring_Facility=F('Payment_Journal__Referring_Facility'),Referring_Doctor=F('Payment_Journal__Referred_Doctor'),Year=F('Date__year')).order_by('Date')
                     )
                 if not genData:
                     messages.success(request,'No record found for the input date')
